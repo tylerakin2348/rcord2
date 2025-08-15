@@ -1,18 +1,19 @@
 <template>
   <!-- Modal Overlay -->
-  <div class="fixed inset-0 z-50 overflow-y-auto" v-if="true">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Background overlay -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="$emit('close')"></div>
-      
-      <!-- Modal panel -->
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full max-w-7xl">
+  <div class="fixed inset-0 z-50 overflow-y-auto">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="$emit('close')"></div>
+    
+    <!-- Modal Content Container -->
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 relative z-10">
+      <!-- Modal panel - Full screen style -->
+      <div class="bg-gray-50 rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-w-7xl min-h-[80vh] relative">
         <!-- Header -->
         <header class="bg-white shadow border-b">
           <div class="px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-6">
               <div class="flex items-center">
-                <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+                <h1 class="text-3xl font-bold text-gray-900">User Dashboard</h1>
               </div>
               <div class="flex items-center space-x-4">
                 <span class="text-sm text-gray-500">Welcome, {{ store.user.name }}!</span>
@@ -30,12 +31,12 @@
         </header>
 
         <!-- Main content -->
-        <main class="px-4 sm:px-6 lg:px-8 py-6 max-h-96 overflow-y-auto">
+        <main class="px-4 sm:px-6 lg:px-8 py-6 overflow-y-auto" style="max-height: calc(80vh - 100px);">
           <!-- User Profile Card -->
-          <div class="bg-gray-50 overflow-hidden shadow rounded-lg mb-6">
+          <div class="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div class="px-4 py-5 sm:p-6">
               <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Your Profile</h3>
-              <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Name</label>
                   <p class="mt-1 text-sm text-gray-900">{{ store.user.name }}</p>
@@ -135,7 +136,7 @@
             </div>
 
             <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
-              <ul class="divide-y divide-gray-200">
+              <ul class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
                 <li v-for="user in store.users" :key="user.id" class="px-6 py-4">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center">

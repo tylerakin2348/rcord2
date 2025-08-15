@@ -34,8 +34,9 @@
             <div class="relative inline-flex items-center justify-center w-32 h-32 bg-gray-100 rounded-full mb-4">
               <div 
                 v-if="!isRecording" 
-                class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors duration-200"
-                @click="startRecording"
+                class="w-20 h-20 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-200"
+                :class="microphoneAvailable ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-400 cursor-not-allowed'"
+                @click="microphoneAvailable ? startRecording() : null"
               >
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10"/>
@@ -54,6 +55,10 @@
             
             <div class="text-sm text-gray-600 mb-2">
               {{ isRecording ? 'Recording...' : 'Click to start recording' }}
+            </div>
+            
+            <div v-if="!microphoneAvailable" class="text-sm text-red-600 mb-2">
+              ⚠️ Microphone access required for recording
             </div>
             
             <div class="text-2xl font-mono font-bold text-gray-900">
@@ -169,29 +174,94 @@ const audioLevel = ref(0)
 const recordingQuality = ref('high')
 const recordingFormat = ref('wav')
 const recordedFiles = ref([])
+const microphoneAvailable = ref(false)
+
+// Audio recording variables
+let mediaRecorder = null
+let audioChunks = []
+let audioStream = null
 
 // Timer for recording
 let recordingInterval = null
 let audioLevelInterval = null
 
-const startRecording = () => {
-  isRecording.value = true
-  recordingTime.value = 0
-  
-  // Start recording timer
-  recordingInterval = setInterval(() => {
-    recordingTime.value++
-  }, 1000)
-  
-  // Simulate audio level updates
-  audioLevelInterval = setInterval(() => {
-    audioLevel.value = Math.random() * 100
-  }, 100)
-  
-  console.log('Started single cord recording...')
+// Check microphone access on mount
+onMounted(async () => {
+  await checkMicrophoneAccess()
+})
+
+const checkMicrophoneAccess = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    microphoneAvailable.value = true
+    stream.getTracks().forEach(track => track.stop()) // Stop the test stream
+  } catch (error) {
+    console.error('Microphone access denied:', error)
+    microphoneAvailable.value = false
+  }
+}
+
+const startRecording = async () => {
+  if (!microphoneAvailable.value) {
+    alert('Microphone access is required for recording. Please enable microphone permissions.')
+    return
+  }
+
+  try {
+    // Get user media
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    
+    // Create MediaRecorder
+    mediaRecorder = new MediaRecorder(audioStream, {
+      mimeType: 'audio/webm;codecs=opus'
+    })
+    
+    audioChunks = []
+    recordingTime.value = 0
+    
+    // Set up MediaRecorder event handlers
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data)
+      }
+    }
+    
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+      await saveRecordingToServer(audioBlob)
+      
+      // Stop all tracks
+      if (audioStream) {
+        audioStream.getTracks().forEach(track => track.stop())
+      }
+    }
+    
+    // Start recording
+    mediaRecorder.start()
+    isRecording.value = true
+    
+    // Start recording timer
+    recordingInterval = setInterval(() => {
+      recordingTime.value++
+    }, 1000)
+    
+    // Simulate audio level updates (you could implement real audio analysis here)
+    audioLevelInterval = setInterval(() => {
+      audioLevel.value = Math.random() * 100
+    }, 100)
+    
+    console.log('Started single cord recording...')
+  } catch (error) {
+    console.error('Error starting recording:', error)
+    alert('Failed to start recording. Please check microphone permissions.')
+  }
 }
 
 const stopRecording = () => {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop()
+  }
+  
   isRecording.value = false
   
   if (recordingInterval) {
@@ -204,20 +274,61 @@ const stopRecording = () => {
     audioLevelInterval = null
   }
   
-  // Add the recorded file to the list
-  const newFile = {
-    id: Date.now(),
-    name: `recording_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${recordingFormat.value}`,
-    duration: formatTime(recordingTime.value),
-    size: `${Math.round(recordingTime.value * 0.5)}MB`,
-    timestamp: Date.now()
+  console.log('Stopped recording, saving file...')
+}
+
+const saveRecordingToServer = async (audioBlob) => {
+  const title = prompt('Enter a title for this recording:', `Recording ${new Date().toLocaleString()}`)
+  
+  if (!title) {
+    console.log('Recording cancelled by user')
+    return
   }
-  
-  recordedFiles.value.unshift(newFile)
-  recordingTime.value = 0
-  audioLevel.value = 0
-  
-  console.log('Stopped single cord recording, saved:', newFile.name)
+
+  try {
+    // Convert blob to base64
+    const reader = new FileReader()
+    const base64Data = await new Promise((resolve) => {
+      reader.onload = () => resolve(reader.result)
+      reader.readAsDataURL(audioBlob)
+    })
+
+    const response = await fetch('/api/recordings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({
+        title: title,
+        description: `Single cord recording from ${new Date().toLocaleString()}`,
+        audio_blob: base64Data,
+        duration: recordingTime.value,
+        mime_type: 'audio/webm'
+      })
+    })
+
+    if (response.ok) {
+      const result = await response.json()
+      
+      // Add to local files list for display
+      recordedFiles.value.push({
+        id: result.recording.id,
+        name: title,
+        duration: formatTime(recordingTime.value),
+        size: result.recording.formatted_file_size,
+        timestamp: new Date().toLocaleString()
+      })
+      
+      alert('Recording saved successfully!')
+    } else {
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to save recording')
+    }
+  } catch (error) {
+    console.error('Error saving recording:', error)
+    alert('Failed to save recording: ' + error.message)
+  }
 }
 
 const formatTime = (seconds) => {

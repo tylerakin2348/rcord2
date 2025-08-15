@@ -45,4 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the recordings for the user.
+     */
+    public function recordings()
+    {
+        return $this->hasMany(Recording::class);
+    }
 }

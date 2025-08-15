@@ -10,8 +10,8 @@
       <Footer />
     </div>
 
-    <!-- Logged In Landing Page (when logged in) -->
-    <LoggedInLanding v-else />
+    <!-- Router View for Logged In Users -->
+    <router-view v-else />
 
     <!-- Login/Register Modal -->
     <LoginModal 
@@ -29,7 +29,6 @@ import Header from './components/Header.vue';
 import Hero from './components/Hero.vue';
 import Features from './components/Features.vue';
 import Footer from './components/Footer.vue';
-import LoggedInLanding from './components/LoggedInLanding.vue';
 import LoginModal from './components/LoginModal.vue';
 
 const store = useMainStore();

@@ -3,8 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RecordingController;
 
 Route::get('/', function () {
+    return view('app');
+});
+
+Route::get('/recordings', function () {
     return view('app');
 });
 
@@ -17,6 +22,17 @@ Route::get('/api/user', [AuthController::class, 'user'])->middleware('auth:web')
 // User CRUD routes (protected)
 Route::middleware('auth:web')->group(function () {
     Route::apiResource('api/users', UserController::class);
+});
+
+// Recording routes
+Route::get('/api/recordings', [RecordingController::class, 'index']);
+Route::get('/api/recordings/{recording}', [RecordingController::class, 'show']);
+Route::get('/api/recordings/{recording}/stream', [RecordingController::class, 'stream']);
+
+Route::middleware('auth:web')->group(function () {
+    Route::post('/api/recordings', [RecordingController::class, 'store']);
+    Route::put('/api/recordings/{recording}', [RecordingController::class, 'update']);
+    Route::delete('/api/recordings/{recording}', [RecordingController::class, 'destroy']);
 });
 
 // API routes for the Vue app can be added here

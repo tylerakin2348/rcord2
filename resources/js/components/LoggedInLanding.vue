@@ -23,6 +23,15 @@
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-700">Hello, {{ store.user?.name }}</span>
             <button 
+              @click="goToRecordings"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span>Recordings</span>
+            </button>
+            <button 
               @click="showDashboard = true"
               class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
             >
@@ -55,16 +64,8 @@
         <!-- Center container for mode selection -->
         <div 
           v-show="!selectedMode"
-          class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto bg-stone-50 rounded-lg shadow-sm p-12"
+          class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto p-12"
         >
-          <!-- Title and Description -->
-          <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-stone-800 mb-4">rcord</h2>
-            <p class="text-lg text-stone-600 max-w-2xl">
-              Professional audio recording made simple. Choose your recording mode and start creating.
-            </p>
-          </div>
-          
           <!-- Recording Mode Buttons -->
           <div class="flex flex-col sm:flex-row gap-8 items-center">
             <!-- Single Cord Button -->
@@ -76,7 +77,6 @@
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
-                <span>Single Cord</span>
               </div>
               <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 Record once
@@ -92,7 +92,6 @@
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Looped Cord</span>
               </div>
               <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-stone-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 Continuous recording
@@ -331,11 +330,13 @@
 <script setup>
 import { ref, onUnmounted } from 'vue';
 import { useMainStore } from '../stores/main';
+import { useRouter } from 'vue-router';
 import DashboardModal from './DashboardModal.vue';
 import SingleCordModal from './SingleCordModal.vue';
 import LoopedCordModal from './LoopedCordModal.vue';
 
 const store = useMainStore();
+const router = useRouter();
 const showDashboard = ref(false);
 const showSingleCord = ref(false);
 const showLoopedCord = ref(false);
@@ -498,6 +499,10 @@ const handleLogout = async () => {
   } catch (error) {
     console.error('Logout failed:', error);
   }
+};
+
+const goToRecordings = () => {
+  router.push('/recordings');
 };
 
 // Cleanup on component unmount

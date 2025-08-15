@@ -43,61 +43,70 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <main class="flex-1 flex px-4 sm:px-6 lg:px-8 overflow-hidden">
       <!-- Main rcord Interface -->
       <div 
-        class="flex items-center justify-center w-full max-w-7xl rounded-lg p-12 transition-all duration-500"
+        class="flex w-full transition-all duration-500"
         :class="{
-          'flex-col max-w-4xl bg-stone-50 shadow-sm': !selectedMode,
-          'flex-row max-w-7xl': selectedMode
+          'items-center justify-center': !selectedMode,
+          'items-stretch': selectedMode
         }"
       >
-        <!-- Title and Description (show only when no mode is selected) -->
-        <!-- Recording Mode Buttons -->
+        <!-- Center container for mode selection -->
         <div 
-          class="flex flex-col sm:flex-row gap-8 items-center mb-8 transition-all duration-500"
-          :class="{ 
-            'transform scale-0 opacity-0 pointer-events-none': selectedMode,
-            'transform scale-100 opacity-100': !selectedMode 
-          }"
+          v-show="!selectedMode"
+          class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto bg-stone-50 rounded-lg shadow-sm p-12"
         >
-          <!-- Single Cord Button -->
-          <button 
-            @click="selectRecordingMode('single')"
-            class="group relative bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-          >
-            <div class="flex items-center space-x-3">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </div>
-            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Record once
-            </div>
-          </button>
+          <!-- Title and Description -->
+          <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-stone-800 mb-4">rcord</h2>
+            <p class="text-lg text-stone-600 max-w-2xl">
+              Professional audio recording made simple. Choose your recording mode and start creating.
+            </p>
+          </div>
+          
+          <!-- Recording Mode Buttons -->
+          <div class="flex flex-col sm:flex-row gap-8 items-center">
+            <!-- Single Cord Button -->
+            <button 
+              @click="selectRecordingMode('single')"
+              class="group relative bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+            >
+              <div class="flex items-center space-x-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                <span>Single Cord</span>
+              </div>
+              <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Record once
+              </div>
+            </button>
 
-          <!-- Looped Cord Button -->
-          <button 
-            @click="selectRecordingMode('looped')"
-            class="group relative bg-gradient-to-r from-stone-600 to-stone-700 hover:from-stone-700 hover:to-stone-800 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-          >
-            <div class="flex items-center space-x-3">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-stone-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Continuous recording
-            </div>
-          </button>
+            <!-- Looped Cord Button -->
+            <button 
+              @click="selectRecordingMode('looped')"
+              class="group relative bg-gradient-to-r from-stone-600 to-stone-700 hover:from-stone-700 hover:to-stone-800 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+            >
+              <div class="flex items-center space-x-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Looped Cord</span>
+              </div>
+              <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-stone-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Continuous recording
+              </div>
+            </button>
+          </div>
         </div>
 
-        <!-- Animated Record Button (shown when mode is selected) -->
+        <!-- Left Half: Recording Controls (shown when mode is selected) -->
         <div 
           v-show="selectedMode"
-          class="flex flex-col items-center justify-center transition-all duration-500"
+          class="flex items-center justify-center w-1/2 h-full transition-all duration-500"
           :class="{ 
-            'opacity-100 transform scale-100 w-1/2 pr-8': selectedMode,
+            'opacity-100 transform scale-100': selectedMode,
             'opacity-0 transform scale-0 pointer-events-none': !selectedMode 
           }"
         >
@@ -191,103 +200,108 @@
           </div>
         </div>
 
-        <!-- Recordings List (shown when mode is selected) -->
+        <!-- Right Half: Recordings List (shown when mode is selected) -->
         <div 
           v-show="selectedMode"
-          class="flex flex-col transition-all duration-500"
+          class="w-1/2 h-full transition-all duration-500 pl-8"
           :class="{ 
-            'opacity-100 transform scale-100 w-1/2 pl-8': selectedMode,
-            'opacity-0 transform scale-0 pointer-events-none': !selectedMode 
+            'opacity-100 transform scale-100 overflow-y-scroll': selectedMode,
+            'opacity-0 transform scale-0 pointer-events-none overflow-y-scroll': !selectedMode 
           }"
+          style="height: calc(100vh - 69px);"
         >
-          <div class="bg-stone-50 rounded-lg shadow-sm p-6 h-full">
-            <h3 class="text-xl font-semibold text-stone-800 mb-4">Recent Recordings</h3>
+          <div class="bg-stone-50 rounded-lg shadow-sm p-6 h-full flex flex-col">
+            <h3 class="text-xl font-semibold text-stone-800 mb-6">Recent Recordings</h3>
             
-            <!-- Recordings List -->
-            <div v-if="recordedFiles.length > 0" class="space-y-3">
-              <div 
-                v-for="file in recordedFiles" 
-                :key="file.id" 
-                class="flex items-center justify-between p-4 bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
-              >
-                <div class="flex items-center space-x-3">
+            <!-- Recordings List with Scroll -->
+            <div class="flex-1 overflow-y-scroll">
+              <div v-if="recordedFiles.length > 0" class="space-y-3">
+                <div 
+                  v-for="file in recordedFiles" 
+                  :key="file.id" 
+                  class="flex items-center justify-between p-4 bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
+                >
+                  <div class="flex items-center space-x-3">
+                    <div 
+                      class="p-2 rounded-lg"
+                      :class="{
+                        'bg-amber-100': selectedMode === 'single',
+                        'bg-stone-100': selectedMode === 'looped'
+                      }"
+                    >
+                      <svg class="w-5 h-5" :class="{
+                        'text-amber-600': selectedMode === 'single',
+                        'text-stone-600': selectedMode === 'looped'
+                      }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" v-if="selectedMode === 'single'" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" v-else />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="font-medium text-stone-900">{{ file.name }}</div>
+                      <div class="text-sm text-stone-500">{{ file.duration }} • {{ file.size }}</div>
+                      <div v-if="selectedMode === 'looped' && file.loops" class="text-xs text-stone-400">{{ file.loops }} loops</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button 
+                      @click="playFile(file)"
+                      class="p-2 rounded-full transition-colors duration-200"
+                      :class="{
+                        'text-amber-600 hover:text-amber-800 hover:bg-amber-50': selectedMode === 'single',
+                        'text-stone-600 hover:text-stone-800 hover:bg-stone-50': selectedMode === 'looped'
+                      }"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m2-7a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                    <button 
+                      @click="downloadFile(file)"
+                      class="p-2 rounded-full transition-colors duration-200"
+                      :class="{
+                        'text-amber-600 hover:text-amber-800 hover:bg-amber-50': selectedMode === 'single',
+                        'text-stone-600 hover:text-stone-800 hover:bg-stone-50': selectedMode === 'looped'
+                      }"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                    <button 
+                      @click="deleteFile(file)"
+                      class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors duration-200"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else class="flex items-center justify-center h-full">
+                <div class="text-center">
                   <div 
-                    class="p-2 rounded-lg"
+                    class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
                     :class="{
                       'bg-amber-100': selectedMode === 'single',
                       'bg-stone-100': selectedMode === 'looped'
                     }"
                   >
-                    <svg class="w-5 h-5" :class="{
-                      'text-amber-600': selectedMode === 'single',
-                      'text-stone-600': selectedMode === 'looped'
+                    <svg class="w-8 h-8" :class="{
+                      'text-amber-400': selectedMode === 'single',
+                      'text-stone-400': selectedMode === 'looped'
                     }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" v-if="selectedMode === 'single'" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" v-else />
                     </svg>
                   </div>
-                  <div>
-                    <div class="font-medium text-stone-900">{{ file.name }}</div>
-                    <div class="text-sm text-stone-500">{{ file.duration }} • {{ file.size }}</div>
-                    <div v-if="selectedMode === 'looped' && file.loops" class="text-xs text-stone-400">{{ file.loops }} loops</div>
-                  </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <button 
-                    @click="playFile(file)"
-                    class="p-2 rounded-full transition-colors duration-200"
-                    :class="{
-                      'text-amber-600 hover:text-amber-800 hover:bg-amber-50': selectedMode === 'single',
-                      'text-stone-600 hover:text-stone-800 hover:bg-stone-50': selectedMode === 'looped'
-                    }"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m2-7a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                  <button 
-                    @click="downloadFile(file)"
-                    class="p-2 rounded-full transition-colors duration-200"
-                    :class="{
-                      'text-amber-600 hover:text-amber-800 hover:bg-amber-50': selectedMode === 'single',
-                      'text-stone-600 hover:text-stone-800 hover:bg-stone-50': selectedMode === 'looped'
-                    }"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </button>
-                  <button 
-                    @click="deleteFile(file)"
-                    class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors duration-200"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  <p class="text-stone-500">No recordings yet</p>
+                  <p class="text-sm text-stone-400 mt-1">Start recording to see your files here</p>
                 </div>
               </div>
-            </div>
-
-            <!-- Empty State -->
-            <div v-else class="text-center py-12">
-              <div 
-                class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                :class="{
-                  'bg-amber-100': selectedMode === 'single',
-                  'bg-stone-100': selectedMode === 'looped'
-                }"
-              >
-                <svg class="w-8 h-8" :class="{
-                  'text-amber-400': selectedMode === 'single',
-                  'text-stone-400': selectedMode === 'looped'
-                }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" v-if="selectedMode === 'single'" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" v-else />
-                </svg>
-              </div>
-              <p class="text-stone-500">No recordings yet</p>
-              <p class="text-sm text-stone-400 mt-1">Start recording to see your files here</p>
             </div>
           </div>
         </div>

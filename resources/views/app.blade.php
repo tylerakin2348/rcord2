@@ -14,7 +14,7 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased">
+<body class="antialiased overflow-hidden">
     <div id="app"></div>
 </body>
 </html>

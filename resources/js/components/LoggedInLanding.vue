@@ -1,7 +1,13 @@
 <template>
   <div class="min-h-screen bg-stone-100 flex flex-col">
     <!-- Header with User Profile Button -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <header 
+      class="bg-white shadow-sm border-b border-gray-200 transition-all duration-500"
+      :class="{
+        'transform translate-y-0': isHeaderExpanded,
+        'transform -translate-y-full': !isHeaderExpanded
+      }"
+    >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
           <div class="flex items-center">
@@ -19,8 +25,8 @@
             </h1>
           </div>
           
-          <!-- User Profile Button -->
-          <div class="flex items-center space-x-4">
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-4">
             <span class="text-sm text-gray-700">Hello, {{ store.user?.name }}</span>
             <button 
               @click="showDashboard = true"
@@ -38,12 +44,88 @@
               Logout
             </button>
           </div>
+
+          <!-- Mobile Hamburger Menu -->
+          <div class="md:hidden">
+            <button
+              @click="isMobileMenuOpen = !isMobileMenuOpen"
+              class="p-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors duration-200"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path 
+                  v-if="!isMobileMenuOpen"
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M4 6h16M4 12h16M4 18h16" 
+                />
+                <path 
+                  v-else
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M6 18L18 6M6 6l12 12" 
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div 
+          v-show="isMobileMenuOpen"
+          class="md:hidden border-t border-gray-200 pt-4 pb-4 space-y-2"
+        >
+          <div class="text-sm text-gray-700 px-3 py-2">Hello, {{ store.user?.name }}</div>
+          <button 
+            @click="showDashboard = true; isMobileMenuOpen = false"
+            class="w-full text-left bg-stone-600 hover:bg-stone-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>Dashboard</span>
+          </button>
+          <button 
+            @click="handleLogout; isMobileMenuOpen = false"
+            class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </header>
 
+    <!-- Header Toggle Tab -->
+    <div 
+      class="flex justify-center relative z-30 transition-all duration-500"
+      :class="{
+        'transform translate-y-0': isHeaderExpanded,
+        'transform -translate-y-full': !isHeaderExpanded
+      }"
+    >
+      <button
+        @click="toggleHeader"
+        class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-4 py-2 rounded-b-lg border-l border-r border-b border-gray-200 shadow-sm transition-colors duration-200"
+        :class="{
+          'rounded-t-none': isHeaderExpanded,
+          'rounded-t-lg': !isHeaderExpanded
+        }"
+      >
+        <svg 
+          class="w-5 h-5 transition-transform duration-300" 
+          :class="{ 'rotate-180': !isHeaderExpanded }"
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 14l5-5 5 5" />
+        </svg>
+      </button>
+    </div>
+
     <!-- Main Content -->
-    <main class="flex-1 flex px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <main class="flex-1 flex overflow-hidden relative">
       <!-- Main rcord Interface -->
       <div 
         class="flex w-full transition-all duration-500"
@@ -98,7 +180,7 @@
           :class="{ 
             'opacity-100 transform scale-100': selectedMode,
             'opacity-0 transform scale-0 pointer-events-none': !selectedMode,
-            'w-1/2': isDrawerExpanded,
+            'w-1/2': isDrawerExpanded && !isMobileView,
             'w-full': !isDrawerExpanded
           }"
         >
@@ -115,8 +197,13 @@
           </div>
 
           <!-- Recording Controls - centered in remaining space -->
-          <div class="flex-1 flex flex-col items-center justify-center"
-               :class="{ 'px-8': !isDrawerExpanded }">
+          <div 
+            class="flex-1 flex flex-col items-center justify-center"
+            :class="{ 
+              'px-8': !isDrawerExpanded,
+              'max-w-lg mx-auto': !isDrawerExpanded
+            }"
+          >
             <!-- Circular Record Button -->
             <div class="relative mb-8">
               <div 
@@ -162,11 +249,11 @@
 
           <!-- Footer Section with Time Counter and Progress Indicators -->
           <div class="p-4 border-t border-stone-200 bg-stone-50">
-            <!-- Looped Recording Layout: Loop Progress | Time | Audio Level -->
-            <div v-if="selectedMode === 'looped' && isRecording" class="flex items-center justify-between">
+            <!-- Looped Recording Layout -->
+            <div v-if="selectedMode === 'looped'" class="flex items-center justify-between">
               <!-- Loop Progress (Left) -->
-              <div class="flex flex-col items-center">
-                <div class="text-xs text-stone-600 mb-2">Loop Progress</div>
+              <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
+                <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Loop Progress</div>
                 <div class="relative w-16 h-16">
                   <!-- Background circle -->
                   <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
@@ -175,7 +262,7 @@
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="#d6d3d1"
+                      :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
                       stroke-width="3"
                     />
                     <!-- Loop progress fill circle -->
@@ -184,17 +271,19 @@
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="#78716c"
+                      :stroke="isRecording ? '#78716c' : '#a8a29e'"
                       stroke-width="3"
                       stroke-linecap="round"
                       :stroke-dasharray="`${2 * Math.PI * 28}`"
-                      :stroke-dashoffset="`${2 * Math.PI * 28 * (1 - ((recordingTime % loopDuration) / loopDuration))}`"
+                      :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - ((recordingTime % loopDuration) / loopDuration))}` : `${2 * Math.PI * 28}`"
                       class="transition-all duration-1000"
                     />
                   </svg>
                   <!-- Center percentage -->
                   <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-xs font-mono text-stone-700">{{ Math.round((recordingTime / loopDuration) * 100) }}%</span>
+                    <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
+                      {{ isRecording ? Math.round(((recordingTime % loopDuration) / loopDuration) * 100) : 0 }}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -204,14 +293,14 @@
                 <div class="text-3xl font-mono font-bold text-stone-800">
                   {{ formatTime(recordingTime) }}
                 </div>
-                <div class="text-sm text-stone-500 mt-1">
+                <div v-if="isRecording" class="text-sm text-stone-500 mt-1">
                   Total: {{ formatTime(totalRecordingTime) }}
                 </div>
               </div>
 
               <!-- Audio Level (Right) -->
-              <div class="flex flex-col items-center">
-                <div class="text-xs text-stone-600 mb-2">Audio Level</div>
+              <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
+                <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Audio Level</div>
                 <div class="relative w-16 h-16">
                   <!-- Background circle -->
                   <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
@@ -220,7 +309,7 @@
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="#d6d3d1"
+                      :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
                       stroke-width="3"
                     />
                     <!-- Audio level fill circle -->
@@ -229,74 +318,75 @@
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="#78716c"
+                      :stroke="isRecording ? '#78716c' : '#a8a29e'"
                       stroke-width="3"
                       stroke-linecap="round"
                       :stroke-dasharray="`${2 * Math.PI * 28}`"
-                      :stroke-dashoffset="`${2 * Math.PI * 28 * (1 - audioLevel / 100)}`"
+                      :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - audioLevel / 100)}` : `${2 * Math.PI * 28}`"
                       class="transition-all duration-150"
                     />
                   </svg>
                   <!-- Center percentage text -->
                   <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-xs font-mono text-stone-700">{{ Math.round(audioLevel) }}%</span>
+                    <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
+                      {{ isRecording ? Math.round(audioLevel) : 0 }}%
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Single Recording or Not Recording Layout -->
-            <div v-else>
-              <!-- Single Recording Layout with Time and Audio Level -->
-              <div v-if="selectedMode === 'single' && isRecording" class="flex items-center justify-between">
-                <!-- Recording Time Counter (Left) -->
-                <div class="text-left">
-                  <div class="text-3xl font-mono font-bold text-stone-800">
-                    {{ formatTime(recordingTime) }}
-                  </div>
-                </div>
-
-                <!-- Audio Level (Right) -->
-                <div class="flex flex-col items-center">
-                  <div class="text-xs text-stone-600 mb-2">Audio Level</div>
-                  <div class="relative w-16 h-16">
-                    <!-- Background circle -->
-                    <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        fill="none"
-                        stroke="#d6d3d1"
-                        stroke-width="3"
-                      />
-                      <!-- Audio level fill circle -->
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        fill="none"
-                        stroke="#f59e0b"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                        :stroke-dasharray="`${2 * Math.PI * 28}`"
-                        :stroke-dashoffset="`${2 * Math.PI * 28 * (1 - audioLevel / 100)}`"
-                        class="transition-all duration-150"
-                      />
-                    </svg>
-                    <!-- Center percentage text -->
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <span class="text-xs font-mono text-stone-700">{{ Math.round(audioLevel) }}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Not Recording or Looped Not Recording Layout -->
-              <div v-else class="text-center">
+            <!-- Single Recording Layout -->
+            <div v-else-if="selectedMode === 'single'" class="flex items-center justify-between">
+              <!-- Recording Time Counter (Left) -->
+              <div class="text-left">
                 <div class="text-3xl font-mono font-bold text-stone-800">
                   {{ formatTime(recordingTime) }}
                 </div>
+              </div>
+
+              <!-- Audio Level (Right) -->
+              <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
+                <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Audio Level</div>
+                <div class="relative w-16 h-16">
+                  <!-- Background circle -->
+                  <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
+                      stroke-width="3"
+                    />
+                    <!-- Audio level fill circle -->
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      :stroke="isRecording ? '#f59e0b' : '#a8a29e'"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      :stroke-dasharray="`${2 * Math.PI * 28}`"
+                      :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - audioLevel / 100)}` : `${2 * Math.PI * 28}`"
+                      class="transition-all duration-150"
+                    />
+                  </svg>
+                  <!-- Center percentage text -->
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
+                      {{ isRecording ? Math.round(audioLevel) : 0 }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fallback (should not normally be reached) -->
+            <div v-else class="text-center">
+              <div class="text-3xl font-mono font-bold text-stone-800">
+                {{ formatTime(recordingTime) }}
               </div>
             </div>
           </div>
@@ -304,7 +394,7 @@
 
         <!-- Drawer Toggle Button -->
         <div 
-          v-show="selectedMode"
+          v-show="selectedMode && !isMobileView"
           class="flex items-center transition-all duration-500"
           :class="{
             'opacity-100': selectedMode,
@@ -331,20 +421,60 @@
           </button>
         </div>
 
+        <!-- Mobile Drawer Toggle Button (floating) -->
+        <div 
+          v-show="selectedMode && isMobileView"
+          class="fixed top-1/2 right-4 z-50 transform -translate-y-1/2"
+        >
+          <button
+            @click="toggleDrawer"
+            class="p-3 bg-stone-600 hover:bg-stone-700 text-white rounded-full shadow-lg transition-all duration-200"
+          >
+            <svg 
+              class="w-5 h-5 transition-transform duration-300" 
+              :class="{ 'rotate-180': !isDrawerExpanded }"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+
         <!-- Right Half: Recordings Drawer -->
         <div 
           v-show="selectedMode"
-          class="h-full transition-all duration-500 bg-stone-50 rounded-lg shadow-sm flex flex-col"
+          class="h-full transition-all duration-500 bg-stone-50 shadow-lg flex flex-col"
           :class="{ 
             'opacity-100 transform scale-100': selectedMode && isDrawerExpanded,
-            'opacity-0 transform scale-x-0 pointer-events-none': !selectedMode || !isDrawerExpanded,
-            'w-1/2 pl-0': isDrawerExpanded,
-            'w-0': !isDrawerExpanded
+            'opacity-0 transform scale-x-0 pointer-events-none': !selectedMode || (!isDrawerExpanded && !isMobileView),
+            // Desktop styles
+            'w-1/2 pl-0': isDrawerExpanded && !isMobileView,
+            'w-0': !isDrawerExpanded && !isMobileView,
+            // Mobile styles - floating overlay
+            'fixed inset-0 top-16 w-full z-40': isMobileView,
+            'transform translate-x-full': isMobileView && !isDrawerExpanded,
+            'transform translate-x-0': isMobileView && isDrawerExpanded
           }"
-          style="height: calc(100vh - 69px);"
+          :style="isMobileView ? {} : { height: 'calc(100vh - 69px)' }"
         >
           <div class="p-6 h-full flex flex-col">
-            <h3 class="text-xl font-semibold text-stone-800 mb-6">Recent Recordings</h3>
+            <!-- Mobile close button -->
+            <div v-if="isMobileView" class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold text-stone-800">Recent Recordings</h3>
+              <button
+                @click="toggleDrawer"
+                class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-200 rounded-full transition-colors duration-200"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Desktop header -->
+            <h3 v-if="!isMobileView" class="text-xl font-semibold text-stone-800 mb-6">Recent Recordings</h3>
             
             <!-- Recordings List with Scroll -->
             <div class="flex-1 overflow-y-scroll">
@@ -462,7 +592,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, computed, onMounted } from 'vue';
 import { useMainStore } from '../stores/main';
 import { useRouter } from 'vue-router';
 import DashboardModal from './DashboardModal.vue';
@@ -474,6 +604,13 @@ const router = useRouter();
 const showDashboard = ref(false);
 const showSingleCord = ref(false);
 const showLoopedCord = ref(false);
+
+// Mobile state
+const isMobileMenuOpen = ref(false);
+const windowWidth = ref(window.innerWidth);
+
+// Computed for mobile view detection
+const isMobileView = computed(() => windowWidth.value < 768);
 
 // Recording state
 const selectedMode = ref(null); // 'single' or 'looped'
@@ -487,6 +624,10 @@ const recordedFiles = ref([]); // List of recorded files
 
 // Drawer state
 const isDrawerExpanded = ref(true);
+const isHeaderCollapsed = ref(false);
+
+// Header computed property for clearer template logic
+const isHeaderExpanded = computed(() => !isHeaderCollapsed.value);
 
 // Browser recording state
 let mediaRecorder = null;
@@ -500,10 +641,37 @@ let recordingInterval = null;
 let audioLevelInterval = null;
 let loopCheckInterval = null;
 
+// Handle window resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
+  // Close mobile menu on resize to desktop
+  if (!isMobileView.value) {
+    isMobileMenuOpen.value = false;
+  }
+  // Close drawer on mobile by default
+  if (isMobileView.value && !selectedMode.value) {
+    isDrawerExpanded.value = false;
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+  // Set initial drawer state based on screen size
+  if (isMobileView.value) {
+    isDrawerExpanded.value = false;
+  }
+});
+
 const selectRecordingMode = (mode) => {
   selectedMode.value = mode;
   // Reset all recording state when switching modes
   resetRecordingState();
+  // Close mobile menu if open
+  isMobileMenuOpen.value = false;
+  // On mobile, close drawer by default when selecting mode
+  if (isMobileView.value) {
+    isDrawerExpanded.value = false;
+  }
 };
 
 const goBack = () => {
@@ -514,6 +682,8 @@ const goBack = () => {
   // Clear selected mode to return to main menu
   selectedMode.value = null;
   resetRecordingState();
+  // Reset drawer state
+  isDrawerExpanded.value = !isMobileView.value;
 };
 
 const toggleRecording = () => {
@@ -646,6 +816,10 @@ const toggleDrawer = () => {
   isDrawerExpanded.value = !isDrawerExpanded.value;
 };
 
+const toggleHeader = () => {
+  isHeaderCollapsed.value = !isHeaderCollapsed.value;
+};
+
 const updateAudioLevel = () => {
   if (analyser) {
     const bufferLength = analyser.frequencyBinCount;
@@ -760,5 +934,8 @@ onUnmounted(() => {
       URL.revokeObjectURL(file.url);
     }
   });
+
+  // Remove event listeners
+  window.removeEventListener('resize', handleResize);
 });
 </script>

@@ -23,15 +23,6 @@
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-700">Hello, {{ store.user?.name }}</span>
             <button 
-              @click="goToRecordings"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <span>Recordings</span>
-            </button>
-            <button 
               @click="showDashboard = true"
               class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
             >
@@ -103,14 +94,16 @@
         <!-- Left Half: Recording Controls (shown when mode is selected) -->
         <div 
           v-show="selectedMode"
-          class="flex items-center justify-center w-1/2 h-full transition-all duration-500"
+          class="flex flex-col h-full transition-all duration-500"
           :class="{ 
             'opacity-100 transform scale-100': selectedMode,
-            'opacity-0 transform scale-0 pointer-events-none': !selectedMode 
+            'opacity-0 transform scale-0 pointer-events-none': !selectedMode,
+            'w-1/2': isDrawerExpanded,
+            'w-full': !isDrawerExpanded
           }"
         >
-          <!-- Record Button with Back Button -->
-          <div class="flex items-center space-x-6 mb-8">
+          <!-- Back Button at top -->
+          <div class="flex justify-start p-4">
             <button
               @click="goBack"
               class="p-3 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors duration-200"
@@ -119,9 +112,13 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
-            
+          </div>
+
+          <!-- Recording Controls - centered in remaining space -->
+          <div class="flex-1 flex flex-col items-center justify-center"
+               :class="{ 'px-8': !isDrawerExpanded }">
             <!-- Circular Record Button -->
-            <div class="relative">
+            <div class="relative mb-8">
               <div 
                 class="w-32 h-32 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 shadow-lg"
                 :class="{
@@ -154,62 +151,100 @@
                 class="absolute inset-0 border-4 border-stone-300 rounded-full animate-spin opacity-50"
               ></div>
             </div>
-          </div>
 
-          <!-- Recording Status -->
-          <div class="text-center mb-6">
-            <div class="text-sm text-stone-600 mb-4">
-              {{ isRecording ? 'Recording...' : 'Click the button to start recording' }}
+            <!-- Recording Status -->
+            <div class="text-center mb-6">
+              <div v-if="selectedMode === 'looped' && isRecording" class="text-sm text-stone-500 mt-2">
+                Loop {{ currentLoop }}
+              </div>
             </div>
-            <div class="text-3xl font-mono font-bold text-stone-800">
-              {{ formatTime(recordingTime) }}
-            </div>
-            <div v-if="selectedMode === 'looped' && isRecording" class="text-sm text-stone-500 mt-2">
-              Loop {{ currentLoop }} • Total: {{ formatTime(totalRecordingTime) }}
-            </div>
-          </div>
 
-          <!-- Audio Level Indicator -->
-          <div v-if="isRecording" class="w-full max-w-sm">
-            <div class="text-center text-sm text-stone-600 mb-2">Audio Level</div>
-            <div class="w-full bg-stone-200 rounded-full h-3">
-              <div 
-                class="h-3 rounded-full transition-all duration-150" 
-                :class="{
-                  'bg-gradient-to-r from-amber-400 to-amber-500': selectedMode === 'single',
-                  'bg-gradient-to-r from-stone-400 to-stone-500': selectedMode === 'looped'
-                }"
-                :style="{ width: audioLevel + '%' }"
-              ></div>
+            <!-- Loop Progress (for looped recording) -->
+            <div v-if="isRecording && selectedMode === 'looped'" class="w-full max-w-sm mt-4">
+              <div class="flex justify-between text-sm text-stone-600 mb-2">
+                <span>Loop Progress</span>
+                <span>{{ Math.round((recordingTime / loopDuration) * 100) }}%</span>
+              </div>
+              <div class="w-full bg-stone-200 rounded-full h-2">
+                <div 
+                  class="bg-gradient-to-r from-stone-400 to-stone-500 h-2 rounded-full transition-all duration-1000" 
+                  :style="{ width: ((recordingTime % loopDuration) / loopDuration) * 100 + '%' }"
+                ></div>
+              </div>
             </div>
           </div>
 
-          <!-- Loop Progress (for looped recording) -->
-          <div v-if="isRecording && selectedMode === 'looped'" class="w-full max-w-sm mt-4">
-            <div class="flex justify-between text-sm text-stone-600 mb-2">
-              <span>Loop Progress</span>
-              <span>{{ Math.round((recordingTime / loopDuration) * 100) }}%</span>
+          <!-- Footer Section with Time Counter and Audio Level -->
+          <div class="p-4 border-t border-stone-200 bg-stone-50">
+            <!-- Recording Time Counter -->
+            <div class="text-center mb-4">
+              <div class="text-3xl font-mono font-bold text-stone-800">
+                {{ formatTime(recordingTime) }}
+              </div>
+              <div v-if="selectedMode === 'looped' && isRecording" class="text-sm text-stone-500 mt-1">
+                Total: {{ formatTime(totalRecordingTime) }}
+              </div>
             </div>
-            <div class="w-full bg-stone-200 rounded-full h-2">
-              <div 
-                class="bg-gradient-to-r from-stone-400 to-stone-500 h-2 rounded-full transition-all duration-1000" 
-                :style="{ width: ((recordingTime % loopDuration) / loopDuration) * 100 + '%' }"
-              ></div>
+
+            <!-- Audio Level Indicator -->
+            <div v-if="isRecording" class="w-full">
+              <div class="text-center text-sm text-stone-600 mb-2">Audio Level</div>
+              <div class="w-full bg-stone-200 rounded-full h-3">
+                <div 
+                  class="h-3 rounded-full transition-all duration-150" 
+                  :class="{
+                    'bg-gradient-to-r from-amber-400 to-amber-500': selectedMode === 'single',
+                    'bg-gradient-to-r from-stone-400 to-stone-500': selectedMode === 'looped'
+                  }"
+                  :style="{ width: audioLevel + '%' }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Half: Recordings List (shown when mode is selected) -->
+        <!-- Drawer Toggle Button -->
         <div 
           v-show="selectedMode"
-          class="w-1/2 h-full transition-all duration-500 pl-8"
+          class="flex items-center transition-all duration-500"
+          :class="{
+            'opacity-100': selectedMode,
+            'opacity-0 pointer-events-none': !selectedMode
+          }"
+        >
+          <button
+            @click="toggleDrawer"
+            class="p-2 bg-stone-200 hover:bg-stone-300 text-stone-600 hover:text-stone-800 rounded-l-lg border-r border-stone-300 transition-colors duration-200 z-10"
+            :class="{
+              'rounded-r-none': isDrawerExpanded,
+              'rounded-r-lg': !isDrawerExpanded
+            }"
+          >
+            <svg 
+              class="w-5 h-5 transition-transform duration-300" 
+              :class="{ 'rotate-180': !isDrawerExpanded }"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Right Half: Recordings Drawer -->
+        <div 
+          v-show="selectedMode"
+          class="h-full transition-all duration-500 bg-stone-50 rounded-lg shadow-sm flex flex-col"
           :class="{ 
-            'opacity-100 transform scale-100 overflow-y-scroll': selectedMode,
-            'opacity-0 transform scale-0 pointer-events-none overflow-y-scroll': !selectedMode 
+            'opacity-100 transform scale-100': selectedMode && isDrawerExpanded,
+            'opacity-0 transform scale-x-0 pointer-events-none': !selectedMode || !isDrawerExpanded,
+            'w-1/2 pl-0': isDrawerExpanded,
+            'w-0': !isDrawerExpanded
           }"
           style="height: calc(100vh - 69px);"
         >
-          <div class="bg-stone-50 rounded-lg shadow-sm p-6 h-full flex flex-col">
+          <div class="p-6 h-full flex flex-col">
             <h3 class="text-xl font-semibold text-stone-800 mb-6">Recent Recordings</h3>
             
             <!-- Recordings List with Scroll -->
@@ -351,6 +386,16 @@ const audioLevel = ref(0);
 const loopDuration = ref(30); // seconds per loop
 const recordedFiles = ref([]); // List of recorded files
 
+// Drawer state
+const isDrawerExpanded = ref(true);
+
+// Browser recording state
+let mediaRecorder = null;
+let audioStream = null;
+let audioContext = null;
+let analyser = null;
+let audioChunks = [];
+
 // Timers
 let recordingInterval = null;
 let audioLevelInterval = null;
@@ -380,42 +425,92 @@ const toggleRecording = () => {
   }
 };
 
-const startRecording = () => {
-  isRecording.value = true;
-  recordingTime.value = 0;
-  totalRecordingTime.value = 0;
-  
-  if (selectedMode.value === 'looped') {
-    currentLoop.value = 1;
-  }
-  
-  // Start recording timer
-  recordingInterval = setInterval(() => {
-    recordingTime.value++;
-    totalRecordingTime.value++;
-  }, 1000);
-  
-  // Simulate audio level updates
-  audioLevelInterval = setInterval(() => {
-    audioLevel.value = Math.random() * 100;
-  }, 100);
-  
-  // For looped recording, handle loop completion
-  if (selectedMode.value === 'looped') {
-    loopCheckInterval = setInterval(() => {
-      if (recordingTime.value >= loopDuration.value) {
-        // Complete current loop
-        recordingTime.value = 0;
-        currentLoop.value++;
+const startRecording = async () => {
+  try {
+    // Request microphone access
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    // Setup audio analysis for level meter
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    const microphone = audioContext.createMediaStreamSource(audioStream);
+    microphone.connect(analyser);
+    analyser.fftSize = 256;
+    
+    // Setup MediaRecorder
+    mediaRecorder = new MediaRecorder(audioStream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data);
       }
+    };
+    
+    mediaRecorder.onstop = () => {
+      createRecordingFile();
+    };
+    
+    // Start recording
+    mediaRecorder.start();
+    isRecording.value = true;
+    recordingTime.value = 0;
+    totalRecordingTime.value = 0;
+    
+    if (selectedMode.value === 'looped') {
+      currentLoop.value = 1;
+    }
+    
+    // Start recording timer
+    recordingInterval = setInterval(() => {
+      recordingTime.value++;
+      totalRecordingTime.value++;
     }, 1000);
+    
+    // Start audio level monitoring
+    audioLevelInterval = setInterval(() => {
+      updateAudioLevel();
+    }, 100);
+    
+    // For looped recording, handle loop completion
+    if (selectedMode.value === 'looped') {
+      loopCheckInterval = setInterval(() => {
+        if (recordingTime.value >= loopDuration.value) {
+          // Complete current loop
+          recordingTime.value = 0;
+          currentLoop.value++;
+        }
+      }, 1000);
+    }
+    
+    console.log(`Started ${selectedMode.value} recording...`);
+    
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    alert('Error accessing microphone. Please ensure you have granted permission and try again.');
+    resetRecordingState();
   }
-  
-  console.log(`Started ${selectedMode.value} recording...`);
 };
 
 const stopRecording = () => {
   isRecording.value = false;
+  
+  // Stop MediaRecorder
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  
+  // Stop audio stream
+  if (audioStream) {
+    audioStream.getTracks().forEach(track => track.stop());
+    audioStream = null;
+  }
+  
+  // Close audio context
+  if (audioContext && audioContext.state !== 'closed') {
+    audioContext.close();
+    audioContext = null;
+  }
   
   // Clear all intervals
   if (recordingInterval) {
@@ -433,20 +528,6 @@ const stopRecording = () => {
     loopCheckInterval = null;
   }
   
-  // Add the recorded file to the list
-  if (totalRecordingTime.value > 0) {
-    const newFile = {
-      id: Date.now(),
-      name: `${selectedMode.value}_recording_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.wav`,
-      duration: formatTime(totalRecordingTime.value),
-      size: `${Math.round(totalRecordingTime.value * 0.5)}MB`,
-      timestamp: Date.now(),
-      loops: selectedMode.value === 'looped' ? currentLoop.value - 1 : null
-    };
-    
-    recordedFiles.value.unshift(newFile);
-  }
-  
   console.log(`Stopped ${selectedMode.value} recording. Total time: ${formatTime(totalRecordingTime.value)}`);
   
   // For looped recording, show loop info
@@ -462,6 +543,47 @@ const resetRecordingState = () => {
   audioLevel.value = 0;
 };
 
+const toggleDrawer = () => {
+  isDrawerExpanded.value = !isDrawerExpanded.value;
+};
+
+const updateAudioLevel = () => {
+  if (analyser) {
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+    
+    // Calculate average volume
+    let sum = 0;
+    for (let i = 0; i < bufferLength; i++) {
+      sum += dataArray[i];
+    }
+    const average = sum / bufferLength;
+    audioLevel.value = (average / 255) * 100; // Convert to percentage
+  }
+};
+
+const createRecordingFile = () => {
+  if (audioChunks.length === 0 || totalRecordingTime.value === 0) return;
+  
+  const blob = new Blob(audioChunks, { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  
+  const newFile = {
+    id: Date.now(),
+    name: `${selectedMode.value}_recording_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.wav`,
+    duration: formatTime(totalRecordingTime.value),
+    size: `${(blob.size / (1024 * 1024)).toFixed(2)}MB`,
+    timestamp: Date.now(),
+    loops: selectedMode.value === 'looped' ? currentLoop.value - 1 : null,
+    blob: blob,
+    url: url
+  };
+  
+  recordedFiles.value.unshift(newFile);
+  audioChunks = []; // Clear chunks for next recording
+};
+
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -470,24 +592,38 @@ const formatTime = (seconds) => {
 
 const playFile = (file) => {
   console.log('Playing file:', file.name);
-  // Implement audio playback
+  
+  if (file.url) {
+    // Create audio element and play
+    const audio = new Audio(file.url);
+    audio.play().catch(error => {
+      console.error('Error playing audio:', error);
+      alert('Error playing audio file');
+    });
+  }
 };
 
 const downloadFile = (file) => {
   console.log('Downloading file:', file.name);
-  // Implement file download
-  // Create a dummy download for demonstration
-  const link = document.createElement('a');
-  link.href = '#';
-  link.download = file.name;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  
+  if (file.url) {
+    // Create download link
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 };
 
 const deleteFile = (file) => {
   const index = recordedFiles.value.findIndex(f => f.id === file.id);
   if (index !== -1) {
+    // Revoke the blob URL to free memory
+    if (file.url) {
+      URL.revokeObjectURL(file.url);
+    }
     recordedFiles.value.splice(index, 1);
     console.log('Deleted file:', file.name);
   }
@@ -501,12 +637,14 @@ const handleLogout = async () => {
   }
 };
 
-const goToRecordings = () => {
-  router.push('/recordings');
-};
-
 // Cleanup on component unmount
 onUnmounted(() => {
+  // Stop recording if active
+  if (isRecording.value) {
+    stopRecording();
+  }
+  
+  // Clear intervals
   if (recordingInterval) {
     clearInterval(recordingInterval);
   }
@@ -516,5 +654,12 @@ onUnmounted(() => {
   if (loopCheckInterval) {
     clearInterval(loopCheckInterval);
   }
+  
+  // Clean up blob URLs
+  recordedFiles.value.forEach(file => {
+    if (file.url) {
+      URL.revokeObjectURL(file.url);
+    }
+  });
 });
 </script>

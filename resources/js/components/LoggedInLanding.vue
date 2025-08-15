@@ -158,46 +158,145 @@
                 Loop {{ currentLoop }}
               </div>
             </div>
-
-            <!-- Loop Progress (for looped recording) -->
-            <div v-if="isRecording && selectedMode === 'looped'" class="w-full max-w-sm mt-4">
-              <div class="flex justify-between text-sm text-stone-600 mb-2">
-                <span>Loop Progress</span>
-                <span>{{ Math.round((recordingTime / loopDuration) * 100) }}%</span>
-              </div>
-              <div class="w-full bg-stone-200 rounded-full h-2">
-                <div 
-                  class="bg-gradient-to-r from-stone-400 to-stone-500 h-2 rounded-full transition-all duration-1000" 
-                  :style="{ width: ((recordingTime % loopDuration) / loopDuration) * 100 + '%' }"
-                ></div>
-              </div>
-            </div>
           </div>
 
-          <!-- Footer Section with Time Counter and Audio Level -->
+          <!-- Footer Section with Time Counter and Progress Indicators -->
           <div class="p-4 border-t border-stone-200 bg-stone-50">
-            <!-- Recording Time Counter -->
-            <div class="text-center mb-4">
-              <div class="text-3xl font-mono font-bold text-stone-800">
-                {{ formatTime(recordingTime) }}
+            <!-- Looped Recording Layout: Loop Progress | Time | Audio Level -->
+            <div v-if="selectedMode === 'looped' && isRecording" class="flex items-center justify-between">
+              <!-- Loop Progress (Left) -->
+              <div class="flex flex-col items-center">
+                <div class="text-xs text-stone-600 mb-2">Loop Progress</div>
+                <div class="relative w-16 h-16">
+                  <!-- Background circle -->
+                  <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="#d6d3d1"
+                      stroke-width="3"
+                    />
+                    <!-- Loop progress fill circle -->
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="#78716c"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      :stroke-dasharray="`${2 * Math.PI * 28}`"
+                      :stroke-dashoffset="`${2 * Math.PI * 28 * (1 - ((recordingTime % loopDuration) / loopDuration))}`"
+                      class="transition-all duration-1000"
+                    />
+                  </svg>
+                  <!-- Center percentage -->
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xs font-mono text-stone-700">{{ Math.round((recordingTime / loopDuration) * 100) }}%</span>
+                  </div>
+                </div>
               </div>
-              <div v-if="selectedMode === 'looped' && isRecording" class="text-sm text-stone-500 mt-1">
-                Total: {{ formatTime(totalRecordingTime) }}
+
+              <!-- Recording Time Counter (Center) -->
+              <div class="text-center flex-1 mx-4">
+                <div class="text-3xl font-mono font-bold text-stone-800">
+                  {{ formatTime(recordingTime) }}
+                </div>
+                <div class="text-sm text-stone-500 mt-1">
+                  Total: {{ formatTime(totalRecordingTime) }}
+                </div>
+              </div>
+
+              <!-- Audio Level (Right) -->
+              <div class="flex flex-col items-center">
+                <div class="text-xs text-stone-600 mb-2">Audio Level</div>
+                <div class="relative w-16 h-16">
+                  <!-- Background circle -->
+                  <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="#d6d3d1"
+                      stroke-width="3"
+                    />
+                    <!-- Audio level fill circle -->
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="#78716c"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      :stroke-dasharray="`${2 * Math.PI * 28}`"
+                      :stroke-dashoffset="`${2 * Math.PI * 28 * (1 - audioLevel / 100)}`"
+                      class="transition-all duration-150"
+                    />
+                  </svg>
+                  <!-- Center percentage text -->
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xs font-mono text-stone-700">{{ Math.round(audioLevel) }}%</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Audio Level Indicator -->
-            <div v-if="isRecording" class="w-full">
-              <div class="text-center text-sm text-stone-600 mb-2">Audio Level</div>
-              <div class="w-full bg-stone-200 rounded-full h-3">
-                <div 
-                  class="h-3 rounded-full transition-all duration-150" 
-                  :class="{
-                    'bg-gradient-to-r from-amber-400 to-amber-500': selectedMode === 'single',
-                    'bg-gradient-to-r from-stone-400 to-stone-500': selectedMode === 'looped'
-                  }"
-                  :style="{ width: audioLevel + '%' }"
-                ></div>
+            <!-- Single Recording or Not Recording Layout -->
+            <div v-else>
+              <!-- Single Recording Layout with Time and Audio Level -->
+              <div v-if="selectedMode === 'single' && isRecording" class="flex items-center justify-between">
+                <!-- Recording Time Counter (Left) -->
+                <div class="text-left">
+                  <div class="text-3xl font-mono font-bold text-stone-800">
+                    {{ formatTime(recordingTime) }}
+                  </div>
+                </div>
+
+                <!-- Audio Level (Right) -->
+                <div class="flex flex-col items-center">
+                  <div class="text-xs text-stone-600 mb-2">Audio Level</div>
+                  <div class="relative w-16 h-16">
+                    <!-- Background circle -->
+                    <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        fill="none"
+                        stroke="#d6d3d1"
+                        stroke-width="3"
+                      />
+                      <!-- Audio level fill circle -->
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        fill="none"
+                        stroke="#f59e0b"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        :stroke-dasharray="`${2 * Math.PI * 28}`"
+                        :stroke-dashoffset="`${2 * Math.PI * 28 * (1 - audioLevel / 100)}`"
+                        class="transition-all duration-150"
+                      />
+                    </svg>
+                    <!-- Center percentage text -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <span class="text-xs font-mono text-stone-700">{{ Math.round(audioLevel) }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Not Recording or Looped Not Recording Layout -->
+              <div v-else class="text-center">
+                <div class="text-3xl font-mono font-bold text-stone-800">
+                  {{ formatTime(recordingTime) }}
+                </div>
               </div>
             </div>
           </div>

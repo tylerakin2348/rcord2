@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-stone-100 flex flex-col">
+  <div class="min-h-screen bg-stone-100 flex flex-col relative">
     <!-- Header with User Profile Button -->
     <header 
       class="bg-white shadow-sm border-b border-gray-200 transition-all duration-500"
@@ -96,21 +96,14 @@
       </div>
     </header>
 
-    <!-- Header Toggle Tab -->
+    <!-- Header Toggle Tab (absolutely positioned) -->
     <div 
-      class="flex justify-center relative z-30 transition-all duration-500"
-      :class="{
-        'transform translate-y-0': isHeaderExpanded,
-        'transform -translate-y-full': !isHeaderExpanded
-      }"
+      class="absolute left-1/2 transform -translate-x-1/2 z-30 transition-all duration-500"
+      :style="{ top: isHeaderExpanded ? '100%' : '0px' }"
     >
       <button
         @click="toggleHeader"
         class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-4 py-2 rounded-b-lg border-l border-r border-b border-gray-200 shadow-sm transition-colors duration-200"
-        :class="{
-          'transform translate-y-0': isHeaderExpanded,
-          'transform -translate-y-full': !isHeaderExpanded
-        }"
       >
         <svg 
           class="w-5 h-5 transition-transform duration-300" 
@@ -173,6 +166,21 @@
           </div>
         </div>
 
+        <!-- Back Button (absolutely positioned) -->
+        <div 
+          v-show="selectedMode"
+          class="absolute top-4 left-4 z-20"
+        >
+          <button
+            @click="goBack"
+            class="p-3 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors duration-200 shadow-sm"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+        </div>
+
         <!-- Left Half: Recording Controls (shown when mode is selected) -->
         <div 
           v-show="selectedMode"
@@ -184,25 +192,10 @@
             'w-full': !isDrawerExpanded
           }"
         >
-          <!-- Back Button at top -->
-          <div class="flex justify-start p-4">
-            <button
-              @click="goBack"
-              class="p-3 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors duration-200"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-          </div>
 
-          <!-- Recording Controls - centered in remaining space -->
+          <!-- Recording Controls - centered in full space -->
           <div 
-            class="flex-1 flex flex-col items-center justify-center"
-            :class="{ 
-              'px-8': !isDrawerExpanded,
-              'max-w-lg mx-auto': !isDrawerExpanded
-            }"
+            class="flex-1 flex flex-col items-center justify-center px-8"
           >
             <!-- Circular Record Button -->
             <div class="relative mb-8">
@@ -392,22 +385,20 @@
           </div>
         </div>
 
-        <!-- Drawer Toggle Button -->
+        <!-- Drawer Toggle Button (absolutely positioned) -->
         <div 
           v-show="selectedMode && !isMobileView"
-          class="flex items-center transition-all duration-500"
+          class="absolute top-1/2 z-20 transition-all duration-500"
           :class="{
             'opacity-100': selectedMode,
-            'opacity-0 pointer-events-none': !selectedMode
+            'opacity-0 pointer-events-none': !selectedMode,
+            'right-1/2 transform -translate-y-1/2': isDrawerExpanded,
+            'right-0 transform -translate-y-1/2': !isDrawerExpanded
           }"
         >
           <button
             @click="toggleDrawer"
-            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-2 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200 z-10"
-            :class="{
-              'rounded-r-none': isDrawerExpanded,
-              '': !isDrawerExpanded
-            }"
+            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-8 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200"
           >
             <svg 
               class="w-5 h-5 transition-transform duration-300" 

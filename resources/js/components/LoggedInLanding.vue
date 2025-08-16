@@ -108,8 +108,8 @@
         @click="toggleHeader"
         class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-4 py-2 rounded-b-lg border-l border-r border-b border-gray-200 shadow-sm transition-colors duration-200"
         :class="{
-          'rounded-t-none': isHeaderExpanded,
-          'rounded-t-lg': !isHeaderExpanded
+          'transform translate-y-0': isHeaderExpanded,
+          'transform -translate-y-full': !isHeaderExpanded
         }"
       >
         <svg 

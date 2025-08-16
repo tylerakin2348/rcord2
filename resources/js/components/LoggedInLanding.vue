@@ -403,10 +403,10 @@
         >
           <button
             @click="toggleDrawer"
-            class="p-2 bg-stone-200 hover:bg-stone-300 text-stone-600 hover:text-stone-800 rounded-l-lg border-r border-stone-300 transition-colors duration-200 z-10"
+            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-2 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200 z-10"
             :class="{
               'rounded-r-none': isDrawerExpanded,
-              'rounded-r-lg': !isDrawerExpanded
+              '': !isDrawerExpanded
             }"
           >
             <svg 

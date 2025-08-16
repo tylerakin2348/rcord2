@@ -59,6 +59,10 @@
               {{ isRecording ? `Loop ${currentLoop} • Recording...` : 'Click to start looped recording' }}
             </div>
             
+            <div v-if="isRecording" class="text-xs text-purple-600 mb-2">
+              📁 Recording will be saved automatically when stopped
+            </div>
+            
             <div class="text-2xl font-mono font-bold text-gray-900 mb-2">
               {{ formatTime(recordingTime) }}
             </div>
@@ -363,14 +367,11 @@ const stopRecording = () => {
 }
 
 const saveRecordingToServer = async (audioBlob) => {
-  const title = prompt('Enter a title for this recording:', `Looped Recording ${new Date().toLocaleString()}`)
-  
-  if (!title) {
-    console.log('Recording cancelled by user')
-    return
-  }
-
   try {
+    // Generate a default title with timestamp
+    const now = new Date()
+    const title = `Looped Recording ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+
     // Convert blob to base64
     const reader = new FileReader()
     const base64Data = await new Promise((resolve) => {
@@ -386,7 +387,7 @@ const saveRecordingToServer = async (audioBlob) => {
       },
       body: JSON.stringify({
         title: title,
-        description: `Looped cord recording from ${new Date().toLocaleString()} - ${currentLoop.value - 1} loops`,
+        description: `Auto-saved looped recording (${formatTime(totalRecordingTime.value)}) - ${currentLoop.value - 1} loops`,
         audio_blob: base64Data,
         duration: totalRecordingTime.value,
         mime_type: 'audio/webm'
@@ -412,7 +413,7 @@ const saveRecordingToServer = async (audioBlob) => {
       currentLoop.value = 0
       audioLevel.value = 0
       
-      alert('Recording saved successfully!')
+      alert(`Recording saved automatically as "${title}"!`)
     } else {
       const error = await response.json()
       throw new Error(error.message || 'Failed to save recording')

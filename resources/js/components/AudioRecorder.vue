@@ -37,45 +37,12 @@
       <div v-if="isRecording" class="recording-indicator">
         <div class="pulse-dot"></div>
         <span>Recording... {{ formatTime(recordingTime) }}</span>
+        <p class="auto-save-note">Recording will be saved automatically when stopped</p>
       </div>
 
-      <div v-if="audioBlob && !isRecording" class="recording-preview">
-        <div class="preview-info">
-          <p>Recording captured: {{ formatTime(recordingDuration) }}</p>
-          <audio ref="audioPlayer" :src="audioUrl" @ended="onPlaybackEnd"></audio>
-        </div>
-
-        <form @submit.prevent="saveRecording" class="save-form">
-          <div class="form-group">
-            <label for="title">Title *</label>
-            <input 
-              id="title"
-              v-model="recordingForm.title" 
-              type="text" 
-              required 
-              placeholder="Enter recording title"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="description">Description</label>
-            <textarea 
-              id="description"
-              v-model="recordingForm.description" 
-              placeholder="Optional description"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="discardRecording" class="btn-secondary">
-              Discard
-            </button>
-            <button type="submit" :disabled="saving" class="btn-primary">
-              {{ saving ? 'Saving...' : 'Save Recording' }}
-            </button>
-          </div>
-        </form>
+      <div v-if="saving" class="saving-indicator">
+        <div class="saving-spinner"></div>
+        <span>Auto-saving recording...</span>
       </div>
 
       <div v-if="!microphoneAvailable" class="error-message">
@@ -196,6 +163,9 @@ export default {
           
           // Stop all tracks
           stream.getTracks().forEach(track => track.stop());
+          
+          // Auto-save the recording
+          this.autoSaveRecording();
         };
         
         this.mediaRecorder.start();
@@ -293,6 +263,64 @@ export default {
       } catch (error) {
         console.error('Error saving recording:', error);
         alert('Failed to save recording: ' + error.message);
+      } finally {
+        this.saving = false;
+      }
+    },
+
+    async autoSaveRecording() {
+      if (!this.audioBlob) {
+        console.error('No recording to save');
+        return;
+      }
+
+      console.log('Auto-saving recording...');
+      this.saving = true;
+
+      try {
+        // Convert blob to base64
+        const reader = new FileReader();
+        const base64Data = await new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(this.audioBlob);
+        });
+
+        // Generate a default title with timestamp
+        const now = new Date();
+        const defaultTitle = `Recording ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        const response = await fetch('/api/recordings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          body: JSON.stringify({
+            title: defaultTitle,
+            description: `Auto-saved recording (${this.formatTime(this.recordingDuration)})`,
+            audio_blob: base64Data,
+            duration: this.recordingDuration,
+            mime_type: 'audio/webm'
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Recording auto-saved successfully!');
+          
+          // Reset form and reload recordings
+          this.discardRecording();
+          await this.loadRecordings();
+          
+          // Show success message
+          alert(`Recording saved automatically as "${defaultTitle}"`);
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to auto-save recording');
+        }
+      } catch (error) {
+        console.error('Error auto-saving recording:', error);
+        alert('Failed to auto-save recording: ' + error.message);
       } finally {
         this.saving = false;
       }
@@ -480,6 +508,40 @@ export default {
   border-radius: 6px;
   color: #e74c3c;
   font-weight: 500;
+  flex-direction: column;
+}
+
+.auto-save-note {
+  font-size: 12px;
+  color: #666;
+  font-weight: normal;
+  margin: 5px 0 0 0;
+}
+
+.saving-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  background: #e8f4fd;
+  border-radius: 6px;
+  color: #3498db;
+  font-weight: 500;
+}
+
+.saving-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #3498db;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .pulse-dot {

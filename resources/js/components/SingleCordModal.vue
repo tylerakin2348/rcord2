@@ -57,6 +57,10 @@
               {{ isRecording ? 'Recording...' : 'Click to start recording' }}
             </div>
             
+            <div v-if="isRecording" class="text-xs text-blue-600 mb-2">
+              📁 Recording will be saved automatically when stopped
+            </div>
+            
             <div v-if="!microphoneAvailable" class="text-sm text-red-600 mb-2">
               ⚠️ Microphone access required for recording
             </div>
@@ -278,14 +282,11 @@ const stopRecording = () => {
 }
 
 const saveRecordingToServer = async (audioBlob) => {
-  const title = prompt('Enter a title for this recording:', `Recording ${new Date().toLocaleString()}`)
-  
-  if (!title) {
-    console.log('Recording cancelled by user')
-    return
-  }
-
   try {
+    // Generate a default title with timestamp
+    const now = new Date()
+    const title = `Single Recording ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+
     // Convert blob to base64
     const reader = new FileReader()
     const base64Data = await new Promise((resolve) => {
@@ -301,7 +302,7 @@ const saveRecordingToServer = async (audioBlob) => {
       },
       body: JSON.stringify({
         title: title,
-        description: `Single cord recording from ${new Date().toLocaleString()}`,
+        description: `Auto-saved single recording (${formatTime(recordingTime.value)})`,
         audio_blob: base64Data,
         duration: recordingTime.value,
         mime_type: 'audio/webm'
@@ -320,7 +321,7 @@ const saveRecordingToServer = async (audioBlob) => {
         timestamp: new Date().toLocaleString()
       })
       
-      alert('Recording saved successfully!')
+      alert(`Recording saved automatically as "${title}"!`)
     } else {
       const error = await response.json()
       throw new Error(error.message || 'Failed to save recording')

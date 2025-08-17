@@ -19,15 +19,21 @@
           <!-- Desktop Navigation -->
           <div class="hidden md:flex items-center space-x-4">
             <span class="text-sm text-gray-700">Hello, {{ store.user?.name }}</span>
-            <button 
-              @click="showDashboard = true"
+            <router-link 
+              to="/profile"
               class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span>Dashboard</span>
-            </button>
+              <span>Profile</span>
+            </router-link>
+            <router-link 
+              to="/system-info"
+              class="text-stone-500 hover:text-stone-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            >
+              System Info
+            </router-link>
             <button 
               @click="handleLogout"
               class="text-stone-500 hover:text-stone-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
@@ -68,15 +74,21 @@
           class="md:hidden border-t border-gray-200 pt-4 pb-4 space-y-2"
         >
           <div class="text-sm text-gray-700 px-3 py-2">Hello, {{ store.user?.name }}</div>
-          <button 
-            @click="showDashboard = true; isMobileMenuOpen = false"
+          <router-link 
+            to="/profile"
             class="w-full text-left bg-stone-600 hover:bg-stone-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span>Dashboard</span>
-          </button>
+            <span>Profile</span>
+          </router-link>
+          <router-link 
+            to="/system-info"
+            class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+          >
+            System Info
+          </router-link>
           <button 
             @click="handleLogout; isMobileMenuOpen = false"
             class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
@@ -219,10 +231,7 @@
     </main>
 
     <!-- Dashboard Modal -->
-    <DashboardModal 
-      v-if="showDashboard"
-      @close="showDashboard = false"
-    />
+    <!-- Removed dashboard modal - now using separate routes -->
 
   </div>
 </template>
@@ -231,13 +240,11 @@
 import { ref, onUnmounted, computed, onMounted } from 'vue';
 import { useMainStore } from '../stores/main';
 import { useRouter } from 'vue-router';
-import DashboardModal from './DashboardModal.vue';
 import RecordingControls from './RecordingControls.vue';
 import RecordingsDrawer from './RecordingsDrawer.vue';
 
 const store = useMainStore();
 const router = useRouter();
-const showDashboard = ref(false);
 
 // Mobile state
 const isMobileMenuOpen = ref(false);

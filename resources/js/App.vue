@@ -23,7 +23,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useMainStore } from './stores/main';
 import Header from './components/Header.vue';
 import Hero from './components/Hero.vue';
@@ -32,12 +33,32 @@ import Footer from './components/Footer.vue';
 import LoginModal from './components/LoginModal.vue';
 
 const store = useMainStore();
+const route = useRoute();
 const showLoginModal = ref(false);
+
+// Routes that should allow scrolling (remove overflow-hidden)
+const scrollableRoutes = ['/recordings', '/profile', '/system-info'];
 
 const handleAuthSuccess = () => {
   showLoginModal.value = false;
   // The store will automatically update the isLoggedIn state
 };
+
+// Watch for route changes and update body overflow
+watch(
+  () => route.path,
+  (newPath) => {
+    const body = document.getElementById('app-body') || document.body;
+    if (scrollableRoutes.includes(newPath)) {
+      // Remove overflow-hidden to allow scrolling
+      body.classList.remove('overflow-hidden');
+    } else {
+      // Add overflow-hidden for main recording interface
+      body.classList.add('overflow-hidden');
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
   store.initialize();

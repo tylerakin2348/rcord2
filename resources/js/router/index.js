@@ -4,6 +4,8 @@ import { useMainStore } from '../stores/main';
 // Import components
 import LoggedInLanding from '../components/LoggedInLanding.vue';
 import RecordingsPage from '../components/RecordingsPage.vue';
+import UserProfile from '../components/UserProfile.vue';
+import SystemInfo from '../components/SystemInfo.vue';
 
 const routes = [
   {
@@ -16,6 +18,18 @@ const routes = [
     path: '/recordings',
     name: 'recordings',
     component: RecordingsPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: UserProfile,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/system-info',
+    name: 'system-info',
+    component: SystemInfo,
     meta: { requiresAuth: true }
   }
 ];

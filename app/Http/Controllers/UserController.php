@@ -107,4 +107,20 @@ class UserController extends Controller
             'message' => 'User deleted successfully'
         ]);
     }
+
+    /**
+     * Get statistics for the current authenticated user.
+     */
+    public function stats(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        $stats = $user->getStats();
+
+        return response()->json($stats);
+    }
 }

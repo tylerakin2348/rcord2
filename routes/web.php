@@ -15,11 +15,20 @@ Route::get('/recordings', function () {
     return view('app');
 });
 
+Route::get('/profile', function () {
+    return view('app');
+});
+
+Route::get('/system-info', function () {
+    return view('app');
+});
+
 // Authentication routes
 Route::post('/api/register', [AuthController::class, 'register']);
 Route::post('/api/login', [AuthController::class, 'login']);
 Route::post('/api/logout', [AuthController::class, 'logout'])->middleware('auth:web');
 Route::get('/api/user', [AuthController::class, 'user'])->middleware('auth:web');
+Route::get('/api/user/stats', [UserController::class, 'stats'])->middleware('auth:web');
 
 // User CRUD routes (protected)
 Route::middleware('auth:web')->group(function () {

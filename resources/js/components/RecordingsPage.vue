@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-stone-100 flex flex-col">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
           <div class="flex items-center">
@@ -33,7 +33,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden">
+    <main class="flex-1">
       <div class="h-full">
         <!-- Recordings Library Component (no recording functionality) -->
         <RecordingsLibrary />

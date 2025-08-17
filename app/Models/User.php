@@ -61,4 +61,34 @@ class User extends Authenticatable
     {
         return $this->hasMany(RecordingSession::class);
     }
+
+    /**
+     * Get user statistics.
+     */
+    public function getStats()
+    {
+        $recordings = $this->recordings();
+        $sessions = $this->recordingSessions();
+        
+        $totalRecordings = $recordings->count();
+        $totalSessions = $sessions->count();
+        
+        // Calculate total duration from recordings
+        $totalDuration = $recordings->sum('duration') ?? 0;
+        
+        // Recent activity (last 30 days)
+        $recentRecordings = $recordings->where('created_at', '>=', now()->subDays(30))->count();
+        $recentSessions = $sessions->where('created_at', '>=', now()->subDays(30))->count();
+        
+        return [
+            'totalRecordings' => $totalRecordings,
+            'totalSessions' => $totalSessions,
+            'totalDuration' => $totalDuration,
+            'averageRecordingDuration' => $totalRecordings > 0 ? round($totalDuration / $totalRecordings) : 0,
+            'recentRecordingsCount' => $recentRecordings,
+            'recentSessionsCount' => $recentSessions,
+            'accountCreated' => $this->created_at->format('Y-m-d'),
+            'lastActive' => $this->updated_at->format('Y-m-d'),
+        ];
+    }
 }

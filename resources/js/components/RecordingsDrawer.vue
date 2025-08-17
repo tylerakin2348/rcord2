@@ -60,8 +60,13 @@
                 'text-stone-600 hover:text-stone-800 hover:bg-stone-50': recordingMode === 'looped'
               }"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m2-7a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <!-- Play Icon -->
+              <svg v-if="currentlyPlayingId !== file.id" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <!-- Pause Icon -->
+              <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
               </svg>
             </button>
             <button 
@@ -133,6 +138,8 @@ export default {
   emits: ['close'],
   setup(props, { emit }) {
     const recordings = ref([])
+    const currentlyPlayingId = ref(null)
+    const currentAudio = ref(null)
     
     // Load recordings from API on component mount
     onMounted(() => {
@@ -156,6 +163,20 @@ export default {
     
     const playFile = async (file) => {
       try {
+        // If this file is currently playing, pause it
+        if (currentlyPlayingId.value === file.id && currentAudio.value) {
+          currentAudio.value.pause()
+          currentAudio.value = null
+          currentlyPlayingId.value = null
+          return
+        }
+        
+        // Stop any currently playing audio
+        if (currentAudio.value) {
+          currentAudio.value.pause()
+          currentAudio.value = null
+        }
+        
         let audioUrl = file.url
         
         // If file doesn't have a URL (from API), fetch it
@@ -168,8 +189,28 @@ export default {
         
         if (audioUrl) {
           const audio = new Audio(audioUrl)
+          
+          // Set up event listeners
+          audio.addEventListener('ended', () => {
+            currentlyPlayingId.value = null
+            currentAudio.value = null
+          })
+          
+          audio.addEventListener('pause', () => {
+            if (currentlyPlayingId.value === file.id) {
+              currentlyPlayingId.value = null
+              currentAudio.value = null
+            }
+          })
+          
+          // Start playing
+          currentAudio.value = audio
+          currentlyPlayingId.value = file.id
+          
           audio.play().catch(error => {
             console.error('Error playing audio:', error)
+            currentlyPlayingId.value = null
+            currentAudio.value = null
           })
         }
       } catch (error) {
@@ -253,6 +294,7 @@ export default {
     
     return {
       recordings,
+      currentlyPlayingId,
       playFile,
       downloadFile,
       deleteFile,

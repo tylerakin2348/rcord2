@@ -2,40 +2,56 @@
   <div class="recordings-library">
     <div class="recordings-list">
       <h3>Recordings Library</h3>
-      <div v-if="loadingRecordings" class="loading">Loading recordings...</div>
-      <div v-else-if="recordings.length === 0" class="no-recordings">
+      <div v-if="loadingRecordings && recordings.length === 0" class="loading">Loading recordings...</div>
+      <div v-else-if="recordings.length === 0 && !loadingRecordings" class="no-recordings">
         No recordings found. Use Single Cord or Looped Cord modes to create recordings.
       </div>
-      <div v-else class="recordings-grid">
-        <div 
-          v-for="recording in recordings" 
-          :key="recording.id" 
-          class="recording-card"
-        >
-          <div class="recording-info">
-            <h4>{{ recording.title }}</h4>
-            <p v-if="recording.description">{{ recording.description }}</p>
-            <div class="recording-meta">
-              <span class="duration">{{ recording.formatted_duration }}</span>
-              <span class="size">{{ recording.formatted_file_size }}</span>
-              <span class="date">{{ formatDate(recording.created_at) }}</span>
+      <div v-else class="recordings-container">
+        <div class="recordings-grid" ref="recordingsGrid">
+          <div 
+            v-for="recording in recordings" 
+            :key="recording.id" 
+            class="recording-card"
+          >
+            <div class="recording-info">
+              <h4>{{ recording.title }}</h4>
+              <p v-if="recording.description">{{ recording.description }}</p>
+              <div class="recording-meta">
+                <span class="duration">{{ recording.formatted_duration }}</span>
+                <span class="size">{{ recording.formatted_file_size }}</span>
+                <span class="date">{{ formatDate(recording.created_at) }}</span>
+              </div>
+              <div v-if="recording.user" class="recording-user">
+                By: {{ recording.user.name }}
+              </div>
             </div>
-            <div v-if="recording.user" class="recording-user">
-              By: {{ recording.user.name }}
+            <div class="recording-actions">
+              <button @click="playRecording(recording)" class="btn-sm">
+                Play
+              </button>
+              <button @click="editRecording(recording)" class="btn-sm">
+                Edit
+              </button>
+              <button @click="deleteRecording(recording)" class="btn-sm btn-danger">
+                Delete
+              </button>
             </div>
-          </div>
-          <div class="recording-actions">
-            <button @click="playRecording(recording)" class="btn-sm">
-              Play
-            </button>
-            <button @click="editRecording(recording)" class="btn-sm">
-              Edit
-            </button>
-            <button @click="deleteRecording(recording)" class="btn-sm btn-danger">
-              Delete
-            </button>
           </div>
         </div>
+        
+        <!-- Loading indicator for infinite scroll -->
+        <div v-if="loadingMore" class="loading-more">
+          <div class="loading-spinner"></div>
+          <span>Loading more recordings...</span>
+        </div>
+        
+        <!-- End of results indicator -->
+        <div v-else-if="!hasMorePages && recordings.length > 0" class="end-of-results">
+          <span>You've reached the end of your recordings</span>
+        </div>
+        
+        <!-- Scroll trigger element -->
+        <div ref="scrollTrigger" class="scroll-trigger"></div>
       </div>
     </div>
   </div>
@@ -47,21 +63,44 @@ export default {
   data() {
     return {
       loadingRecordings: true,
-      recordings: []
+      loadingMore: false,
+      recordings: [],
+      currentPage: 1,
+      hasMorePages: true,
+      perPage: 15,
+      intersectionObserver: null
     };
   },
   async mounted() {
     await this.loadRecordings();
+    this.setupInfiniteScroll();
+  },
+  beforeUnmount() {
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
   },
   methods: {
-    async loadRecordings() {
-      this.loadingRecordings = true;
+    async loadRecordings(page = 1, append = false) {
+      if (page === 1) {
+        this.loadingRecordings = true;
+      } else {
+        this.loadingMore = true;
+      }
       
       try {
-        const response = await fetch('/api/recordings');
+        const response = await fetch(`/api/recordings?page=${page}&per_page=${this.perPage}`);
         if (response.ok) {
           const result = await response.json();
-          this.recordings = result.recordings;
+          
+          if (append) {
+            this.recordings = [...this.recordings, ...result.recordings];
+          } else {
+            this.recordings = result.recordings;
+          }
+          
+          this.currentPage = result.pagination.current_page;
+          this.hasMorePages = result.pagination.has_more_pages;
         } else {
           throw new Error('Failed to load recordings');
         }
@@ -69,7 +108,45 @@ export default {
         console.error('Error loading recordings:', error);
       } finally {
         this.loadingRecordings = false;
+        this.loadingMore = false;
       }
+    },
+
+    setupInfiniteScroll() {
+      this.intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          const target = entries[0];
+          if (target.isIntersecting && this.hasMorePages && !this.loadingMore) {
+            this.loadMoreRecordings();
+          }
+        },
+        {
+          root: null,
+          rootMargin: '100px',
+          threshold: 0.1
+        }
+      );
+
+      // Use nextTick to ensure the DOM is updated
+      this.$nextTick(() => {
+        if (this.$refs.scrollTrigger) {
+          this.intersectionObserver.observe(this.$refs.scrollTrigger);
+        }
+      });
+    },
+
+    async loadMoreRecordings() {
+      if (!this.hasMorePages || this.loadingMore) return;
+      
+      const nextPage = this.currentPage + 1;
+      await this.loadRecordings(nextPage, true);
+      
+      // Re-setup intersection observer after loading more content
+      this.$nextTick(() => {
+        if (this.$refs.scrollTrigger && this.intersectionObserver) {
+          this.intersectionObserver.observe(this.$refs.scrollTrigger);
+        }
+      });
     },
 
     async playRecording(recording) {
@@ -101,7 +178,12 @@ export default {
           });
 
           if (response.ok) {
-            await this.loadRecordings();
+            // Update the recording in the current list instead of reloading all
+            const updatedRecording = await response.json();
+            const index = this.recordings.findIndex(r => r.id === recording.id);
+            if (index !== -1) {
+              this.recordings[index] = { ...this.recordings[index], title, description };
+            }
             alert('Recording updated successfully!');
           } else {
             throw new Error('Failed to update recording');
@@ -124,7 +206,8 @@ export default {
           });
 
           if (response.ok) {
-            await this.loadRecordings();
+            // Remove the recording from the current list instead of reloading all
+            this.recordings = this.recordings.filter(r => r.id !== recording.id);
             alert('Recording deleted successfully!');
           } else {
             throw new Error('Failed to delete recording');
@@ -176,10 +259,53 @@ export default {
   border: 2px dashed #dee2e6;
 }
 
+.recordings-container {
+  position: relative;
+}
+
 .recordings-grid {
   display: grid;
   gap: 20px;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  margin-bottom: 20px;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e0e0e0;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.end-of-results {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-size: 14px;
+  border-top: 1px solid #eee;
+  margin-top: 20px;
+}
+
+.scroll-trigger {
+  height: 1px;
+  width: 100%;
 }
 
 .recording-card {

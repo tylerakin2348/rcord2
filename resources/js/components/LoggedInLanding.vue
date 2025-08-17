@@ -282,17 +282,6 @@
       @close="showDashboard = false"
     />
 
-    <!-- Single Cord Recording Modal -->
-    <SingleCordModal 
-      v-if="showSingleCord"
-      @close="showSingleCord = false"
-    />
-
-    <!-- Looped Cord Recording Modal -->
-    <LoopedCordModal 
-      v-if="showLoopedCord"
-      @close="showLoopedCord = false"
-    />
   </div>
 </template>
 
@@ -301,8 +290,6 @@ import { ref, onUnmounted, computed, onMounted } from 'vue';
 import { useMainStore } from '../stores/main';
 import { useRouter } from 'vue-router';
 import DashboardModal from './DashboardModal.vue';
-import SingleCordModal from './SingleCordModal.vue';
-import LoopedCordModal from './LoopedCordModal.vue';
 import RecordingControls from './RecordingControls.vue';
 import RecordingsDrawer from './RecordingsDrawer.vue';
 

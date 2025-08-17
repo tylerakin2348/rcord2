@@ -28,10 +28,19 @@ class RecordingController extends Controller
             }
         }
         
-        $recordings = $query->get();
+        // Pagination parameters
+        $perPage = $request->get('per_page', 15); // Default to 15 recordings per page
+        $page = $request->get('page', 1);
+        
+        // Validate per_page parameter
+        if ($perPage > 50) {
+            $perPage = 50; // Maximum 50 recordings per page
+        }
+        
+        $recordings = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
-            'recordings' => $recordings->map(function ($recording) {
+            'recordings' => $recordings->getCollection()->map(function ($recording) {
                 return [
                     'id' => $recording->id,
                     'title' => $recording->title,
@@ -52,7 +61,16 @@ class RecordingController extends Controller
                         'name' => $recording->user->name,
                     ] : null,
                 ];
-            })
+            }),
+            'pagination' => [
+                'current_page' => $recordings->currentPage(),
+                'per_page' => $recordings->perPage(),
+                'total' => $recordings->total(),
+                'last_page' => $recordings->lastPage(),
+                'has_more_pages' => $recordings->hasMorePages(),
+                'from' => $recordings->firstItem(),
+                'to' => $recordings->lastItem(),
+            ]
         ]);
     }
 

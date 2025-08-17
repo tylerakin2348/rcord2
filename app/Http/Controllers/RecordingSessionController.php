@@ -27,10 +27,19 @@ class RecordingSessionController extends Controller
             }
         }
 
-        $sessions = $query->orderBy('created_at', 'desc')->get();
+        // Pagination parameters
+        $perPage = $request->get('per_page', 15); // Default to 15 sessions per page
+        $page = $request->get('page', 1);
+        
+        // Validate per_page parameter
+        if ($perPage > 50) {
+            $perPage = 50; // Maximum 50 sessions per page
+        }
+
+        $sessions = $query->orderBy('created_at', 'desc')->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
-            'sessions' => $sessions->map(function ($session) {
+            'sessions' => $sessions->getCollection()->map(function ($session) {
                 return [
                     'id' => $session->id,
                     'title' => $session->title,
@@ -59,7 +68,16 @@ class RecordingSessionController extends Controller
                     'created_at' => $session->created_at,
                     'updated_at' => $session->updated_at,
                 ];
-            })
+            }),
+            'pagination' => [
+                'current_page' => $sessions->currentPage(),
+                'per_page' => $sessions->perPage(),
+                'total' => $sessions->total(),
+                'last_page' => $sessions->lastPage(),
+                'has_more_pages' => $sessions->hasMorePages(),
+                'from' => $sessions->firstItem(),
+                'to' => $sessions->lastItem(),
+            ]
         ]);
     }
 

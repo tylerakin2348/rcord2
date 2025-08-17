@@ -83,7 +83,11 @@
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
               <div class="flex items-center">
-                <div class="flex-shrink-0 text-3xl">🎙️</div>
+                <div class="flex-shrink-0 p-2 bg-blue-200 rounded-lg">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-blue-800">Total Recordings</p>
                   <p class="text-2xl font-bold text-blue-900">{{ userStats.totalRecordings }}</p>
@@ -93,7 +97,11 @@
 
             <div class="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
               <div class="flex items-center">
-                <div class="flex-shrink-0 text-3xl">📊</div>
+                <div class="flex-shrink-0 p-2 bg-green-200 rounded-lg">
+                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-green-800">Recording Sessions</p>
                   <p class="text-2xl font-bold text-green-900">{{ userStats.totalSessions }}</p>
@@ -103,7 +111,11 @@
 
             <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
               <div class="flex items-center">
-                <div class="flex-shrink-0 text-3xl">⏱️</div>
+                <div class="flex-shrink-0 p-2 bg-purple-200 rounded-lg">
+                  <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-purple-800">Total Duration</p>
                   <p class="text-2xl font-bold text-purple-900">{{ formatDuration(userStats.totalDuration) }}</p>
@@ -113,7 +125,11 @@
 
             <div class="bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-lg border border-orange-200">
               <div class="flex items-center">
-                <div class="flex-shrink-0 text-3xl">💾</div>
+                <div class="flex-shrink-0 p-2 bg-orange-200 rounded-lg">
+                  <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-orange-800">Storage Used</p>
                   <p class="text-2xl font-bold text-orange-900">{{ formatFileSize(userStats.totalStorageBytes) }}</p>

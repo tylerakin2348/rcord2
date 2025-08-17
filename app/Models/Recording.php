@@ -15,7 +15,8 @@ class Recording extends Model
         'duration',
         'mime_type',
         'file_size',
-        'user_id'
+        'user_id',
+        'recording_type_id'
     ];
 
     protected $appends = [
@@ -26,6 +27,11 @@ class Recording extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function recordingType(): BelongsTo
+    {
+        return $this->belongsTo(RecordingType::class);
     }
 
     public function getFormattedDurationAttribute()

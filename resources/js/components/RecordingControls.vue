@@ -364,25 +364,33 @@ export default {
           formData.append('loops', fileData.loops)
         }
         
-        // Send to API endpoint
-        const response = await fetch('/api/recordings', {
-          method: 'POST',
-          body: formData,
+        // Use axios instead of fetch for better authentication handling
+        const response = await window.axios.post('/api/recordings', formData, {
           headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            'Content-Type': 'multipart/form-data',
           }
         })
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        const result = await response.json()
-        console.log('Recording saved successfully:', result)
+        console.log('Recording saved successfully:', response.data)
         
       } catch (error) {
         console.error('Error saving recording to API:', error)
-        alert('Error saving recording. Please try again.')
+        
+        // More specific error handling
+        if (error.response) {
+          console.error('Response status:', error.response.status)
+          console.error('Response data:', error.response.data)
+          
+          if (error.response.status === 401) {
+            alert('Authentication required. Please log in and try again.')
+          } else if (error.response.status === 422) {
+            alert('Invalid recording data. Please try again.')
+          } else {
+            alert('Error saving recording. Please try again.')
+          }
+        } else {
+          alert('Network error. Please check your connection and try again.')
+        }
       }
     }
     

@@ -41,9 +41,14 @@
               </svg>
             </div>
             <div>
-              <div class="font-medium text-stone-900">{{ file.name }}</div>
-              <div class="text-sm text-stone-500">{{ file.duration }} • {{ file.size }}</div>
-              <div v-if="recordingMode === 'looped' && file.loops" class="text-xs text-stone-400">{{ file.loops }} loops</div>
+              <div class="font-medium text-stone-900">{{ file.title || file.name }}</div>
+              <div class="text-sm text-stone-500">
+                {{ file.formatted_duration || file.duration }} • {{ file.formatted_file_size || file.size }}
+              </div>
+              <div v-if="file.recording_type" class="text-xs text-stone-400">
+                {{ file.recording_type.display_name }}
+                <span v-if="recordingMode === 'looped' && file.loops"> • {{ file.loops }} loops</span>
+              </div>
             </div>
           </div>
           <div class="flex items-center space-x-2">
@@ -136,14 +141,11 @@ export default {
     
     const loadRecordingsFromAPI = async () => {
       try {
-        const response = await fetch(`/api/recordings?mode=${props.recordingMode}`)
+        const response = await window.axios.get('/api/recordings', {
+          params: { mode: props.recordingMode }
+        })
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        const data = await response.json()
-        recordings.value = data.recordings || []
+        recordings.value = response.data.recordings || []
         
       } catch (error) {
         console.error('Error loading recordings from API:', error)
@@ -158,11 +160,10 @@ export default {
         
         // If file doesn't have a URL (from API), fetch it
         if (!audioUrl && file.id) {
-          const response = await fetch(`/api/recordings/${file.id}/download`)
-          if (response.ok) {
-            const blob = await response.blob()
-            audioUrl = URL.createObjectURL(blob)
-          }
+          const response = await window.axios.get(`/api/recordings/${file.id}/stream`, {
+            responseType: 'blob'
+          })
+          audioUrl = URL.createObjectURL(response.data)
         }
         
         if (audioUrl) {
@@ -183,16 +184,15 @@ export default {
         
         // If file doesn't have a URL (from API), fetch it
         if (!downloadUrl && file.id) {
-          const response = await fetch(`/api/recordings/${file.id}/download`)
-          if (response.ok) {
-            const blob = await response.blob()
-            downloadUrl = URL.createObjectURL(blob)
-            
-            // Get filename from response headers if available
-            const disposition = response.headers.get('content-disposition')
-            if (disposition && disposition.includes('filename=')) {
-              fileName = disposition.split('filename=')[1].replace(/"/g, '')
-            }
+          const response = await window.axios.get(`/api/recordings/${file.id}/stream`, {
+            responseType: 'blob'
+          })
+          downloadUrl = URL.createObjectURL(response.data)
+          
+          // Get filename from response headers if available
+          const disposition = response.headers['content-disposition']
+          if (disposition && disposition.includes('filename=')) {
+            fileName = disposition.split('filename=')[1].replace(/"/g, '')
           }
         }
         
@@ -221,17 +221,8 @@ export default {
       
       try {
         if (file.id) {
-          // Delete from API
-          const response = await fetch(`/api/recordings/${file.id}`, {
-            method: 'DELETE',
-            headers: {
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            }
-          })
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
-          }
+          // Delete from API using axios
+          await window.axios.delete(`/api/recordings/${file.id}`)
         }
         
         // Remove from local list
@@ -244,7 +235,11 @@ export default {
         
       } catch (error) {
         console.error('Error deleting file:', error)
-        alert('Error deleting recording. Please try again.')
+        if (error.response?.status === 401) {
+          alert('Authentication required. Please log in and try again.')
+        } else {
+          alert('Error deleting recording. Please try again.')
+        }
       }
     }
     

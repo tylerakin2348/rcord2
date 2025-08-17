@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RecordingController;
+use App\Http\Controllers\RecordingTypeController;
 
 Route::get('/', function () {
     return view('app');
@@ -28,6 +29,9 @@ Route::middleware('auth:web')->group(function () {
 Route::get('/api/recordings', [RecordingController::class, 'index']);
 Route::get('/api/recordings/{recording}', [RecordingController::class, 'show']);
 Route::get('/api/recordings/{recording}/stream', [RecordingController::class, 'stream']);
+
+// Recording types routes
+Route::get('/api/recording-types', [RecordingTypeController::class, 'index']);
 
 Route::middleware('auth:web')->group(function () {
     Route::post('/api/recordings', [RecordingController::class, 'store']);

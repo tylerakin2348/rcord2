@@ -89,12 +89,12 @@
 
     <!-- Header Toggle Tab (absolutely positioned) -->
     <div 
-      class="absolute left-1/2 transform -translate-x-1/2 z-30 transition-all duration-500"
-      :style="{ top: isHeaderExpanded ? '100%' : '0px' }"
+      class="fixed left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500"
+      :style="{ top: isHeaderExpanded ? '88px' : '0px' }"
     >
       <button
         @click="toggleHeader"
-        class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-4 py-2 rounded-b-lg border-l border-r border-b border-gray-200 shadow-sm transition-colors duration-200"
+        class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-4 py-2 rounded-b-lg border-l border-r border-b border-gray-200 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
       >
         <svg 
           class="w-5 h-5 transition-transform duration-300" 

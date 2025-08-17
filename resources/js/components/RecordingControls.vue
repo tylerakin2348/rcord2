@@ -6,7 +6,7 @@
       <!-- Loop Button (only visible for looped mode when recording and first loop) -->
       <button 
         v-if="isRecording && recordingMode === 'looped' && currentLoop === 1"
-        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300"
+        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300 hover:rotate-12 hover:scale-105"
         :class="{ 'bg-stone-400 cursor-not-allowed focus:ring-stone-200': savingLoop }"
         :disabled="savingLoop"
         @click="saveCurrentLoopAndContinue"
@@ -14,7 +14,7 @@
       >
         <div class="w-15 h-15 bg-stone-50 rounded-full flex items-center justify-center">
           <svg 
-            class="w-8 h-8 text-stone-600 pointer-events-none" 
+            class="w-8 h-8 text-stone-600 pointer-events-none transition-transform duration-300" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"

@@ -6,11 +6,7 @@
             class="flex justify-between items-center mb-4"
         >
             <h3 class="text-xl font-semibold text-stone-800">
-                {{
-                    recordingMode === 'looped'
-                        ? 'Recording Sessions'
-                        : 'Recent Recordings'
-                }}
+               Recording Sessions
             </h3>
             <button
                 @click="$emit('close')"

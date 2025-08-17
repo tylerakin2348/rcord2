@@ -12,7 +12,7 @@
         <div class="flex justify-between items-center py-4">
           <div class="flex items-center">
             <h1 class="text-2xl font-bold text-stone-700">
-              Recording
+              Loop Memo
             </h1>
           </div>
           

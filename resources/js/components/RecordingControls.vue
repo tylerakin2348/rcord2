@@ -33,10 +33,10 @@
       <button 
         class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50"
         :class="{
-          'bg-amber-500 w-20 h-20 hover:bg-amber-600 focus:ring-amber-300': !isRecording && recordingMode === 'single',
-          'bg-stone-500 w-20 h-20 hover:bg-stone-600 focus:ring-stone-300': !isRecording && recordingMode === 'looped',
-          'bg-amber-600 w-16 h-16 animate-pulse focus:ring-amber-300': isRecording && recordingMode === 'single',
-          'bg-stone-600 w-16 h-16 focus:ring-stone-300': isRecording && recordingMode === 'looped'
+          'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'single',
+          'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'looped',
+          'bg-red-200 w-16 h-16 animate-pulse focus:ring-red-300': isRecording && recordingMode === 'single',
+          'bg-red-200 w-16 h-16 focus:ring-red-300': isRecording && recordingMode === 'looped'
         }"
         @click="handleMainButtonClick"
         :aria-label="getMainButtonAriaLabel()"
@@ -46,8 +46,8 @@
           v-if="!isRecording"
           class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center"
         >
-          <div class="w-16 h-16 bg-amber-500 rounded-full" v-if="recordingMode === 'single'"></div>
-          <div class="w-16 h-16 bg-stone-500 rounded-full" v-else></div>
+          <div class="w-16 h-16 bg-red-500 rounded-full" v-if="recordingMode === 'single'"></div>
+          <div class="w-16 h-16 bg-red-500 rounded-full" v-else></div>
         </div>
         
         <!-- Recording State - Always show stop button (square) when recording -->
@@ -58,8 +58,8 @@
           <div 
             class="w-0 h-0 rounded-sm"
             :class="{
-              'bg-amber-600': recordingMode === 'single',
-              'bg-stone-600': recordingMode === 'looped'
+              'bg-red-600': recordingMode === 'single',
+              'bg-red-600': recordingMode === 'looped'
             }"
           ></div>
         </div>

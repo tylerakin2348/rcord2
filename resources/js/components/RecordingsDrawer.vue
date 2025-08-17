@@ -96,9 +96,9 @@
                         class="flex items-center justify-between p-4 bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
                     >
                         <div class="flex items-center space-x-3">
-                            <div class="p-2 rounded-lg bg-amber-100">
+                            <div class="p-2 rounded-lg bg-stone-100">
                                 <svg
-                                    class="w-5 h-5 text-amber-600"
+                                    class="w-5 h-5 text-stone-600"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -133,7 +133,7 @@
                         <div class="flex items-center space-x-2">
                             <button
                                 @click="playFile(file)"
-                                class="p-2 rounded-full text-amber-600 hover:text-amber-800 hover:bg-amber-50 transition-colors duration-200"
+                                class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                             >
                                 <!-- Play Icon -->
                                 <svg
@@ -156,7 +156,7 @@
                             </button>
                             <button
                                 @click="downloadFile(file)"
-                                class="p-2 rounded-full text-amber-600 hover:text-amber-800 hover:bg-amber-50 transition-colors duration-200"
+                                class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                             >
                                 <svg
                                     class="w-5 h-5"
@@ -331,9 +331,9 @@
                                         @click="playFile(session.recordings[0])"
                                         class="p-2 rounded-full transition-colors duration-200"
                                         :class="{
-                                            'bg-amber-100 text-amber-600': currentlyPlayingId !== session.recordings[0]?.id,
+                                            'bg-stone-100 text-stone-600': currentlyPlayingId !== session.recordings[0]?.id,
                                             'bg-red-100 text-red-600 hover:bg-red-200': currentlyPlayingId === session.recordings[0]?.id,
-                                            'hover:bg-amber-200': currentlyPlayingId !== session.recordings[0]?.id
+                                            'hover:bg-stone-200': currentlyPlayingId !== session.recordings[0]?.id
                                         }"
                                     >
                                         <svg
@@ -713,6 +713,49 @@
                 </p>
             </div>
         </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div 
+            v-if="showDeleteModal"
+            class="fixed inset-0 flex items-center justify-center z-50"
+            style="background-color: rgba(0, 0, 0, 0.6);"
+            @click="cancelDelete"
+        >
+            <div 
+                class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-md w-full"
+                @click.stop
+            >
+                <div class="flex items-center mb-4">
+                    <div class="p-2 bg-red-100 rounded-full mr-3">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {{ deleteModalTitle }}
+                    </h3>
+                </div>
+                
+                <p class="text-gray-700 mb-6">
+                    {{ deleteModalMessage }}
+                </p>
+                
+                <div class="flex justify-end space-x-3">
+                    <button
+                        @click="cancelDelete"
+                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        @click="confirmDelete"
+                        class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -758,6 +801,12 @@ export default {
         const scrollTrigger = ref(null);
         const sessionsScrollTrigger = ref(null);
         const scrollContainer = ref(null);
+
+        // Delete modal state
+        const showDeleteModal = ref(false);
+        const deleteModalTitle = ref('');
+        const deleteModalMessage = ref('');
+        const pendingDeleteAction = ref(null);
 
         // Load recordings from API on component mount
         onMounted(() => {
@@ -1102,72 +1151,98 @@ export default {
             }
         };
 
+        // Modal helper functions
+        const showDeleteConfirmation = (title, message, deleteAction) => {
+            deleteModalTitle.value = title;
+            deleteModalMessage.value = message;
+            pendingDeleteAction.value = deleteAction;
+            showDeleteModal.value = true;
+        };
+
+        const confirmDelete = async () => {
+            if (pendingDeleteAction.value) {
+                await pendingDeleteAction.value();
+            }
+            cancelDelete();
+        };
+
+        const cancelDelete = () => {
+            showDeleteModal.value = false;
+            deleteModalTitle.value = '';
+            deleteModalMessage.value = '';
+            pendingDeleteAction.value = null;
+        };
+
         const deleteSession = async (session) => {
-            if (
-                !confirm(
-                    `Are you sure you want to delete "${session.title}" and all its recordings?`
-                )
-            ) {
-                return;
-            }
-
-            try {
-                // Delete session from API (this will also delete associated recordings)
-                await window.axios.delete(
-                    `/api/recording-sessions/${session.id}`
-                );
-
-                // Remove from local list
-                sessions.value = sessions.value.filter(
-                    (s) => s.id !== session.id
-                );
-            } catch (error) {
-                console.error('Error deleting session:', error);
-                if (error.response?.status === 401) {
-                    alert(
-                        'Authentication required. Please log in and try again.'
+            const actualDeleteSession = async () => {
+                try {
+                    // Delete session from API (this will also delete associated recordings)
+                    await window.axios.delete(
+                        `/api/recording-sessions/${session.id}`
                     );
-                } else {
-                    alert('Error deleting session. Please try again.');
+
+                    // Remove from local list
+                    sessions.value = sessions.value.filter(
+                        (s) => s.id !== session.id
+                    );
+                } catch (error) {
+                    console.error('Error deleting session:', error);
+                    if (error.response?.status === 401) {
+                        alert(
+                            'Authentication required. Please log in and try again.'
+                        );
+                    } else {
+                        alert('Error deleting session. Please try again.');
+                    }
                 }
-            }
+            };
+
+            showDeleteConfirmation(
+                'Delete Session',
+                `Are you sure you want to delete "${session.title}" and all its recordings? This action cannot be undone.`,
+                actualDeleteSession
+            );
         };
 
         const deleteFile = async (file) => {
-            if (!confirm('Are you sure you want to delete this recording?')) {
-                return;
-            }
+            const actualDeleteFile = async () => {
+                try {
+                    if (file.id) {
+                        // Delete from API using axios
+                        await window.axios.delete(`/api/recordings/${file.id}`);
+                    }
 
-            try {
-                if (file.id) {
-                    // Delete from API using axios
-                    await window.axios.delete(`/api/recordings/${file.id}`);
-                }
+                    // If in single mode, remove from local recordings list
+                    if (props.recordingMode === 'single') {
+                        recordings.value = recordings.value.filter(
+                            (f) => f.id !== file.id
+                        );
+                    } else if (props.recordingMode === 'looped') {
+                        // For looped recordings, refresh session data to update counts and recordings
+                        await loadSessionsFromAPI(1, false);
+                    }
 
-                // If in single mode, remove from local recordings list
-                if (props.recordingMode === 'single') {
-                    recordings.value = recordings.value.filter(
-                        (f) => f.id !== file.id
-                    );
-                } else if (props.recordingMode === 'looped') {
-                    // For looped recordings, refresh session data to update counts and recordings
-                    await loadSessionsFromAPI(1, false);
+                    // Clean up blob URL if it exists
+                    if (file.url) {
+                        URL.revokeObjectURL(file.url);
+                    }
+                } catch (error) {
+                    console.error('Error deleting file:', error);
+                    if (error.response?.status === 401) {
+                        alert(
+                            'Authentication required. Please log in and try again.'
+                        );
+                    } else {
+                        alert('Error deleting recording. Please try again.');
+                    }
                 }
+            };
 
-                // Clean up blob URL if it exists
-                if (file.url) {
-                    URL.revokeObjectURL(file.url);
-                }
-            } catch (error) {
-                console.error('Error deleting file:', error);
-                if (error.response?.status === 401) {
-                    alert(
-                        'Authentication required. Please log in and try again.'
-                    );
-                } else {
-                    alert('Error deleting recording. Please try again.');
-                }
-            }
+            showDeleteConfirmation(
+                'Delete Recording',
+                `Are you sure you want to delete "${file.title || file.name}"? This action cannot be undone.`,
+                actualDeleteFile
+            );
         };
 
         // Method to add a new recording (called from parent)
@@ -1226,6 +1301,13 @@ export default {
             isSessionExpanded,
             loadRecordingsFromAPI,
             loadSessionsFromAPI,
+
+            // Modal state and functions
+            showDeleteModal,
+            deleteModalTitle,
+            deleteModalMessage,
+            confirmDelete,
+            cancelDelete,
         };
     },
 };

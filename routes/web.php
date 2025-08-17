@@ -29,6 +29,7 @@ Route::post('/api/login', [AuthController::class, 'login']);
 Route::post('/api/logout', [AuthController::class, 'logout'])->middleware('auth:web');
 Route::get('/api/user', [AuthController::class, 'user'])->middleware('auth:web');
 Route::get('/api/user/stats', [UserController::class, 'stats'])->middleware('auth:web');
+Route::get('/api/system/stats', [UserController::class, 'systemStats'])->middleware('auth:web');
 
 // User CRUD routes (protected)
 Route::middleware('auth:web')->group(function () {

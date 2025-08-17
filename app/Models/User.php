@@ -76,6 +76,9 @@ class User extends Authenticatable
         // Calculate total duration from recordings
         $totalDuration = $recordings->sum('duration') ?? 0;
         
+        // Calculate total storage used (file_size is in bytes)
+        $totalStorageBytes = $recordings->sum('file_size') ?? 0;
+        
         // Recent activity (last 30 days)
         $recentRecordings = $recordings->where('created_at', '>=', now()->subDays(30))->count();
         $recentSessions = $sessions->where('created_at', '>=', now()->subDays(30))->count();
@@ -84,7 +87,9 @@ class User extends Authenticatable
             'totalRecordings' => $totalRecordings,
             'totalSessions' => $totalSessions,
             'totalDuration' => $totalDuration,
+            'totalStorageBytes' => $totalStorageBytes,
             'averageRecordingDuration' => $totalRecordings > 0 ? round($totalDuration / $totalRecordings) : 0,
+            'averageFileSize' => $totalRecordings > 0 ? round($totalStorageBytes / $totalRecordings) : 0,
             'recentRecordingsCount' => $recentRecordings,
             'recentSessionsCount' => $recentSessions,
             'accountCreated' => $this->created_at->format('Y-m-d'),

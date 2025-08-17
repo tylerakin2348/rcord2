@@ -80,7 +80,7 @@
         <div class="px-6 py-8">
           <h2 class="text-xl font-semibold text-stone-900 mb-6">Your Activity</h2>
           
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
               <div class="flex items-center">
                 <div class="flex-shrink-0 text-3xl">🎙️</div>
@@ -107,6 +107,16 @@
                 <div class="ml-4">
                   <p class="text-sm font-medium text-purple-800">Total Duration</p>
                   <p class="text-2xl font-bold text-purple-900">{{ formatDuration(userStats.totalDuration) }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-lg border border-orange-200">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 text-3xl">💾</div>
+                <div class="ml-4">
+                  <p class="text-sm font-medium text-orange-800">Storage Used</p>
+                  <p class="text-2xl font-bold text-orange-900">{{ formatFileSize(userStats.totalStorageBytes) }}</p>
                 </div>
               </div>
             </div>
@@ -232,6 +242,16 @@ const formatDuration = (seconds) => {
     return `${hours}h ${minutes}m`
   }
   return `${minutes}m`
+}
+
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 B'
+  
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  const size = bytes / Math.pow(1024, i)
+  
+  return `${size.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`
 }
 
 // Methods

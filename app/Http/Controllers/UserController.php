@@ -123,4 +123,48 @@ class UserController extends Controller
 
         return response()->json($stats);
     }
+
+    /**
+     * Get system-wide statistics (admin only).
+     */
+    public function systemStats(Request $request)
+    {
+        // TODO: Add admin role check when authentication roles are implemented
+        // For now, any authenticated user can access system stats
+        
+        $totalUsers = User::count();
+        $totalRecordings = \App\Models\Recording::count();
+        $totalSessions = \App\Models\RecordingSession::count();
+        
+        // Calculate total duration across all recordings
+        $totalDuration = \App\Models\Recording::sum('duration') ?? 0;
+        
+        // Calculate total storage used across all recordings
+        $totalStorageBytes = \App\Models\Recording::sum('file_size') ?? 0;
+        
+        // Recent activity (last 30 days)
+        $recentUsers = User::where('created_at', '>=', now()->subDays(30))->count();
+        $recentRecordings = \App\Models\Recording::where('created_at', '>=', now()->subDays(30))->count();
+        $recentSessions = \App\Models\RecordingSession::where('created_at', '>=', now()->subDays(30))->count();
+        
+        // Average statistics
+        $averageRecordingDuration = $totalRecordings > 0 ? round($totalDuration / $totalRecordings) : 0;
+        $averageFileSize = $totalRecordings > 0 ? round($totalStorageBytes / $totalRecordings) : 0;
+        $averageRecordingsPerUser = $totalUsers > 0 ? round($totalRecordings / $totalUsers, 1) : 0;
+        
+        return response()->json([
+            'totalUsers' => $totalUsers,
+            'totalRecordings' => $totalRecordings,
+            'totalSessions' => $totalSessions,
+            'totalDuration' => $totalDuration,
+            'totalStorageBytes' => $totalStorageBytes,
+            'recentUsers' => $recentUsers,
+            'recentRecordings' => $recentRecordings,
+            'recentSessions' => $recentSessions,
+            'averageRecordingDuration' => $averageRecordingDuration,
+            'averageFileSize' => $averageFileSize,
+            'averageRecordingsPerUser' => $averageRecordingsPerUser,
+            'systemStartDate' => User::orderBy('created_at')->first()?->created_at->format('Y-m-d'),
+        ]);
+    }
 }

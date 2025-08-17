@@ -69,7 +69,7 @@
               <div class="flex-shrink-0 text-3xl">💾</div>
               <div class="ml-4">
                 <p class="text-sm font-medium text-stone-500">Storage Used</p>
-                <p class="text-2xl font-bold text-stone-900">{{ formatFileSize(systemStats.storageUsed) }}</p>
+                <p class="text-2xl font-bold text-stone-900">{{ formatFileSize(systemStats.totalStorageBytes) }}</p>
               </div>
             </div>
           </div>
@@ -78,10 +78,61 @@
         <div class="bg-white overflow-hidden shadow-sm rounded-lg">
           <div class="p-6">
             <div class="flex items-center">
-              <div class="flex-shrink-0 text-3xl">⚡</div>
+              <div class="flex-shrink-0 text-3xl">📊</div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-stone-500">System Uptime</p>
-                <p class="text-2xl font-bold text-stone-900">{{ systemStats.uptime }}%</p>
+                <p class="text-sm font-medium text-stone-500">Total Sessions</p>
+                <p class="text-2xl font-bold text-stone-900">{{ systemStats.totalSessions }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Stats -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 text-3xl">⏱️</div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-stone-500">Total Duration</p>
+                <p class="text-2xl font-bold text-stone-900">{{ formatDuration(systemStats.totalDuration) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 text-3xl">📈</div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-stone-500">Avg Recordings/User</p>
+                <p class="text-2xl font-bold text-stone-900">{{ systemStats.averageRecordingsPerUser }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 text-3xl">🆕</div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-stone-500">Recent Users</p>
+                <p class="text-2xl font-bold text-stone-900">{{ systemStats.recentUsers }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 text-3xl">🎵</div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-stone-500">Recent Recordings</p>
+                <p class="text-2xl font-bold text-stone-900">{{ systemStats.recentRecordings }}</p>
               </div>
             </div>
           </div>
@@ -263,8 +314,16 @@ const users = ref([])
 const systemStats = ref({
   totalUsers: 0,
   totalRecordings: 0,
-  storageUsed: 0,
-  uptime: 99.9
+  totalSessions: 0,
+  totalDuration: 0,
+  totalStorageBytes: 0,
+  recentUsers: 0,
+  recentRecordings: 0,
+  recentSessions: 0,
+  averageRecordingsPerUser: 0,
+  averageRecordingDuration: 0,
+  averageFileSize: 0,
+  systemStartDate: null
 })
 
 const loadingUsers = ref(false)
@@ -310,9 +369,20 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
+const formatDuration = (seconds) => {
+  if (!seconds) return '0 min'
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
+}
+
 const loadSystemStats = async () => {
   try {
-    const response = await window.axios.get('/api/admin/stats')
+    const response = await window.axios.get('/api/system/stats')
     systemStats.value = response.data
   } catch (error) {
     console.error('Failed to load system stats:', error)

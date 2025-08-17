@@ -305,9 +305,11 @@ export default {
         
         // Recording event handlers
         mediaRecorder.ondataavailable = (event) => {
+          // console.log(`Data available: ${event.data.size} bytes, timecode: ${event.timecode}`)
           if (event.data.size > 0) {
             recordedChunks.push(event.data)
             allRecordedChunks.push(event.data)
+            // console.log(`Total chunks: ${recordedChunks.length}, All chunks: ${allRecordedChunks.length}`)
           }
         }
         
@@ -321,16 +323,42 @@ export default {
         mediaRecorder.onstop = () => {
           // Only process final recording if we're actually stopping (not just saving a loop)
           if (!isRecording.value) {
-            const blob = new Blob(allRecordedChunks, { type: 'audio/webm' })
+            // For looped recordings, only save the current incomplete loop (if any)
+            // For single recordings, save the complete recording
+            const chunksToUse = props.recordingMode === 'looped' ? recordedChunks : allRecordedChunks
+            const blob = new Blob(chunksToUse, { type: 'audio/webm' })
+            
+            // Skip saving if there's no audio data (empty current loop)
+            if (blob.size === 0 && props.recordingMode === 'looped') {
+              console.log('No final loop audio to save')
+              
+              // Reset after successful save
+              recordedChunks = []
+              allRecordedChunks = []
+              recordingTime.value = 0
+              totalRecordingTime.value = 0
+              currentLoop.value = 1
+              loopDuration.value = null // Reset loop duration for next session
+              audioLevel.value = 0
+              
+              return
+            }
             
             // Create file record
             const now = new Date()
-            const fileName = `${props.recordingMode}-recording-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
-            const fileSize = formatFileSize(blob.size)
+            let fileName, duration
             
-            // Calculate final loop count for looped recordings
-            const finalLoopCount = props.recordingMode === 'looped' ? currentLoop.value : 1
-            const duration = formatTime(props.recordingMode === 'looped' ? totalRecordingTime.value : recordingTime.value)
+            if (props.recordingMode === 'looped') {
+              // For looped mode, this is the final partial loop
+              fileName = `loop-${currentLoop.value}-final-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
+              duration = formatTime(recordingTime.value)
+            } else {
+              // For single mode, this is the complete recording
+              fileName = `${props.recordingMode}-recording-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
+              duration = formatTime(recordingTime.value)
+            }
+            
+            const fileSize = formatFileSize(blob.size)
             
             const fileData = {
               id: Date.now(),
@@ -342,13 +370,17 @@ export default {
               mode: props.recordingMode
             }
             
-            // Add loops info for looped recordings
+            // Add loop info for looped recordings
             if (props.recordingMode === 'looped') {
-              fileData.loops = finalLoopCount
+              fileData.loops = 1 // This is just the final partial loop
+              fileData.loopNumber = currentLoop.value
             }
             
             // Save to API
-            saveRecordingToAPI(fileData)
+          console.log(fileData, '333333fkaldxf - FINAL SAVE')
+          console.log('before 11 - FINAL SAVE')
+          saveRecordingToAPI(fileData)
+          console.log('after 22 - FINAL SAVE')
             
             // Emit completion event
             emit('recording-complete', fileData)
@@ -375,15 +407,113 @@ export default {
         isRecording.value = true
         
         // Start timer with loop handling for looped recordings
-        recordingTimer = setInterval(() => {
+        recordingTimer = setInterval(async () => {
           recordingTime.value++
           if (props.recordingMode === 'looped') {
             totalRecordingTime.value++
             
             // Check if we've completed a loop
             if (loopDuration.value && recordingTime.value >= loopDuration.value) {
-              recordingTime.value = 0
-              currentLoop.value++
+              // console.log(`Auto-saving loop ${currentLoop.value} after ${loopDuration.value} seconds`)
+              // console.log(`recordedChunks length: ${recordedChunks.length}`)
+              
+              // Make sure we have data to save
+              if (recordedChunks.length === 0) {
+                // console.warn('No recorded chunks available for auto-save, skipping...')
+                // Reset for next loop anyway
+                recordingTime.value = 0
+                currentLoop.value++
+                return
+              }
+              
+              // Save the current loop automatically
+              try {
+                // Stop the current recording to get final data and start fresh for next loop
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                  // Temporarily store current onstop handler
+                  const originalOnStop = mediaRecorder.onstop
+                  
+                  mediaRecorder.onstop = async () => {
+                    try {
+                      // Save the current loop as an individual recording
+                      const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
+                      console.log(`Loop blob size: ${currentLoopBlob.size} bytes`)
+                      
+                      // Make sure we have a valid blob with data
+                      if (currentLoopBlob.size === 0) {
+                        console.warn('Empty blob created, skipping save...')
+                        // Reset for next loop anyway
+                        recordedChunks = []
+                        recordingTime.value = 0
+                        currentLoop.value++
+                        
+                        // Restart recording for next loop
+                        if (isRecording.value) {
+                          mediaRecorder.start(1000)
+                        }
+                        return
+                      }
+                      
+                      // Create file record for current loop
+                      const now = new Date()
+                      const fileName = `loop-${currentLoop.value}-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
+                      const fileSize = formatFileSize(currentLoopBlob.size)
+                      
+                      const loopFileData = {
+                        id: Date.now(),
+                        name: fileName,
+                        blob: currentLoopBlob,
+                        duration: formatTime(recordingTime.value),
+                        size: fileSize,
+                        timestamp: now,
+                        mode: props.recordingMode,
+                        loops: 1, // This is a single loop
+                        loopNumber: currentLoop.value
+                      }
+                      
+                      console.log(loopFileData, '1111fkaldxf - AUTO SAVE')
+                      // Save current loop to API
+                      console.log('before - AUTO SAVE')
+                      await saveRecordingToAPI(loopFileData)
+                      console.log('after - AUTO SAVE')
+                      
+                      // Emit completion event for current loop
+                      emit('recording-complete', loopFileData)
+                      
+                      console.log(`Auto-saved loop ${currentLoop.value}, starting loop ${currentLoop.value + 1}`)
+                      
+                    } catch (error) {
+                      console.error('Error auto-saving current loop:', error)
+                      if (error.response) {
+                        console.error('Response status:', error.response.status)
+                        console.error('Response data:', error.response.data)
+                      }
+                    }
+                    
+                    // Reset for next loop and restart recording
+                    recordedChunks = [] // Clear chunks for next loop
+                    recordingTime.value = 0 // Reset loop timer
+                    currentLoop.value++ // Increment loop counter
+                    
+                    // Restore original onstop handler
+                    mediaRecorder.onstop = originalOnStop
+                    
+                    // Restart recording for next loop if still recording
+                    if (isRecording.value) {
+                      mediaRecorder.start(1000)
+                    }
+                  }
+                  
+                  // Stop to trigger the save and restart cycle
+                  mediaRecorder.stop()
+                }
+              } catch (error) {
+                console.error('Error in auto-save process:', error)
+                // Reset for next loop anyway
+                recordedChunks = []
+                recordingTime.value = 0
+                currentLoop.value++
+              }
             } else if (!loopDuration.value && currentLoop.value === 1) {
               // First loop - duration will be set when user saves the loop
               // No automatic loop progression yet
@@ -414,7 +544,7 @@ export default {
     }
     
     const handleButtonClick = () => {
-      console.log('clicking button')
+      // console.log('clicking button')
       // Prevent clicks when saving a loop
       if (savingLoop.value) {
         return
@@ -440,16 +570,16 @@ export default {
       if (props.recordingMode === 'looped') {
         // If we have a loop duration set and we're on loop 2+, act as stop button
         if (loopDuration.value && currentLoop.value > 1) {
-          console.log('Stop button clicked - stopping recording')
+          // console.log('Stop button clicked - stopping recording')
           stopRecording()
         } else {
           // First loop - check for double click to stop, single click to save and continue
           if (timeDiff < 500) {
-            console.log('Double click detected - stopping recording')
+            // console.log('Double click detected - stopping recording')
             stopRecording()
           } else {
             // Single click saves current loop and continues
-            console.log('Single click - saving current loop')
+            // console.log('Single click - saving current loop')
             saveCurrentLoopAndContinue()
           }
         }
@@ -500,52 +630,93 @@ export default {
         // If this is the first loop completion, set the loop duration
         if (currentLoop.value === 1 && !loopDuration.value) {
           loopDuration.value = recordingTime.value
-          console.log(`Loop duration set to ${loopDuration.value} seconds based on first loop`)
+          // console.log(`Loop duration set to ${loopDuration.value} seconds based on first loop`)
         }
         
-        // Save the current loop as an individual recording
-        const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
+        // Save current onstop handler for restoration later
+        const originalOnStop = mediaRecorder.onstop
         
-        // Create file record for current loop
-        const now = new Date()
-        const fileName = `loop-${currentLoop.value}-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
-        const fileSize = formatFileSize(currentLoopBlob.size)
-        
-        const loopFileData = {
-          id: Date.now(),
-          name: fileName,
-          blob: currentLoopBlob,
-          duration: formatTime(recordingTime.value),
-          size: fileSize,
-          timestamp: now,
-          mode: props.recordingMode,
-          loops: 1, // This is a single loop
-          loopNumber: currentLoop.value
+        // Set temporary onstop handler for loop save and restart
+        mediaRecorder.onstop = async () => {
+          try {
+            // Save the current loop as an individual recording
+            const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
+            
+            // Create file record for current loop
+            const now = new Date()
+            const fileName = `loop-${currentLoop.value}-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
+            const fileSize = formatFileSize(currentLoopBlob.size)
+            
+            const loopFileData = {
+              id: Date.now(),
+              name: fileName,
+              blob: currentLoopBlob,
+              duration: formatTime(recordingTime.value),
+              size: fileSize,
+              timestamp: now,
+              mode: props.recordingMode,
+              loops: 1, // This is a single loop
+              loopNumber: currentLoop.value
+            }
+            
+            console.log(loopFileData, '22222fkaldxf - MANUAL SAVE')
+            // Save current loop to API
+            console.log('before 1 - MANUAL SAVE')
+            await saveRecordingToAPI(loopFileData)
+            console.log('after 2 - MANUAL SAVE')
+            
+            // Emit completion event for current loop
+            emit('recording-complete', loopFileData)
+            
+            console.log(`Manual saved loop ${currentLoop.value}, starting loop ${currentLoop.value + 1}`)
+            
+          } catch (error) {
+            console.error('Error saving current loop:', error)
+            if (error.response) {
+              console.error('Response status:', error.response.status)
+              console.error('Response data:', error.response.data)
+            }
+          }
+          
+          // Reset for next loop and restart recording
+          recordedChunks = [] // Clear chunks for next loop
+          recordingTime.value = 0 // Reset loop timer
+          currentLoop.value++ // Increment loop counter
+          
+          // Restore original onstop handler
+          mediaRecorder.onstop = originalOnStop
+          
+          // Restart recording for next loop if still recording
+          if (isRecording.value) {
+            mediaRecorder.start(1000)
+          }
+          
+          savingLoop.value = false
         }
         
-        // Save current loop to API
-        await saveRecordingToAPI(loopFileData)
-        
-        // Emit completion event for current loop
-        emit('recording-complete', loopFileData)
-        
-        // Reset for next loop but keep recording going
-        recordedChunks = [] // Clear chunks for next loop
-        recordingTime.value = 0 // Reset loop timer
-        currentLoop.value++ // Increment loop counter
-        
-        console.log(`Saved loop ${currentLoop.value - 1}, starting loop ${currentLoop.value}`)
+        // Stop to trigger the save and restart cycle
+        mediaRecorder.stop()
         
       } catch (error) {
-        console.error('Error saving current loop:', error)
-        alert('Error saving loop. Recording will continue.')
-      } finally {
+        console.error('Error in manual save process:', error)
         savingLoop.value = false
       }
     }
     
     const saveRecordingToAPI = async (fileData) => {
       try {
+        console.log('saveRecordingToAPI called with:', {
+          name: fileData.name,
+          duration: fileData.duration,
+          size: fileData.size,
+          mode: fileData.mode,
+          loops: fileData.loops,
+          loopNumber: fileData.loopNumber,
+          blobSize: fileData.blob.size,
+          blobType: fileData.blob.type,
+          currentSession: currentSession.value ? currentSession.value.id : null
+        })
+        
         // Create FormData to send the audio file
         const formData = new FormData()
         formData.append('audio', fileData.blob, fileData.name)
@@ -561,6 +732,7 @@ export default {
             formData.append('session_id', currentSession.value.id)
             // Loop number should be the next one in the session
             formData.append('loop_number', (currentSession.value.recordings_count || 0) + 1)
+            // console.log('Using existing session:', currentSession.value.id, 'Loop number:', (currentSession.value.recordings_count || 0) + 1)
           } else {
             // Create session title and description for new session
             const timestamp = new Date().toLocaleString()
@@ -570,7 +742,13 @@ export default {
             formData.append('session_title', title)
             formData.append('session_description', description)
             formData.append('loop_number', 1) // First loop in new session
+            // console.log('Creating new session:', title, 'Loop number: 1')
           }
+        }
+        
+        console.log('FormData entries:')
+        for (let [key, value] of formData.entries()) {
+          console.log(key, typeof value === 'object' && value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value)
         }
         
         // Use axios instead of fetch for better authentication handling
@@ -580,7 +758,7 @@ export default {
           }
         })
         
-        console.log('Recording saved successfully:', response.data)
+        // console.log('Recording saved successfully:', response.data)
         
         // If this was a looped recording and we got a session back, store it
         if (fileData.mode === 'looped' && response.data.recording.session_id) {

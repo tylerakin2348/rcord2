@@ -82,17 +82,104 @@ class RecordingController extends Controller
         // Handle both old format (title/description) and new format (FormData from RecordingControls)
         if ($request->hasFile('audio')) {
             // New format from RecordingControls component
-            $request->validate([
-                'audio' => 'required|file|mimes:webm,wav,mp3,ogg',
-                'duration' => 'required|string',
-                'size' => 'required|string',
-                'mode' => 'required|string|in:single,looped',
-                'loops' => 'nullable|integer',
-                'session_id' => 'nullable|integer|exists:recording_sessions,id',
-                'loop_number' => 'nullable|integer',
-                'session_title' => 'nullable|string|max:255',
-                'session_description' => 'nullable|string',
-            ]);
+            try {
+                \Log::info('Recording validation attempt:', [
+                    'mode' => $request->mode,
+                    'has_audio_file' => $request->hasFile('audio'),
+                    'audio_info' => $request->hasFile('audio') ? [
+                        'size' => $request->file('audio')->getSize(),
+                        'mime_type' => $request->file('audio')->getMimeType(),
+                        'extension' => $request->file('audio')->getClientOriginalExtension(),
+                        'original_name' => $request->file('audio')->getClientOriginalName(),
+                    ] : null,
+                    'request_data' => [
+                        'duration' => $request->duration,
+                        'size' => $request->size,
+                        'loops' => $request->loops,
+                        'session_id' => $request->session_id,
+                    ]
+                ]);
+
+                $validation = $request->validate([
+                    'audio' => 'required|file|mimetypes:audio/webm,video/webm,audio/wav,audio/mpeg,audio/mp3,audio/ogg,application/octet-stream',
+                    'duration' => 'required|string',
+                    'size' => 'required|string',
+                    'mode' => 'required|string|in:single,looped',
+                    'loops' => 'nullable|integer',
+                    'session_id' => 'nullable|integer|exists:recording_sessions,id',
+                    'loop_number' => 'nullable|integer',
+                    'session_title' => 'nullable|string|max:255',
+                    'session_description' => 'nullable|string',
+                ]);
+
+                \Log::info('Recording validation passed');
+
+                // Additional validation for octet-stream and video/webm files to ensure they're audio files
+                $mimeType = $request->file('audio')->getMimeType();
+                if ($mimeType === 'application/octet-stream' || $mimeType === 'video/webm') {
+                    $allowedExtensions = ['webm', 'wav', 'mp3', 'ogg'];
+                    $fileExtension = strtolower($request->file('audio')->getClientOriginalExtension());
+                    
+                    if (!in_array($fileExtension, $allowedExtensions)) {
+                        \Log::error('Extension validation failed for binary/video file', [
+                            'mime_type' => $mimeType,
+                            'extension' => $fileExtension,
+                            'allowed' => $allowedExtensions
+                        ]);
+                        
+                        return response()->json([
+                            'message' => 'Validation failed',
+                            'errors' => [
+                                'audio' => ['The uploaded file must be an audio file with extension: webm, wav, mp3, or ogg.']
+                            ]
+                        ], 422);
+                    }
+                    
+                    \Log::info('Accepted file with non-standard MIME type', [
+                        'mime_type' => $mimeType,
+                        'extension' => $fileExtension
+                    ]);
+                }
+
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Log detailed validation error information
+                \Log::error('Recording validation failed:', [
+                    'errors' => $e->errors(),
+                    'request_data' => [
+                        'has_audio_file' => $request->hasFile('audio'),
+                        'audio_file_info' => $request->hasFile('audio') ? [
+                            'original_name' => $request->file('audio')->getClientOriginalName(),
+                            'size' => $request->file('audio')->getSize(),
+                            'mime_type' => $request->file('audio')->getMimeType(),
+                            'extension' => $request->file('audio')->getClientOriginalExtension(),
+                            'is_valid' => $request->file('audio')->isValid(),
+                            'error' => $request->file('audio')->getError(),
+                        ] : null,
+                        'duration' => $request->duration,
+                        'size' => $request->size,
+                        'mode' => $request->mode,
+                        'loops' => $request->loops,
+                        'session_id' => $request->session_id,
+                        'loop_number' => $request->loop_number,
+                    ]
+                ]);
+                
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                    'debug_info' => [
+                        'has_audio_file' => $request->hasFile('audio'),
+                        'audio_file_info' => $request->hasFile('audio') ? [
+                            'original_name' => $request->file('audio')->getClientOriginalName(),
+                            'size' => $request->file('audio')->getSize(),
+                            'mime_type' => $request->file('audio')->getMimeType(),
+                            'extension' => $request->file('audio')->getClientOriginalExtension(),
+                            'is_valid' => $request->file('audio')->isValid(),
+                            'error' => $request->file('audio')->getError(),
+                        ] : null,
+                    ]
+                ], 422);
+            }
 
             try {
                 $audioFile = $request->file('audio');

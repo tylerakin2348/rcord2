@@ -11,17 +11,8 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
           <div class="flex items-center">
-            <h1 
-              class="text-2xl font-bold transition-all duration-500"
-              :class="{
-                'text-gray-900': !selectedMode,
-                'text-amber-700': selectedMode === 'single',
-                'text-stone-700': selectedMode === 'looped'
-              }"
-            >
-              <span v-if="!selectedMode">Welcome Back!</span>
-              <span v-else-if="selectedMode === 'single'">Single Cord Recording</span>
-              <span v-else-if="selectedMode === 'looped'">Looped Cord Recording</span>
+            <h1 class="text-2xl font-bold text-stone-700">
+              Recording
             </h1>
           </div>
           
@@ -120,92 +111,26 @@
     <!-- Main Content -->
     <main class="flex-1 flex overflow-hidden relative">
       <!-- Main rcord Interface -->
-      <div 
-        class="flex w-full transition-all duration-500"
-        :class="{
-          'items-center justify-center': !selectedMode,
-          'items-stretch': selectedMode
-        }"
-      >
-        <!-- Center container for mode selection -->
+      <div class="flex w-full items-stretch">
+        <!-- Left Half: Recording Controls -->
         <div 
-          v-show="!selectedMode"
-          class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto p-12"
-        >
-          <!-- Recording Mode Buttons -->
-          <div class="flex flex-col sm:flex-row gap-8 items-center">
-            <!-- Single Cord Button -->
-            <button 
-              @click="selectRecordingMode('single')"
-              class="group relative bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-            >
-              <div class="flex items-center space-x-3">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-              </div>
-              <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Record once
-              </div>
-            </button>
-
-            <!-- Looped Cord Button -->
-            <button 
-              @click="selectRecordingMode('looped')"
-              class="group relative bg-gradient-to-r from-stone-600 to-stone-700 hover:from-stone-700 hover:to-stone-800 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-            >
-              <div class="flex items-center space-x-3">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-stone-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Continuous recording
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Back Button (absolutely positioned) -->
-        <div 
-          v-show="selectedMode"
-          class="absolute top-4 left-4 z-20"
-        >
-          <button
-            @click="goBack"
-            class="p-3 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors duration-200 shadow-sm"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Left Half: Recording Controls (shown when mode is selected) -->
-        <div 
-          v-show="selectedMode"
-          class="flex flex-col h-full transition-all duration-500"
+          class="flex flex-col h-full"
           :class="{ 
-            'opacity-100 transform scale-100': selectedMode,
-            'opacity-0 transform scale-0 pointer-events-none': !selectedMode,
             'w-1/2': isDrawerExpanded && !isMobileView,
             'w-full': !isDrawerExpanded
           }"
         >
           <RecordingControls 
-            v-if="selectedMode"
-            :recording-mode="selectedMode"
+            recording-mode="looped"
             @recording-complete="onRecordingComplete"
           />
         </div>
 
         <!-- Drawer Toggle Button (absolutely positioned) -->
         <div 
-          v-show="selectedMode && !isMobileView"
-          class="absolute top-1/2 z-20 transition-all duration-500"
+          v-show="!isMobileView"
+          class="absolute top-1/2 z-20"
           :class="{
-            'opacity-100': selectedMode,
-            'opacity-0 pointer-events-none': !selectedMode,
             'right-1/2 transform -translate-y-1/2': isDrawerExpanded,
             'right-0 transform -translate-y-1/2': !isDrawerExpanded
           }"
@@ -228,7 +153,7 @@
 
         <!-- Mobile Drawer Toggle Button (floating) -->
         <div 
-          v-show="selectedMode && isMobileView"
+          v-show="isMobileView"
           class="fixed top-1/2 right-4 z-50 transform -translate-y-1/2"
         >
           <button
@@ -250,14 +175,11 @@
 
         <!-- Right Half: Recordings Drawer -->
         <div 
-          v-show="selectedMode"
-          class="h-full transition-all duration-500 bg-stone-50 shadow-lg flex flex-col"
+          class="h-full bg-stone-50 shadow-lg flex flex-col"
           :class="{ 
-            'opacity-100 transform scale-100': selectedMode && isDrawerExpanded,
-            'opacity-0 transform scale-x-0 pointer-events-none': !selectedMode || (!isDrawerExpanded && !isMobileView),
             // Desktop styles
             'w-1/2 pl-0': isDrawerExpanded && !isMobileView,
-            'w-0': !isDrawerExpanded && !isMobileView,
+            'w-0 opacity-0 transform scale-x-0 pointer-events-none': !isDrawerExpanded && !isMobileView,
             // Mobile styles - floating overlay
             'fixed inset-0 top-16 w-full z-40': isMobileView,
             'transform translate-x-full': isMobileView && !isDrawerExpanded,
@@ -266,8 +188,7 @@
           :style="isMobileView ? {} : { height: 'calc(100vh - 69px)' }"
         >
           <RecordingsDrawer
-            v-if="selectedMode"
-            :recording-mode="selectedMode"
+            recording-mode="looped"
             :is-mobile="isMobileView"
             @close="toggleDrawer"
             ref="recordingsDrawer"
@@ -296,8 +217,6 @@ import RecordingsDrawer from './RecordingsDrawer.vue';
 const store = useMainStore();
 const router = useRouter();
 const showDashboard = ref(false);
-const showSingleCord = ref(false);
-const showLoopedCord = ref(false);
 
 // Mobile state
 const isMobileMenuOpen = ref(false);
@@ -305,9 +224,6 @@ const windowWidth = ref(window.innerWidth);
 
 // Computed for mobile view detection
 const isMobileView = computed(() => windowWidth.value < 768);
-
-// Recording mode selection (for controlling which component is shown)
-const selectedMode = ref(null); // 'single' or 'looped'
 
 // Drawer state
 const isDrawerExpanded = ref(true);
@@ -327,7 +243,7 @@ const handleResize = () => {
     isMobileMenuOpen.value = false;
   }
   // Close drawer on mobile by default
-  if (isMobileView.value && !selectedMode.value) {
+  if (isMobileView.value) {
     isDrawerExpanded.value = false;
   }
 };
@@ -339,23 +255,6 @@ onMounted(() => {
     isDrawerExpanded.value = false;
   }
 });
-
-const selectRecordingMode = (mode) => {
-  selectedMode.value = mode;
-  // Close mobile menu if open
-  isMobileMenuOpen.value = false;
-  // On mobile, close drawer by default when selecting mode
-  if (isMobileView.value) {
-    isDrawerExpanded.value = false;
-  }
-};
-
-const goBack = () => {
-  // Clear selected mode to return to main menu
-  selectedMode.value = null;
-  // Reset drawer state
-  isDrawerExpanded.value = !isMobileView.value;
-};
 
 const toggleDrawer = () => {
   isDrawerExpanded.value = !isDrawerExpanded.value;

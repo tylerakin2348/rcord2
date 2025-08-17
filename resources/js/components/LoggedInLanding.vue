@@ -114,10 +114,12 @@
       <div class="flex w-full items-stretch">
         <!-- Left Half: Recording Controls -->
         <div 
-          class="flex flex-col h-full"
+          class="flex flex-col h-full transition-all duration-200"
           :class="{ 
-            'w-1/2': isDrawerExpanded && !isMobileView,
             'w-full': !isDrawerExpanded
+          }"
+          :style="{ 
+            width: isDrawerExpanded && !isMobileView ? `${100 - constrainedDrawerWidth}%` : '100%'
           }"
         >
           <RecordingControls 
@@ -130,9 +132,9 @@
         <div 
           v-show="!isMobileView"
           class="absolute top-1/2 z-20"
-          :class="{
-            'right-1/2 transform -translate-y-1/2': isDrawerExpanded,
-            'right-0 transform -translate-y-1/2': !isDrawerExpanded
+          :style="{
+            right: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0px',
+            transform: 'translateY(-50%)'
           }"
         >
           <button
@@ -149,6 +151,23 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
+        </div>
+
+        <!-- Resize Handle -->
+        <div 
+          v-show="!isMobileView && isDrawerExpanded"
+          class="absolute top-0 z-30 h-full cursor-col-resize group"
+          :style="{
+            right: `${constrainedDrawerWidth}%`,
+            transform: 'translateX(50%)'
+          }"
+          @mousedown="startDragging"
+        >
+          <div 
+            class="w-1 h-full bg-transparent group-hover:bg-stone-300 transition-colors duration-200"
+            :class="{ 'bg-stone-400': isDragging }"
+          ></div>
+          <div class="absolute inset-y-0 -left-1 -right-1"></div> <!-- Invisible wider hit area -->
         </div>
 
         <!-- Mobile Drawer Toggle Button (floating) -->
@@ -175,17 +194,19 @@
 
         <!-- Right Half: Recordings Drawer -->
         <div 
-          class="h-full bg-stone-50 shadow-lg flex flex-col"
+          class="h-full bg-stone-50 shadow-lg flex flex-col transition-all duration-200"
           :class="{ 
             // Desktop styles
-            'w-1/2 pl-0': isDrawerExpanded && !isMobileView,
-            'w-0 opacity-0 transform scale-x-0 pointer-events-none': !isDrawerExpanded && !isMobileView,
+            'opacity-0 transform scale-x-0 pointer-events-none': !isDrawerExpanded && !isMobileView,
             // Mobile styles - floating overlay
             'fixed inset-0 top-16 w-full z-40': isMobileView,
             'transform translate-x-full': isMobileView && !isDrawerExpanded,
             'transform translate-x-0': isMobileView && isDrawerExpanded
           }"
-          :style="isMobileView ? {} : { height: 'calc(100vh - 69px)' }"
+          :style="isMobileView ? {} : { 
+            width: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0%',
+            height: 'calc(100vh - 69px)' 
+          }"
         >
           <RecordingsDrawer
             recording-mode="looped"
@@ -229,6 +250,17 @@ const isMobileView = computed(() => windowWidth.value < 768);
 const isDrawerExpanded = ref(true);
 const isHeaderCollapsed = ref(false);
 
+// Draggable sidebar state
+const drawerWidth = ref(30); // Default 30%
+const isDragging = ref(false);
+const dragStartX = ref(0);
+const dragStartWidth = ref(0);
+
+// Computed drawer width with constraints
+const constrainedDrawerWidth = computed(() => {
+  return Math.max(0, Math.min(50, drawerWidth.value));
+});
+
 // Header computed property for clearer template logic
 const isHeaderExpanded = computed(() => !isHeaderCollapsed.value);
 
@@ -254,6 +286,10 @@ onMounted(() => {
   if (isMobileView.value) {
     isDrawerExpanded.value = false;
   }
+  
+  // Add mouse event listeners for dragging
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
 });
 
 const toggleDrawer = () => {
@@ -262,6 +298,40 @@ const toggleDrawer = () => {
 
 const toggleHeader = () => {
   isHeaderCollapsed.value = !isHeaderCollapsed.value;
+};
+
+// Draggable functionality
+const startDragging = (event) => {
+  if (isMobileView.value) return;
+  
+  isDragging.value = true;
+  dragStartX.value = event.clientX;
+  dragStartWidth.value = drawerWidth.value;
+  event.preventDefault();
+};
+
+const handleMouseMove = (event) => {
+  if (!isDragging.value || isMobileView.value) return;
+  
+  const deltaX = dragStartX.value - event.clientX;
+  const windowWidthPx = windowWidth.value;
+  const deltaPercent = (deltaX / windowWidthPx) * 100;
+  
+  drawerWidth.value = dragStartWidth.value + deltaPercent;
+  
+  // Auto-collapse if dragged to less than 5%
+  if (constrainedDrawerWidth.value < 5) {
+    isDrawerExpanded.value = false;
+    drawerWidth.value = 30; // Reset to default
+  } else if (!isDrawerExpanded.value && constrainedDrawerWidth.value >= 5) {
+    isDrawerExpanded.value = true;
+  }
+};
+
+const handleMouseUp = () => {
+  if (isDragging.value) {
+    isDragging.value = false;
+  }
 };
 
 const onRecordingComplete = (recordingData) => {
@@ -283,5 +353,7 @@ const handleLogout = async () => {
 onUnmounted(() => {
   // Remove event listeners
   window.removeEventListener('resize', handleResize);
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
 });
 </script>

@@ -1,61 +1,20 @@
 <template>
   <!-- Recording Controls - centered in full space -->
   <div class="flex-1 flex flex-col items-center justify-center px-8">
-    <!-- Circular Record Button -->
-    <div class="relative mb-8">
+    <!-- Recording Button Group -->
+    <div class="relative mb-8 flex items-center gap-4">
+      <!-- Loop Button (only visible for looped mode when recording and first loop) -->
       <button 
-        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50"
-        :class="{
-          'bg-amber-500 w-20 h-20 hover:bg-amber-600 focus:ring-amber-300': !isRecording && recordingMode === 'single',
-          'bg-stone-500 w-20 h-20 hover:bg-stone-600 focus:ring-stone-300': !isRecording && recordingMode === 'looped',
-          'bg-amber-600 w-16 h-16 animate-pulse focus:ring-amber-300': isRecording && recordingMode === 'single',
-          'bg-stone-600 w-16 h-16 focus:ring-stone-300': isRecording && recordingMode === 'looped' && !savingLoop,
-          'bg-stone-400 w-16 h-16 cursor-not-allowed focus:ring-stone-200': isRecording && recordingMode === 'looped' && savingLoop
-        }"
+        v-if="isRecording && recordingMode === 'looped' && currentLoop === 1"
+        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300"
+        :class="{ 'bg-stone-400 cursor-not-allowed focus:ring-stone-200': savingLoop }"
         :disabled="savingLoop"
-        @click="handleButtonClick"
-        :aria-label="getButtonAriaLabel()"
+        @click="saveCurrentLoopAndContinue"
+        :aria-label="'Save current loop and continue recording'"
       >
-        <!-- Not Recording State -->
-        <div 
-          v-if="!isRecording"
-          class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center"
-        >
-          <div class="w-16 h-16 bg-amber-500 rounded-full" v-if="recordingMode === 'single'"></div>
-          <div class="w-16 h-16 bg-stone-500 rounded-full" v-else></div>
-        </div>
-        
-        <!-- Recording State -->
-        <div 
-          v-else
-          class="w-15 h-15 bg-stone-50 flex items-center justify-center"
-          :class="{
-            'rounded-sm': recordingMode === 'single',
-            'rounded-full': recordingMode === 'looped'
-          }"
-        >
-          <!-- Single Mode: Square Stop Button -->
-          <div 
-            v-if="recordingMode === 'single'"
-            class="w-16 h-16 bg-amber-600 rounded-sm"
-          ></div>
-          
-          <!-- Looped Mode: Loop Arrow Icon, Stop Button, or Saving Spinner -->
-          <div v-if="savingLoop" class="flex items-center justify-center pointer-events-none">
-            <!-- <svg class="w-8 h-8 text-stone-600 animate-spin pointer-events-none" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg> -->
-          </div>
-          <!-- Show stop button (square) when loop duration is set and we're on loop 2+ -->
-          <div 
-            v-else-if="loopDuration && currentLoop > 1"
-            class="w-10 h-10 bg-stone-600 rounded-sm"
-          ></div>
-          <!-- Show loop arrow icon for first loop -->
+        <div class="w-15 h-15 bg-stone-50 rounded-full flex items-center justify-center">
           <svg 
-            v-else
-            class="w-10 h-10 text-stone-600 pointer-events-none" 
+            class="w-8 h-8 text-stone-600 pointer-events-none" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -70,11 +29,41 @@
         </div>
       </button>
       
-      <!-- Loop indicator for looped recording -->
-      <!-- <div 
-        v-if="isRecording && recordingMode === 'looped'" 
-        class="absolute inset-0 border-4 border-stone-300 rounded-full animate-spin opacity-50"
-      ></div> -->
+      <!-- Main Record/Stop Button -->
+      <button 
+        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50"
+        :class="{
+          'bg-amber-500 w-20 h-20 hover:bg-amber-600 focus:ring-amber-300': !isRecording && recordingMode === 'single',
+          'bg-stone-500 w-20 h-20 hover:bg-stone-600 focus:ring-stone-300': !isRecording && recordingMode === 'looped',
+          'bg-amber-600 w-16 h-16 animate-pulse focus:ring-amber-300': isRecording && recordingMode === 'single',
+          'bg-stone-600 w-16 h-16 focus:ring-stone-300': isRecording && recordingMode === 'looped'
+        }"
+        @click="handleMainButtonClick"
+        :aria-label="getMainButtonAriaLabel()"
+      >
+        <!-- Not Recording State -->
+        <div 
+          v-if="!isRecording"
+          class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center"
+        >
+          <div class="w-16 h-16 bg-amber-500 rounded-full" v-if="recordingMode === 'single'"></div>
+          <div class="w-16 h-16 bg-stone-500 rounded-full" v-else></div>
+        </div>
+        
+        <!-- Recording State - Always show stop button (square) when recording -->
+        <div 
+          v-else
+          class="w-5 h-5 bg-stone-50 flex items-center justify-center rounded-sm"
+        >
+          <div 
+            class="w-0 h-0 rounded-sm"
+            :class="{
+              'bg-amber-600': recordingMode === 'single',
+              'bg-stone-600': recordingMode === 'looped'
+            }"
+          ></div>
+        </div>
+      </button>
     </div>
 
     <!-- Recording Status -->
@@ -586,6 +575,17 @@ export default {
       }
     }
     
+    const handleMainButtonClick = () => {
+      // If not recording, start recording
+      if (!isRecording.value) {
+        toggleRecording()
+        return
+      }
+      
+      // If recording, always stop (for both single and looped modes)
+      stopRecording()
+    }
+    
     const getButtonAriaLabel = () => {
       if (savingLoop.value) {
         return 'Saving current loop...'
@@ -605,6 +605,14 @@ export default {
           return 'Click to save loop and continue, double-click to stop recording'
         }
       }
+    }
+    
+    const getMainButtonAriaLabel = () => {
+      if (!isRecording.value) {
+        return `Start ${props.recordingMode} recording`
+      }
+      
+      return 'Stop recording'
     }
     
     const toggleRecording = () => {
@@ -849,9 +857,12 @@ export default {
       savingLoop,
       lastClickTime,
       handleButtonClick,
+      handleMainButtonClick,
       getButtonAriaLabel,
+      getMainButtonAriaLabel,
       toggleRecording,
       resetSession,
+      saveCurrentLoopAndContinue,
       formatTime
     }
   }

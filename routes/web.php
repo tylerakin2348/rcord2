@@ -23,6 +23,18 @@ Route::get('/system-info', function () {
     return view('app');
 });
 
+Route::get('/system-info/storage', function () {
+    return view('app');
+});
+
+Route::get('/system-info/activity', function () {
+    return view('app');
+});
+
+Route::get('/system-info/sessions', function () {
+    return view('app');
+});
+
 // Authentication routes
 Route::post('/api/register', [AuthController::class, 'register']);
 Route::post('/api/login', [AuthController::class, 'login']);
@@ -30,6 +42,11 @@ Route::post('/api/logout', [AuthController::class, 'logout'])->middleware('auth:
 Route::get('/api/user', [AuthController::class, 'user'])->middleware('auth:web');
 Route::get('/api/user/stats', [UserController::class, 'stats'])->middleware('auth:web');
 Route::get('/api/system/stats', [UserController::class, 'systemStats'])->middleware('auth:web');
+
+// Detailed report routes (admin)
+Route::get('/api/system/users-storage', [UserController::class, 'usersStorage'])->middleware('auth:web');
+Route::get('/api/system/users-activity', [UserController::class, 'usersActivity'])->middleware('auth:web');
+Route::get('/api/system/users-sessions', [UserController::class, 'usersSessions'])->middleware('auth:web');
 
 // User CRUD routes (protected)
 Route::middleware('auth:web')->group(function () {

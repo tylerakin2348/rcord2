@@ -167,4 +167,171 @@ class UserController extends Controller
             'systemStartDate' => User::orderBy('created_at')->first()?->created_at->format('Y-m-d'),
         ]);
     }
+
+    /**
+     * Get storage usage breakdown by user (admin only).
+     */
+    public function usersStorage(Request $request)
+    {
+        // TODO: Add admin role check when authentication roles are implemented
+        
+        $users = User::with(['recordings'])
+            ->get()
+            ->map(function ($user) {
+                $totalStorage = $user->recordings->sum('file_size') ?? 0;
+                $recordingCount = $user->recordings->count();
+                
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'totalStorage' => $totalStorage,
+                    'recordingCount' => $recordingCount,
+                    'averageFileSize' => $recordingCount > 0 ? round($totalStorage / $recordingCount) : 0,
+                    'storagePercentage' => 0, // Will be calculated in summary
+                    'accountCreated' => $user->created_at,
+                ];
+            })
+            ->sortByDesc('totalStorage')
+            ->values();
+
+        // Calculate total system storage and percentages
+        $totalSystemStorage = $users->sum('totalStorage');
+        $activeUsers = $users->where('totalStorage', '>', 0)->count();
+        $averageStoragePerUser = $activeUsers > 0 ? round($totalSystemStorage / $activeUsers) : 0;
+
+        // Calculate percentages
+        $users = $users->map(function ($user) use ($totalSystemStorage) {
+            $user['storagePercentage'] = $totalSystemStorage > 0 ? 
+                round(($user['totalStorage'] / $totalSystemStorage) * 100, 2) : 0;
+            return $user;
+        });
+
+        return response()->json([
+            'users' => $users,
+            'summary' => [
+                'totalStorage' => $totalSystemStorage,
+                'activeUsers' => $activeUsers,
+                'averagePerUser' => $averageStoragePerUser,
+            ]
+        ]);
+    }
+
+    /**
+     * Get activity breakdown by user (admin only).
+     */
+    public function usersActivity(Request $request)
+    {
+        // TODO: Add admin role check when authentication roles are implemented
+        
+        $users = User::with(['recordings', 'recordingSessions'])
+            ->get()
+            ->map(function ($user) {
+                $totalRecordings = $user->recordings->count();
+                $totalSessions = $user->recordingSessions->count();
+                $totalDuration = $user->recordings->sum('duration') ?? 0;
+                
+                // Recent activity (last 30 days)
+                $recentRecordingsCount = $user->recordings()
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->count();
+                $recentSessionsCount = $user->recordingSessions()
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->count();
+                
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'totalRecordings' => $totalRecordings,
+                    'totalSessions' => $totalSessions,
+                    'totalDuration' => $totalDuration,
+                    'recentRecordingsCount' => $recentRecordingsCount,
+                    'recentSessionsCount' => $recentSessionsCount,
+                    'accountCreated' => $user->created_at,
+                ];
+            })
+            ->sortByDesc('totalRecordings')
+            ->values();
+
+        // Summary calculations
+        $totalRecordings = $users->sum('totalRecordings');
+        $totalSessions = $users->sum('totalSessions');
+        $activeUsers = $users->where('totalRecordings', '>', 0)->count();
+        $averagePerUser = $activeUsers > 0 ? round($totalRecordings / $activeUsers, 1) : 0;
+
+        return response()->json([
+            'users' => $users,
+            'summary' => [
+                'totalRecordings' => $totalRecordings,
+                'totalSessions' => $totalSessions,
+                'activeUsers' => $activeUsers,
+                'averagePerUser' => $averagePerUser,
+            ]
+        ]);
+    }
+
+    /**
+     * Get sessions breakdown by user (admin only).
+     */
+    public function usersSessions(Request $request)
+    {
+        // TODO: Add admin role check when authentication roles are implemented
+        
+        $users = User::with(['recordingSessions', 'recordings'])
+            ->get()
+            ->map(function ($user) {
+                $totalSessions = $user->recordingSessions->count();
+                $totalRecordings = $user->recordings->count();
+                
+                // Recent sessions (last 30 days)
+                $recentSessions = $user->recordingSessions()
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->count();
+                
+                // Calculate session statistics
+                $totalDuration = $user->recordingSessions->sum('duration') ?? 0;
+                $activeSessions = $user->recordingSessions()
+                    ->where('ended_at', null)
+                    ->count();
+                
+                $averageRecordingsPerSession = $totalSessions > 0 ? 
+                    round($totalRecordings / $totalSessions, 1) : 0;
+                
+                $lastSession = $user->recordingSessions()
+                    ->latest()
+                    ->first()?->created_at;
+                
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'totalSessions' => $totalSessions,
+                    'activeSessions' => $activeSessions,
+                    'totalDuration' => $totalDuration,
+                    'recentSessions' => $recentSessions,
+                    'averageRecordingsPerSession' => $averageRecordingsPerSession,
+                    'lastSession' => $lastSession,
+                ];
+            })
+            ->sortByDesc('totalSessions')
+            ->values();
+
+        // Summary calculations
+        $totalSessions = $users->sum('totalSessions');
+        $activeSessions = $users->sum('activeSessions');
+        $totalDuration = $users->sum('totalDuration');
+        $usersWithSessions = $users->where('totalSessions', '>', 0)->count();
+        $averageDuration = $totalSessions > 0 ? round($totalDuration / $totalSessions) : 0;
+
+        return response()->json([
+            'users' => $users,
+            'summary' => [
+                'totalSessions' => $totalSessions,
+                'activeSessions' => $activeSessions,
+                'averageDuration' => $averageDuration,
+                'usersWithSessions' => $usersWithSessions,
+            ]
+        ]);
+    }
 }

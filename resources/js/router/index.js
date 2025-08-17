@@ -6,6 +6,9 @@ import LoggedInLanding from '../components/LoggedInLanding.vue';
 import RecordingsPage from '../components/RecordingsPage.vue';
 import UserProfile from '../components/UserProfile.vue';
 import SystemInfo from '../components/SystemInfo.vue';
+import UserStorageReport from '../components/UserStorageReport.vue';
+import UserActivityReport from '../components/UserActivityReport.vue';
+import UserSessionsReport from '../components/UserSessionsReport.vue';
 
 const routes = [
   {
@@ -30,6 +33,24 @@ const routes = [
     path: '/system-info',
     name: 'system-info',
     component: SystemInfo,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/system-info/storage',
+    name: 'user-storage-report',
+    component: UserStorageReport,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/system-info/activity',
+    name: 'user-activity-report',
+    component: UserActivityReport,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/system-info/sessions',
+    name: 'user-sessions-report',
+    component: UserSessionsReport,
     meta: { requiresAuth: true }
   }
 ];

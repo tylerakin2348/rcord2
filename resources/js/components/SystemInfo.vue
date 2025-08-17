@@ -55,7 +55,10 @@
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+        <router-link 
+          to="/system-info/activity" 
+          class="bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        >
           <div class="p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0 p-2 bg-green-100 rounded-lg">
@@ -66,12 +69,16 @@
               <div class="ml-4">
                 <p class="text-sm font-medium text-stone-500">Total Recordings</p>
                 <p class="text-2xl font-bold text-stone-900">{{ systemStats.totalRecordings }}</p>
+                <p class="text-xs text-stone-400 mt-1">Click for details →</p>
               </div>
             </div>
           </div>
-        </div>
+        </router-link>
 
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+        <router-link 
+          to="/system-info/storage" 
+          class="bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        >
           <div class="p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0 p-2 bg-purple-100 rounded-lg">
@@ -82,12 +89,16 @@
               <div class="ml-4">
                 <p class="text-sm font-medium text-stone-500">Storage Used</p>
                 <p class="text-2xl font-bold text-stone-900">{{ formatFileSize(systemStats.totalStorageBytes) }}</p>
+                <p class="text-xs text-stone-400 mt-1">Click for details →</p>
               </div>
             </div>
           </div>
-        </div>
+        </router-link>
 
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+        <router-link 
+          to="/system-info/sessions" 
+          class="bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        >
           <div class="p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0 p-2 bg-orange-100 rounded-lg">
@@ -98,10 +109,11 @@
               <div class="ml-4">
                 <p class="text-sm font-medium text-stone-500">Total Sessions</p>
                 <p class="text-2xl font-bold text-stone-900">{{ systemStats.totalSessions }}</p>
+                <p class="text-xs text-stone-400 mt-1">Click for details →</p>
               </div>
             </div>
           </div>
-        </div>
+        </router-link>
       </div>
 
       <!-- Additional Stats -->

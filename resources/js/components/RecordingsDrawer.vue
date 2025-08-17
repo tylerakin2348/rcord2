@@ -6,7 +6,7 @@
             class="flex justify-between items-center mb-4"
         >
             <h3 class="text-xl font-semibold text-stone-800">
-               Recording Sessions
+               Saved Memos
             </h3>
             <button
                 @click="$emit('close')"
@@ -33,11 +33,7 @@
             v-if="!isMobile"
             class="text-xl font-semibold text-stone-800 mb-6"
         >
-            {{
-                recordingMode === 'looped'
-                    ? 'Recording Sessions'
-                    : 'Recent Recordings'
-            }}
+           Saved Memos
         </h3>
 
         <!-- Recordings List with Scroll -->
@@ -426,7 +422,7 @@
                                     </div>
                                     <div class="flex-1">
                                         <div class="font-medium text-stone-900">
-                                            {{ session.title }}
+                                            Grouped Memos | {{ session.title }}
                                         </div>
                                         <div class="text-sm text-stone-500">
                                             {{
@@ -515,13 +511,19 @@
                                     class="flex items-center justify-between p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-200 transition-colors duration-200"
                                 >
                                     <div class="flex items-center space-x-3">
-                                        <div
-                                            class="p-1.5 rounded-lg bg-stone-200"
+                                         <svg
+                                            class="w-5 h-5 text-stone-600"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
                                         >
-                                            <div
-                                                class="w-1.5 h-1.5 bg-stone-600 rounded-full"
-                                            ></div>
-                                        </div>
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                                            />
+                                        </svg>
                                         <div>
                                             <div
                                                 class="text-sm font-medium text-stone-800"

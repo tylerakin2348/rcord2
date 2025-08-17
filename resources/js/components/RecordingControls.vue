@@ -40,13 +40,19 @@
             class="w-16 h-16 bg-amber-600 rounded-sm"
           ></div>
           
-          <!-- Looped Mode: Loop Arrow Icon or Saving Spinner -->
+          <!-- Looped Mode: Loop Arrow Icon, Stop Button, or Saving Spinner -->
           <div v-if="savingLoop" class="flex items-center justify-center pointer-events-none">
             <!-- <svg class="w-8 h-8 text-stone-600 animate-spin pointer-events-none" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg> -->
           </div>
+          <!-- Show stop button (square) when loop duration is set and we're on loop 2+ -->
+          <div 
+            v-else-if="loopDuration && currentLoop > 1"
+            class="w-10 h-10 bg-stone-600 rounded-sm"
+          ></div>
+          <!-- Show loop arrow icon for first loop -->
           <svg 
             v-else
             class="w-10 h-10 text-stone-600 pointer-events-none" 
@@ -89,8 +95,8 @@
     <!-- Looped Recording Layout -->
     <div v-if="recordingMode === 'looped'" class="flex items-center justify-between">
       <!-- Loop Progress (Left) -->
-      <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
-        <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Loop Progress</div>
+      <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording || currentLoop === 1 }">
+        <div class="text-xs mb-2" :class="(isRecording && currentLoop > 1) ? 'text-stone-600' : 'text-stone-400'">Loop Progress</div>
         <div class="relative w-16 h-16">
           <!-- Background circle -->
           <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
@@ -99,11 +105,12 @@
               cy="32"
               r="28"
               fill="none"
-              :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
+              :stroke="(isRecording && currentLoop > 1) ? '#d6d3d1' : '#e7e5e4'"
               stroke-width="3"
             />
-            <!-- Loop progress fill circle -->
+            <!-- Loop progress fill circle - only show if we have a loop duration and are on loop 2+ -->
             <circle
+              v-if="loopDuration && currentLoop > 1"
               cx="32"
               cy="32"
               r="28"
@@ -112,14 +119,14 @@
               stroke-width="3"
               stroke-linecap="round"
               :stroke-dasharray="`${2 * Math.PI * 28}`"
-              :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - ((recordingTime % loopDuration) / loopDuration))}` : `${2 * Math.PI * 28}`"
+              :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - (recordingTime / loopDuration))}` : `${2 * Math.PI * 28}`"
               class="transition-all duration-1000"
             />
           </svg>
           <!-- Center percentage -->
           <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
-              {{ isRecording ? Math.round(((recordingTime % loopDuration) / loopDuration) * 100) : 0 }}%
+            <span class="text-xs font-mono" :class="(isRecording && currentLoop > 1 && loopDuration) ? 'text-stone-700' : 'text-stone-400'">
+              {{ (isRecording && currentLoop > 1 && loopDuration) ? Math.round((recordingTime / loopDuration) * 100) : 0 }}%
             </span>
           </div>
         </div>
@@ -248,7 +255,7 @@ export default {
     const totalRecordingTime = ref(0)
     const audioLevel = ref(0)
     const currentLoop = ref(1)
-    const loopDuration = ref(10) // 10 seconds per loop
+    const loopDuration = ref(null) // Will be set based on first loop completion
     const savingLoop = ref(false) // Indicates when a loop is being saved
     const lastClickTime = ref(0) // Track click timing for double-click detection
     
@@ -352,6 +359,7 @@ export default {
             recordingTime.value = 0
             totalRecordingTime.value = 0
             currentLoop.value = 1
+            loopDuration.value = null // Reset loop duration for next session
             audioLevel.value = 0
             
             // Clean up
@@ -373,9 +381,12 @@ export default {
             totalRecordingTime.value++
             
             // Check if we've completed a loop
-            if (recordingTime.value >= loopDuration.value) {
+            if (loopDuration.value && recordingTime.value >= loopDuration.value) {
               recordingTime.value = 0
               currentLoop.value++
+            } else if (!loopDuration.value && currentLoop.value === 1) {
+              // First loop - duration will be set when user saves the loop
+              // No automatic loop progression yet
             }
           }
         }, 1000)
@@ -427,14 +438,20 @@ export default {
       
       // If recording and in looped mode
       if (props.recordingMode === 'looped') {
-        // Double click (within 500ms) stops recording
-        if (timeDiff < 500) {
-          console.log('Double click detected - stopping recording')
+        // If we have a loop duration set and we're on loop 2+, act as stop button
+        if (loopDuration.value && currentLoop.value > 1) {
+          console.log('Stop button clicked - stopping recording')
           stopRecording()
         } else {
-          // Single click saves current loop and continues
-          console.log('Single click - saving current loop')
-          saveCurrentLoopAndContinue()
+          // First loop - check for double click to stop, single click to save and continue
+          if (timeDiff < 500) {
+            console.log('Double click detected - stopping recording')
+            stopRecording()
+          } else {
+            // Single click saves current loop and continues
+            console.log('Single click - saving current loop')
+            saveCurrentLoopAndContinue()
+          }
         }
       }
     }
@@ -451,7 +468,12 @@ export default {
       if (props.recordingMode === 'single') {
         return 'Stop recording'
       } else {
-        return 'Click to save loop and continue, double-click to stop recording'
+        // Looped mode
+        if (loopDuration.value && currentLoop.value > 1) {
+          return 'Stop recording'
+        } else {
+          return 'Click to save loop and continue, double-click to stop recording'
+        }
       }
     }
     
@@ -475,6 +497,12 @@ export default {
       savingLoop.value = true
       
       try {
+        // If this is the first loop completion, set the loop duration
+        if (currentLoop.value === 1 && !loopDuration.value) {
+          loopDuration.value = recordingTime.value
+          console.log(`Loop duration set to ${loopDuration.value} seconds based on first loop`)
+        }
+        
         // Save the current loop as an individual recording
         const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
         
@@ -613,6 +641,7 @@ export default {
       sessionTitle.value = ''
       sessionDescription.value = ''
       totalRecordingTime.value = 0
+      loopDuration.value = null // Reset loop duration
     }
     
     // Watch for recording mode changes to reset session

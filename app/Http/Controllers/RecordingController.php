@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Recording;
 use App\Models\RecordingType;
+use App\Models\RecordingSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,10 @@ class RecordingController extends Controller
                 'size' => 'required|string',
                 'mode' => 'required|string|in:single,looped',
                 'loops' => 'nullable|integer',
+                'session_id' => 'nullable|integer|exists:recording_sessions,id',
+                'loop_number' => 'nullable|integer',
+                'session_title' => 'nullable|string|max:255',
+                'session_description' => 'nullable|string',
             ]);
 
             try {
@@ -86,19 +91,53 @@ class RecordingController extends Controller
                 $durationParts = explode(':', $request->duration);
                 $durationSeconds = ((int)$durationParts[0] * 60) + (int)$durationParts[1];
 
-                // Generate title based on mode and timestamp
-                $title = ucfirst($request->mode) . ' Recording - ' . now()->format('M j, Y g:i A');
-                
-                // Generate description
-                $description = 'Recorded in ' . $request->mode . ' mode';
-                if ($request->mode === 'looped' && $request->loops) {
-                    $description .= ' with ' . $request->loops . ' loops';
-                }
-
                 // Get or create recording type
                 $recordingType = RecordingType::findByName($request->mode);
                 if (!$recordingType) {
                     throw new \Exception("Invalid recording mode: {$request->mode}");
+                }
+
+                // Handle recording session
+                $recordingSession = null;
+                $loopNumber = null;
+
+                if ($request->mode === 'looped') {
+                    if ($request->session_id) {
+                        // Use existing session
+                        $recordingSession = RecordingSession::where('id', $request->session_id)
+                            ->where('user_id', Auth::id())
+                            ->firstOrFail();
+                        
+                        // Get the next loop number
+                        $loopNumber = $recordingSession->recordings()->count() + 1;
+                    } else {
+                        // Create new session for looped recording
+                        $sessionTitle = $request->session_title ?? ('Looped Session - ' . now()->format('M j, Y g:i A'));
+                        $sessionDescription = $request->session_description ?? 'Looped recording session';
+
+                        $recordingSession = RecordingSession::create([
+                            'title' => $sessionTitle,
+                            'description' => $sessionDescription,
+                            'user_id' => Auth::id(),
+                            'recording_type_id' => $recordingType->id,
+                            'loop_duration' => $durationSeconds, // Use first recording's duration as loop duration
+                        ]);
+                        
+                        $loopNumber = 1;
+                    }
+                }
+
+                // Generate title based on mode and session context
+                if ($recordingSession) {
+                    $title = $recordingSession->title . ' - Loop ' . $loopNumber;
+                } else {
+                    $title = ucfirst($request->mode) . ' Recording - ' . now()->format('M j, Y g:i A');
+                }
+                
+                // Generate description
+                $description = 'Recorded in ' . $request->mode . ' mode';
+                if ($request->mode === 'looped' && $request->loops) {
+                    $description .= ' (loop ' . $loopNumber . ')';
                 }
 
                 // Create recording record
@@ -112,7 +151,14 @@ class RecordingController extends Controller
                     'file_size' => $fileSize,
                     'user_id' => Auth::id(),
                     'recording_type_id' => $recordingType->id,
+                    'recording_session_id' => $recordingSession ? $recordingSession->id : null,
+                    'loop_number' => $loopNumber,
                 ]);
+
+                // Update session stats if applicable
+                if ($recordingSession) {
+                    $recordingSession->updateSessionStats();
+                }
 
                 return response()->json([
                     'message' => 'Recording saved successfully',
@@ -126,6 +172,8 @@ class RecordingController extends Controller
                         'formatted_file_size' => $recording->formatted_file_size,
                         'created_at' => $recording->created_at,
                         'file_url' => Storage::url($filePath),
+                        'loop_number' => $recording->loop_number,
+                        'session_id' => $recording->recording_session_id,
                     ]
                 ], 201);
 

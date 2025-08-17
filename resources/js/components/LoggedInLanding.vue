@@ -379,9 +379,9 @@ const toggleHeader = () => {
 };
 
 const onRecordingComplete = (recordingData) => {
-  // When a recording is completed, refresh the recordings drawer
+  // Refresh the recordings drawer to show the new recording
   if (recordingsDrawer.value) {
-    recordingsDrawer.value.loadRecordingsFromAPI();
+    recordingsDrawer.value.refreshData();
   }
 };
 

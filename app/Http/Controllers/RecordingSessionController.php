@@ -1,0 +1,214 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\RecordingSession;
+use App\Models\RecordingType;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+
+class RecordingSessionController extends Controller
+{
+    /**
+     * Display a listing of recording sessions for the authenticated user
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = Auth::user()->recordingSessions()->with(['recordingType', 'recordings' => function ($query) {
+            $query->orderBy('loop_number')->orderBy('created_at');
+        }]);
+
+        // Filter by recording type if provided
+        if ($request->has('type')) {
+            $recordingType = RecordingType::where('name', $request->type)->first();
+            if ($recordingType) {
+                $query->where('recording_type_id', $recordingType->id);
+            }
+        }
+
+        $sessions = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'sessions' => $sessions->map(function ($session) {
+                return [
+                    'id' => $session->id,
+                    'title' => $session->title,
+                    'description' => $session->description,
+                    'recording_type' => $session->recordingType->name,
+                    'session_duration' => $session->session_duration,
+                    'formatted_session_duration' => $session->formatted_session_duration,
+                    'total_loops' => $session->total_loops,
+                    'loop_duration' => $session->loop_duration,
+                    'settings' => $session->settings,
+                    'recordings_count' => $session->recordings->count(),
+                    'recordings' => $session->recordings->map(function ($recording) {
+                        return [
+                            'id' => $recording->id,
+                            'filename' => $recording->filename,
+                            'file_path' => $recording->file_path,
+                            'title' => $recording->title,
+                            'duration' => $recording->duration,
+                            'formatted_duration' => $recording->formatted_duration,
+                            'file_size' => $recording->file_size,
+                            'formatted_file_size' => $recording->formatted_file_size,
+                            'loop_number' => $recording->loop_number,
+                            'created_at' => $recording->created_at,
+                        ];
+                    }),
+                    'created_at' => $session->created_at,
+                    'updated_at' => $session->updated_at,
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Store a new recording session
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'recording_type' => 'required|string|in:single,looped',
+            'loop_duration' => 'nullable|integer|min:1',
+            'settings' => 'nullable|array',
+        ]);
+
+        $recordingType = RecordingType::where('name', $validated['recording_type'])->firstOrFail();
+
+        $session = RecordingSession::create([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'user_id' => Auth::id(),
+            'recording_type_id' => $recordingType->id,
+            'loop_duration' => $validated['loop_duration'],
+            'settings' => $validated['settings'] ?? null,
+        ]);
+
+        $session->load(['recordingType', 'recordings']);
+
+        return response()->json([
+            'session' => [
+                'id' => $session->id,
+                'title' => $session->title,
+                'description' => $session->description,
+                'recording_type' => $session->recordingType->name,
+                'session_duration' => $session->session_duration,
+                'formatted_session_duration' => $session->formatted_session_duration,
+                'total_loops' => $session->total_loops,
+                'loop_duration' => $session->loop_duration,
+                'settings' => $session->settings,
+                'recordings_count' => $session->recordings->count(),
+                'created_at' => $session->created_at,
+                'updated_at' => $session->updated_at,
+            ]
+        ], 201);
+    }
+
+    /**
+     * Display the specified recording session
+     */
+    public function show(RecordingSession $session): JsonResponse
+    {
+        // Ensure user can only access their own sessions
+        if ($session->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $session->load(['recordingType', 'recordings' => function ($query) {
+            $query->orderBy('loop_number')->orderBy('created_at');
+        }]);
+
+        return response()->json([
+            'session' => [
+                'id' => $session->id,
+                'title' => $session->title,
+                'description' => $session->description,
+                'recording_type' => $session->recordingType->name,
+                'session_duration' => $session->session_duration,
+                'formatted_session_duration' => $session->formatted_session_duration,
+                'total_loops' => $session->total_loops,
+                'loop_duration' => $session->loop_duration,
+                'settings' => $session->settings,
+                'recordings' => $session->recordings->map(function ($recording) {
+                    return [
+                        'id' => $recording->id,
+                        'filename' => $recording->filename,
+                        'file_path' => $recording->file_path,
+                        'duration' => $recording->duration,
+                        'formatted_duration' => $recording->formatted_duration,
+                        'file_size' => $recording->file_size,
+                        'formatted_file_size' => $recording->formatted_file_size,
+                        'loop_number' => $recording->loop_number,
+                        'created_at' => $recording->created_at,
+                    ];
+                }),
+                'created_at' => $session->created_at,
+                'updated_at' => $session->updated_at,
+            ]
+        ]);
+    }
+
+    /**
+     * Update the specified recording session
+     */
+    public function update(Request $request, RecordingSession $session): JsonResponse
+    {
+        // Ensure user can only update their own sessions
+        if ($session->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'settings' => 'nullable|array',
+        ]);
+
+        $session->update($validated);
+        $session->load(['recordingType', 'recordings']);
+
+        return response()->json([
+            'session' => [
+                'id' => $session->id,
+                'title' => $session->title,
+                'description' => $session->description,
+                'recording_type' => $session->recordingType->name,
+                'session_duration' => $session->session_duration,
+                'formatted_session_duration' => $session->formatted_session_duration,
+                'total_loops' => $session->total_loops,
+                'loop_duration' => $session->loop_duration,
+                'settings' => $session->settings,
+                'recordings_count' => $session->recordings->count(),
+                'created_at' => $session->created_at,
+                'updated_at' => $session->updated_at,
+            ]
+        ]);
+    }
+
+    /**
+     * Remove the specified recording session and all associated recordings
+     */
+    public function destroy(RecordingSession $session): JsonResponse
+    {
+        // Ensure user can only delete their own sessions
+        if ($session->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Delete associated recordings first (this will also delete the files)
+        foreach ($session->recordings as $recording) {
+            // Delete the file from storage
+            if (file_exists(storage_path('app/' . $recording->file_path))) {
+                unlink(storage_path('app/' . $recording->file_path));
+            }
+            $recording->delete();
+        }
+
+        $session->delete();
+
+        return response()->json(['message' => 'Recording session deleted successfully']);
+    }
+}

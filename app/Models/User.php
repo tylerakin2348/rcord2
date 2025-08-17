@@ -53,4 +53,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Recording::class);
     }
+
+    /**
+     * Get the recording sessions for the user.
+     */
+    public function recordingSessions()
+    {
+        return $this->hasMany(RecordingSession::class);
+    }
 }

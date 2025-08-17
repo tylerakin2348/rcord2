@@ -16,7 +16,9 @@ class Recording extends Model
         'mime_type',
         'file_size',
         'user_id',
-        'recording_type_id'
+        'recording_type_id',
+        'recording_session_id',
+        'loop_number'
     ];
 
     protected $appends = [
@@ -32,6 +34,11 @@ class Recording extends Model
     public function recordingType(): BelongsTo
     {
         return $this->belongsTo(RecordingType::class);
+    }
+
+    public function recordingSession(): BelongsTo
+    {
+        return $this->belongsTo(RecordingSession::class);
     }
 
     public function getFormattedDurationAttribute()

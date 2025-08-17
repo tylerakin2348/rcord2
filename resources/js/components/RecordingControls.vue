@@ -190,7 +190,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 export default {
   name: 'RecordingControls',
@@ -209,6 +209,11 @@ export default {
     const audioLevel = ref(0)
     const currentLoop = ref(1)
     const loopDuration = ref(10) // 10 seconds per loop
+    
+    // Session management for looped recordings
+    const currentSession = ref(null)
+    const sessionTitle = ref('')
+    const sessionDescription = ref('')
     
     // MediaRecorder and Audio
     let mediaRecorder = null
@@ -264,6 +269,9 @@ export default {
           const now = new Date()
           const fileName = `${props.recordingMode}-recording-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
           const fileSize = formatFileSize(blob.size)
+          
+          // Calculate final loop count for looped recordings
+          const finalLoopCount = props.recordingMode === 'looped' ? currentLoop.value : 1
           const duration = formatTime(props.recordingMode === 'looped' ? totalRecordingTime.value : recordingTime.value)
           
           const fileData = {
@@ -278,7 +286,7 @@ export default {
           
           // Add loops info for looped recordings
           if (props.recordingMode === 'looped') {
-            fileData.loops = currentLoop.value
+            fileData.loops = finalLoopCount
           }
           
           // Save to API
@@ -287,7 +295,7 @@ export default {
           // Emit completion event
           emit('recording-complete', fileData)
           
-          // Reset
+          // Reset after successful save
           recordedChunks = []
           allRecordedChunks = []
           recordingTime.value = 0
@@ -362,6 +370,22 @@ export default {
         
         if (fileData.mode === 'looped') {
           formData.append('loops', fileData.loops)
+          
+          // If we have a current session, use it
+          if (currentSession.value) {
+            formData.append('session_id', currentSession.value.id)
+            // Loop number should be the next one in the session
+            formData.append('loop_number', (currentSession.value.recordings_count || 0) + 1)
+          } else {
+            // Create session title and description for new session
+            const timestamp = new Date().toLocaleString()
+            const title = sessionTitle.value || `Looped Session - ${timestamp}`
+            const description = sessionDescription.value || 'Looped recording session'
+            
+            formData.append('session_title', title)
+            formData.append('session_description', description)
+            formData.append('loop_number', 1) // First loop in new session
+          }
         }
         
         // Use axios instead of fetch for better authentication handling
@@ -372,6 +396,22 @@ export default {
         })
         
         console.log('Recording saved successfully:', response.data)
+        
+        // If this was a looped recording and we got a session back, store it
+        if (fileData.mode === 'looped' && response.data.recording.session_id) {
+          if (!currentSession.value) {
+            // Fetch the session details for future loops
+            try {
+              const sessionResponse = await window.axios.get(`/api/recording-sessions/${response.data.recording.session_id}`)
+              currentSession.value = sessionResponse.data.session
+            } catch (sessionError) {
+              console.error('Error fetching session details:', sessionError)
+            }
+          } else {
+            // Update the current session's recording count
+            currentSession.value.recordings_count = (currentSession.value.recordings_count || 0) + 1
+          }
+        }
         
       } catch (error) {
         console.error('Error saving recording to API:', error)
@@ -384,9 +424,10 @@ export default {
           if (error.response.status === 401) {
             alert('Authentication required. Please log in and try again.')
           } else if (error.response.status === 422) {
-            alert('Invalid recording data. Please try again.')
+            console.error('Validation errors:', error.response.data.errors)
+            alert('Invalid recording data. Please check the console for details.')
           } else {
-            alert('Error saving recording. Please try again.')
+            alert(`Error saving recording: ${error.response.data.message || 'Unknown error'}`)
           }
         } else {
           alert('Network error. Please check your connection and try again.')
@@ -408,6 +449,22 @@ export default {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     }
     
+    // Reset session when switching modes
+    const resetSession = () => {
+      currentSession.value = null
+      currentLoop.value = 1
+      sessionTitle.value = ''
+      sessionDescription.value = ''
+      totalRecordingTime.value = 0
+    }
+    
+    // Watch for recording mode changes to reset session
+    watch(() => props.recordingMode, (newMode, oldMode) => {
+      if (oldMode && newMode !== oldMode) {
+        resetSession()
+      }
+    })
+    
     // Cleanup on unmount
     onUnmounted(() => {
       if (isRecording.value) {
@@ -422,7 +479,11 @@ export default {
       audioLevel,
       currentLoop,
       loopDuration,
+      currentSession,
+      sessionTitle,
+      sessionDescription,
       toggleRecording,
+      resetSession,
       formatTime
     }
   }

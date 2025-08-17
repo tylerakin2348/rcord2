@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\RecordingTypeController;
+use App\Http\Controllers\RecordingSessionController;
 
 Route::get('/', function () {
     return view('app');
@@ -37,6 +38,13 @@ Route::middleware('auth:web')->group(function () {
     Route::post('/api/recordings', [RecordingController::class, 'store']);
     Route::put('/api/recordings/{recording}', [RecordingController::class, 'update']);
     Route::delete('/api/recordings/{recording}', [RecordingController::class, 'destroy']);
+    
+    // Recording session routes (all require authentication)
+    Route::get('/api/recording-sessions', [RecordingSessionController::class, 'index']);
+    Route::get('/api/recording-sessions/{session}', [RecordingSessionController::class, 'show']);
+    Route::post('/api/recording-sessions', [RecordingSessionController::class, 'store']);
+    Route::put('/api/recording-sessions/{session}', [RecordingSessionController::class, 'update']);
+    Route::delete('/api/recording-sessions/{session}', [RecordingSessionController::class, 'destroy']);
 });
 
 // API routes for the Vue app can be added here

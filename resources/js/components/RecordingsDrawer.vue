@@ -286,8 +286,122 @@
                     <div
                         v-for="session in sessions"
                         :key="session.id"
-                        class="bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
                     >
+                        <!-- Simple Card for Single Recording Sessions -->
+                        <div
+                            v-if="session.recordings_count === 1"
+                            class="bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200 p-4"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 flex-1">
+                                    <div class="p-2 rounded-lg bg-stone-100">
+                                        <svg
+                                            class="w-5 h-5 text-stone-600"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-medium text-stone-900">
+                                            {{ session.title }}
+                                        </div>
+                                        <div class="text-sm text-stone-500">
+                                            {{ session.formatted_session_duration }}
+                                            • {{ session.recordings[0]?.formatted_file_size }}
+                                        </div>
+                                        <div
+                                            v-if="session.description"
+                                            class="text-xs text-stone-400 mt-1"
+                                        >
+                                            {{ session.description }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Play/Pause Button -->
+                                    <button
+                                        @click="playFile(session.recordings[0])"
+                                        class="p-2 rounded-full transition-colors duration-200"
+                                        :class="{
+                                            'bg-amber-100 text-amber-600': currentlyPlayingId !== session.recordings[0]?.id,
+                                            'bg-red-100 text-red-600 hover:bg-red-200': currentlyPlayingId === session.recordings[0]?.id,
+                                            'hover:bg-amber-200': currentlyPlayingId !== session.recordings[0]?.id
+                                        }"
+                                    >
+                                        <svg
+                                            v-if="currentlyPlayingId !== session.recordings[0]?.id"
+                                            class="w-5 h-5"
+                                            fill="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                        <svg
+                                            v-else
+                                            class="w-5 h-5"
+                                            fill="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                                        </svg>
+                                    </button>
+
+                                    <!-- Download Button -->
+                                    <button
+                                        @click="downloadFile(session.recordings[0])"
+                                        class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                            />
+                                        </svg>
+                                    </button>
+
+                                    <!-- Delete Button -->
+                                    <button
+                                        @click="deleteSession(session.id)"
+                                        class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expandable Session for Multiple Recordings -->
+                        <div
+                            v-else
+                            class="bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
+                        >
                         <!-- Session Header -->
                         <div
                             class="p-4"
@@ -505,6 +619,7 @@
                                     No recordings in this session
                                 </p>
                             </div>
+                        </div>
                         </div>
                     </div>
 

@@ -4,12 +4,12 @@
     <!-- Circular Record Button -->
     <div class="relative mb-8">
       <div 
-        class="w-32 h-32 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 shadow-lg"
+        class="rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 shadow-lg"
         :class="{
-          'bg-amber-500 hover:bg-amber-600': !isRecording && recordingMode === 'single',
-          'bg-stone-500 hover:bg-stone-600': !isRecording && recordingMode === 'looped',
-          'bg-amber-600 animate-pulse': isRecording && recordingMode === 'single',
-          'bg-stone-600': isRecording && recordingMode === 'looped'
+          'bg-amber-500 w-20 h-20 hover:bg-amber-600': !isRecording && recordingMode === 'single',
+          'bg-stone-500 w-20 h-20 hover:bg-stone-600': !isRecording && recordingMode === 'looped',
+          'bg-amber-600 w-16 h-16 animate-pulse': isRecording && recordingMode === 'single',
+          'bg-stone-600 w-16 h-16 ': isRecording && recordingMode === 'looped'
         }"
         @click="toggleRecording"
       >
@@ -17,15 +17,15 @@
           v-if="!isRecording"
           class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center"
         >
-          <div class="w-8 h-8 bg-amber-500 rounded-full" v-if="recordingMode === 'single'"></div>
-          <div class="w-8 h-8 bg-stone-500 rounded-full" v-else></div>
+          <div class="w-16 h-16 bg-amber-500 rounded-full" v-if="recordingMode === 'single'"></div>
+          <div class="w-16 h-16 bg-stone-500 rounded-full" v-else></div>
         </div>
         <div 
           v-else
-          class="w-16 h-16 bg-stone-50 rounded-sm flex items-center justify-center"
+          class="w-20 h-20 bg-stone-50 rounded-sm flex items-center justify-center"
         >
-          <div class="w-8 h-8 bg-amber-600 rounded-sm" v-if="recordingMode === 'single'"></div>
-          <div class="w-8 h-8 bg-stone-600 rounded-sm" v-else></div>
+          <div class="w-16 h-16 bg-amber-600 rounded-sm" v-if="recordingMode === 'single'"></div>
+          <div class="w-16 h-16 bg-stone-600 rounded-sm" v-else></div>
         </div>
       </div>
       

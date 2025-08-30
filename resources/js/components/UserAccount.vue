@@ -9,48 +9,11 @@
     />
 
     <PageHeader 
-      :pageTitle="'User Profile'"
+      :pageTitle="'User Account'"
     />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- User Profile Card -->
-      <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-8">
-        <div class="px-6 py-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-stone-900">Profile Information</h2>
-            <button
-              @click="showEditProfile = true"
-              class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              Edit Profile
-            </button>
-          </div>
-          
-          <!-- Profile Details Grid -->
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="bg-stone-50 p-4 rounded-lg">
-              <label class="block text-sm font-medium text-stone-700 mb-1">Full Name</label>
-              <p class="text-stone-900 font-medium">{{ store.user?.name || 'N/A' }}</p>
-            </div>
-            
-            <div class="bg-stone-50 p-4 rounded-lg">
-              <label class="block text-sm font-medium text-stone-700 mb-1">Email Address</label>
-              <p class="text-stone-900 font-medium">{{ store.user?.email || 'N/A' }}</p>
-            </div>
-            
-            <div class="bg-stone-50 p-4 rounded-lg">
-              <label class="block text-sm font-medium text-stone-700 mb-1">Member Since</label>
-              <p class="text-stone-900 font-medium">{{ formatDate(store.user?.created_at) }}</p>
-            </div>
-            
-            <div class="bg-stone-50 p-4 rounded-lg">
-              <label class="block text-sm font-medium text-stone-700 mb-1">User ID</label>
-              <p class="text-stone-900 font-medium">#{{ store.user?.id || 'N/A' }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Personal Stats -->
       <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-8">
@@ -117,6 +80,44 @@
         </div>
       </div>
 
+      <!-- User Account Card -->
+      <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-8">
+        <div class="px-6 py-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-stone-900">Account Information</h2>
+            <button
+              @click="showEditAccount = true"
+              class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            >
+              Edit Account
+            </button>
+          </div>
+          
+          <!-- Profile Details Grid -->
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="bg-stone-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-stone-700 mb-1">Full Name</label>
+              <p class="text-stone-900 font-medium">{{ store.user?.name || 'N/A' }}</p>
+            </div>
+            
+            <div class="bg-stone-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-stone-700 mb-1">Email Address</label>
+              <p class="text-stone-900 font-medium">{{ store.user?.email || 'N/A' }}</p>
+            </div>
+            
+            <div class="bg-stone-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-stone-700 mb-1">Member Since</label>
+              <p class="text-stone-900 font-medium">{{ formatDate(store.user?.created_at) }}</p>
+            </div>
+            
+            <div class="bg-stone-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-stone-700 mb-1">User ID</label>
+              <p class="text-stone-900 font-medium">#{{ store.user?.id || 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Account Settings -->
       <div class="bg-white overflow-hidden shadow-sm rounded-lg">
         <div class="px-6 py-8">
@@ -166,11 +167,11 @@
       </div>
     </main>
 
-    <!-- Edit Profile Modal -->
-    <EditProfileModal
-      v-if="showEditProfile"
-      @close="showEditProfile = false"
-      @success="handleProfileUpdate"
+    <!-- Edit Account Modal -->
+    <EditAccountModal
+      v-if="showEditAccount"
+      @close="showEditAccount = false"
+      @success="handleAccountUpdate"
     />
 
     <!-- Change Password Modal -->
@@ -196,7 +197,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useMainStore } from '../stores/main'
-import EditProfileModal from './EditProfileModal.vue'
 import ChangePasswordModal from './ChangePasswordModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
@@ -206,7 +206,7 @@ const store = useMainStore()
 const isDrawerExpanded = ref(false)
 
 // Modal states
-const showEditProfile = ref(false)
+const showEditAccount = ref(false)
 const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
 
@@ -258,8 +258,8 @@ const handleLogout = async () => {
   }
 }
 
-const handleProfileUpdate = () => {
-  showEditProfile.value = false
+const handleAccountUpdate = () => {
+  showEditAccount.value = false
   // Optionally refresh user data
 }
 

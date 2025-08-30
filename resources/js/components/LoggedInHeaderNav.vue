@@ -15,11 +15,11 @@
                   </svg>
                 </button>
                 <div v-if="showDesktopMenu" class="absolute right-0 mt-4 w-56 bg-white border border-gray-200 rounded-b-lg shadow-lg flex flex-col py-2 z-[99999]">
-                  <button @click="goToProfile" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
+                  <button @click="goToAccount" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
                     <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <span>Profile</span>
+                    <span>Account</span>
                   </button>
                   <button @click="goToSystemInfo" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
                     <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,11 +85,11 @@
       </button>
       <div class="flex flex-col items-center justify-center w-full flex-1 space-y-6 mt-20">
         <span class="text-lg text-white font-semibold text-center">Hello, {{ userName }}</span>
-        <button @click="goToProfileAndCloseMobile" class="w-3/4 text-center bg-stone-700 hover:bg-stone-800 text-white px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md flex items-center gap-2">
+  <button @click="goToAccountAndCloseMobile" class="w-3/4 text-center bg-stone-700 hover:bg-stone-800 text-white px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md flex items-center gap-2">
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span>Profile</span>
+          <span>Account</span>
         </button>
         <button @click="goToSystemInfoAndCloseMobile" class="w-3/4 text-center bg-stone-800 hover:bg-stone-900 text-stone-200 px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md flex items-center gap-2">
           <svg class="w-5 h-5 text-stone-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,8 +139,8 @@ const toggleDesktopMenuAndEmit = () => {
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
-const goToProfile = () => {
-  router.push('/profile');
+const goToAccount = () => {
+  router.push('/account');
   showDesktopMenu.value = false;
 };
 const goToSystemInfo = () => {
@@ -151,8 +151,8 @@ const handleLogoutAndClose = async () => {
   await store.logout();
   showDesktopMenu.value = false;
 };
-const goToProfileAndCloseMobile = () => {
-  router.push('/profile');
+const goToAccountAndCloseMobile = () => {
+  router.push('/account');
   isMobileMenuOpen.value = false;
 };
 const goToSystemInfoAndCloseMobile = () => {

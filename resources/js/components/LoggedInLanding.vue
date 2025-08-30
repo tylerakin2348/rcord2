@@ -169,8 +169,8 @@ watch(isDrawerExpanded, (val) => {
   }
 });
 
-const goToProfile = () => {
-  router.push('/profile');
+const goToAccount = () => {
+  router.push('/account');
   showDesktopMenu.value = false;
 };
 const goToSystemInfo = () => {

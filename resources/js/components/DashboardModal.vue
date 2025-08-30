@@ -183,11 +183,11 @@
       @success="handleUserSuccess"
     />
 
-    <!-- Edit Profile Modal -->
-    <EditProfileModal
-      :isOpen="showEditProfile"
-      @close="showEditProfile = false"
-      @success="handleProfileUpdate"
+    <!-- Edit Account Modal -->
+    <EditAccountModal
+      :isOpen="showEditAccount"
+      @close="showEditAccount = false"
+      @success="handleAccountUpdate"
     />
 
     <!-- Delete Confirmation Modal -->
@@ -205,7 +205,7 @@
 import { ref, onMounted } from 'vue'
 import { useMainStore } from '../stores/main.js'
 import UserFormModal from './UserFormModal.vue'
-import EditProfileModal from './EditProfileModal.vue'
+import EditAccountModal from './EditAccountModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
 
 // Define emits
@@ -215,7 +215,7 @@ const store = useMainStore()
 
 const showCreateUser = ref(false)
 const showEditUser = ref(false)
-const showEditProfile = ref(false)
+const showEditAccount = ref(false)
 const showDeleteConfirm = ref(false)
 const selectedUser = ref(null)
 const userToDelete = ref(null)
@@ -248,8 +248,8 @@ const handleUserSuccess = () => {
   closeUserModal()
 }
 
-const handleProfileUpdate = () => {
-  showEditProfile.value = false
+const handleAccountUpdate = () => {
+  showEditAccount.value = false
 }
 
 const formatDate = (dateString) => {

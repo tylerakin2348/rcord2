@@ -177,8 +177,8 @@ const summary = ref({
 const isDrawerExpanded = ref(true);
 const isHeaderCollapsed = ref(false);
 
-const goToProfile = () => {
-  router.push('/profile');
+const goToAccount = () => {
+  router.push('/account');
   showDesktopMenu.value = false;
 };
 const goToSystemInfo = () => {

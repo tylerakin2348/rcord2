@@ -37,7 +37,7 @@ const route = useRoute();
 const showLoginModal = ref(false);
 
 // Routes that should allow scrolling (remove overflow-hidden)
-const scrollableRoutes = ['/recordings', '/profile', '/system-info'];
+const scrollableRoutes = ['/recordings', '/profile', '/system-info', '/account'];
 
 const handleAuthSuccess = () => {
   showLoginModal.value = false;

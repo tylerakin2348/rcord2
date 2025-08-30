@@ -4,7 +4,7 @@ import { useMainStore } from '../stores/main';
 // Import components
 import LoggedInLanding from '../components/LoggedInLanding.vue';
 import RecordingsPage from '../components/RecordingsPage.vue';
-import UserProfile from '../components/UserProfile.vue';
+import UserAccount from '../components/UserAccount.vue';
 import SystemInfo from '../components/SystemInfo.vue';
 import UserStorageReport from '../components/UserStorageReport.vue';
 import UserActivityReport from '../components/UserActivityReport.vue';
@@ -24,9 +24,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/profile',
-    name: 'profile',
-    component: UserProfile,
+    path: '/account',
+    name: 'account',
+    component: UserAccount,
     meta: { requiresAuth: true }
   },
   {

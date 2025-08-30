@@ -97,11 +97,32 @@
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">{{ formatFileSize(user.totalStorageBytes) }}</div>
-                  <div class="text-xs text-gray-500">{{ ((user.totalStorageBytes / summary.totalStorage) * 100).toFixed(1) }}% of total</div>
+                  <div class="text-sm font-medium text-gray-900">{{ formatFileSize(Number(user.totalStorageBytes)) }}</div>
+                  <div class="text-xs text-gray-500">
+                    <template v-if="summary.totalStorage > 0 && user.totalStorageBytes > 0">
+                      {{ ((Number(user.totalStorageBytes) / Number(summary.totalStorage)) * 100).toFixed(1) }}% of total
+                    </template>
+                    <template v-else>
+                      0% of total
+                    </template>
+                  </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.totalRecordings }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.totalSessions }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <template v-if="user.totalRecordings !== undefined && user.totalRecordings !== null">
+                    {{ user.totalRecordings }}
+                  </template>
+                  <template v-else>
+                    0
+                  </template>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <template v-if="user.totalSessions !== undefined && user.totalSessions !== null">
+                    {{ user.totalSessions }}
+                  </template>
+                  <template v-else>
+                    0
+                  </template>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatFileSize(user.averageFileSize) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(user.lastActive) }}</td>
               </tr>
@@ -149,13 +170,12 @@ const summary = ref({
 
 // Format file size
 const formatFileSize = (bytes) => {
-  if (!bytes || bytes === 0) return '0 B'
-  
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  const size = bytes / Math.pow(1024, i)
-  
-  return `${size.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`
+  bytes = Number(bytes);
+  if (!bytes || isNaN(bytes) || bytes <= 0) return '0 B';
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = bytes / Math.pow(1024, i);
+  return `${size.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
 }
 
 // Format date

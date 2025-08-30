@@ -516,8 +516,8 @@ const exportSystemData = async () => {
 
 const showDesktopMenu = ref(false)
 
-const goToProfile = () => {
-  router.push('/profile');
+const goToAccount = () => {
+  router.push('/account');
   showDesktopMenu.value = false;
 };
 

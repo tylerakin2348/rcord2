@@ -144,6 +144,7 @@
   <!-- Edit Plan Modal -->
   <EditPlanModal v-if="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
   <SwitchPlanModal v-if="showSwitchModal" :isOpen="showSwitchModal" :plan="selectedPlan" @close="closeSwitchModal" @success="handlePlanUpdate" />
+  <PlanPaymentModal v-if="showPaymentModal" :isOpen="showPaymentModal" :plan="selectedPlan" @close="closePaymentModal" @success="handlePlanUpdate" />
 
       <!-- Account Settings -->
       <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -223,14 +224,24 @@
 
 <script setup>
 import SwitchPlanModal from './SwitchPlanModal.vue'
+import PlanPaymentModal from './PlanPaymentModal.vue'
 const showSwitchModal = ref(false)
+const showPaymentModal = ref(false)
 const selectedPlan = ref(null)
 const openSwitchModal = (plan) => {
   selectedPlan.value = plan
-  showSwitchModal.value = true
+  if (plan.name === 'base' || plan.name === 'full') {
+    showPaymentModal.value = true
+  } else {
+    showSwitchModal.value = true
+  }
 }
 const closeSwitchModal = () => {
   showSwitchModal.value = false
+  selectedPlan.value = null
+}
+const closePaymentModal = () => {
+  showPaymentModal.value = false
   selectedPlan.value = null
 }
 import { ref, onMounted, computed } from 'vue'

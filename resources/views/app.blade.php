@@ -17,4 +17,5 @@
 <body class="antialiased" id="app-body">
     <div id="app"></div>
 </body>
+<script src="https://js.stripe.com/v3/"></script>
 </html>

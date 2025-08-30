@@ -7,6 +7,7 @@ use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\RecordingTypeController;
 use App\Http\Controllers\RecordingSessionController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\StripeController;
 
 Route::get('/', function () {
     return view('app');
@@ -117,3 +118,5 @@ Route::get('/api/features', function () {
         ]
     ]);
 });
+
+Route::middleware('auth:web')->post('/api/stripe/payment-intent', [StripeController::class, 'createPaymentIntent']);

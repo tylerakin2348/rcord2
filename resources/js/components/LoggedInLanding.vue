@@ -1,142 +1,11 @@
 <template>
   <div class="min-h-screen bg-stone-100 flex flex-col relative">
-    <!-- Header with User Profile Button -->
-    <header 
-      class="bg-white shadow-sm border-b border-gray-200 z-10 transition-all duration-500"
-      :class="{
-        'transform translate-y-0': isHeaderExpanded,
-        'transform -translate-y-full': !isHeaderExpanded
-      }"
-    >
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center py-4">
-          <div class="flex items-center">
-            <h1 class="text-2xl font-bold text-stone-700">
-              ReCord
-            </h1>
-          </div>
-          
-          <!-- Desktop Navigation: Single Dropdown -->
-          <div class="hidden md:flex items-center relative">
-            <span class="text-sm text-gray-700 mr-2">Hello, {{ store.user?.name }}</span>
-            <div class="relative">
-              <button @click="showDesktopMenu = !showDesktopMenu" class="p-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <div v-if="showDesktopMenu && isHeaderExpanded" class="absolute right-0 mt-4 w-56 bg-white border border-gray-200 rounded-b-lg shadow-lg flex flex-col py-2">
-                <button @click="goToProfile" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
-                  <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>Profile</span>
-                </button>
-                <button @click="goToSystemInfo" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
-                  <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
-                  </svg>
-                  <span>System Info</span>
-                </button>
-                <button @click="handleLogoutAndClose" class="px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">Logout</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mobile Hamburger Menu -->
-          <div class="md:hidden">
-            <button
-              @click="isMobileMenuOpen = !isMobileMenuOpen"
-              class="p-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors duration-200"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path 
-                  v-if="!isMobileMenuOpen"
-                  stroke-linecap="round" 
-                  stroke-linejoin="round" 
-                  stroke-width="2" 
-                  d="M4 6h16M4 12h16M4 18h16" 
-                />
-                <path 
-                  v-else
-                  stroke-linecap="round" 
-                  stroke-linejoin="round" 
-                  stroke-width="2" 
-                  d="M6 18L18 6M6 6l12 12" 
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-    <!-- Mobile Menu Dropdown (moved outside header/main for full overlay) -->
-    <div 
-      v-show="isMobileMenuOpen"
-      class="md:hidden fixed left-0 top-0 w-full h-full z-[99999] bg-stone-900 bg-opacity-95 border-t border-gray-200 pt-4 pb-4 overflow-y-auto transition-colors duration-500 flex flex-col"
-      style="height: 100vh;"
-    >
-      <!-- ReCord logo top left -->
-      <div class="absolute left-4 top-4 z-[100001]">
-        <h1 class="text-2xl font-bold text-white">ReCord</h1>
-      </div>
-      <!-- Close (X) Button -->
-      <button
-        @click="isMobileMenuOpen = false"
-        class="absolute top-4 right-4 z-[100000] bg-stone-800 text-white rounded-full p-2 shadow-lg hover:bg-stone-700 focus:outline-none"
-        aria-label="Close menu"
-      >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <!-- Centered user profile above menu items -->
-      <div class="flex flex-col items-center justify-center w-full flex-1 space-y-6 mt-20">
-        <span class="text-lg text-white font-semibold text-center">Hello, {{ store.user?.name }}</span>
-        <router-link 
-          to="/profile"
-          class="w-3/4 text-center bg-stone-700 hover:bg-stone-800 text-white px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md"
-        >
-          <svg class="w-5 h-5 inline-block mr-2 align-middle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span class="align-middle">Profile</span>
-        </router-link>
-        <router-link 
-          to="/system-info"
-          class="w-3/4 text-center bg-stone-800 hover:bg-stone-900 text-stone-200 px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md"
-        >
-          System Info
-        </router-link>
-        <button 
-          @click="handleLogout; isMobileMenuOpen = false"
-          class="w-3/4 text-center bg-stone-700 hover:bg-stone-800 text-stone-200 px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-
-    <!-- Header Toggle Tab (absolutely positioned) -->
-    <div 
-      class="fixed left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500"
-      :style="{ top: isHeaderExpanded ? '70px' : '0px' }"
-    >
-      <button
-        @click="toggleHeader"
-        class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-4 py-2 rounded-b-lg border-l border-r border-b border-gray-200 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
-      >
-        <svg 
-          class="w-5 h-5 transition-transform duration-300" 
-          :class="{ 'rotate-180': !isHeaderExpanded }"
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 14l5-5 5 5" />
-        </svg>
-      </button>
-    </div>
+    <LoggedInHeaderNav 
+      :userName="store.user?.name" 
+      :handleLogout="handleLogout" 
+      :showHeaderToggle="true"
+      @dropdown-toggled="onDropdownToggled"
+    />
 
     <!-- Main Content -->
     <main class="flex-1 flex overflow-hidden relative">
@@ -256,12 +125,10 @@
 <script setup>
 import { ref, onUnmounted, computed, onMounted, watch } from 'vue';
 import { useMainStore } from '../stores/main';
-import { useRouter } from 'vue-router';
 import RecordingControls from './RecordingControls.vue';
 import RecordingsDrawer from './RecordingsDrawer.vue';
-
+import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
 const store = useMainStore();
-const router = useRouter();
 
 // Mobile state
 const isMobileMenuOpen = ref(false);
@@ -299,7 +166,7 @@ watch(showDesktopMenu, (val) => {
   }
 });
 watch(isDrawerExpanded, (val) => {
-  if (val && showDesktopMenu.value) {
+  if (val) {
     showDesktopMenu.value = false;
   }
 });
@@ -342,7 +209,16 @@ onMounted(() => {
   document.addEventListener('mouseup', handleMouseUp);
 });
 
+function onDropdownToggled(isOpen) {
+  if (isOpen && isDrawerExpanded.value) {
+    isDrawerExpanded.value = false;
+  }
+}
 const toggleDrawer = () => {
+  // Always close dropdown when opening drawer
+  if (showDesktopMenu.value) {
+    showDesktopMenu.value = false;
+  }
   isDrawerExpanded.value = !isDrawerExpanded.value;
 };
 

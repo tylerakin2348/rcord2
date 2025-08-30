@@ -1,41 +1,14 @@
 <template>
   <div class="min-h-screen bg-stone-100">
-    <!-- Sticky Header -->
-    <header class="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center py-4">
-          <h1 class="text-2xl font-bold text-stone-700">ReCord</h1>
-          <!-- Navigation -->
-          <div class="flex items-center relative">
-            <span class="text-sm text-gray-700 mr-2">Hello, {{ store.user?.name }}</span>
-            <div class="relative">
-              <button @click="showDesktopMenu = !showDesktopMenu" class="p-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <div v-if="showDesktopMenu" class="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[99999] flex flex-col py-2">
-                <button @click="goToProfile" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
-                  <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>Profile</span>
-                </button>
-                <button @click="goToSystemInfo" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
-                  <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
-                  </svg>
-                  <span>System Info</span>
-                </button>
-                <button @click="handleLogoutAndClose" class="px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">Logout</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+    <!-- Header Navigation -->
+    <LoggedInHeaderNav 
+      :userName="store.user?.name" 
+      :handleLogout="handleLogout" 
+      :showHeaderToggle="false"
+      @dropdown-toggled="onDropdownToggled" 
+    />
     <!-- Back button and page title below header -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex items-center space-x-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex flex-row items-center">
       <button 
         @click="$router.push('/')"
         class="text-stone-500 hover:text-stone-700 p-2 rounded-lg transition-colors duration-200"
@@ -44,7 +17,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <h1 class="text-2xl font-bold text-stone-700">User Profile</h1>
+      <h1 class="text-2xl font-bold text-stone-700 ml-2">User Profile</h1>
     </div>
 
     <!-- Main Content -->
@@ -230,20 +203,19 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useMainStore } from '../stores/main'
 import EditProfileModal from './EditProfileModal.vue'
 import ChangePasswordModal from './ChangePasswordModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
+import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
 
-const router = useRouter()
 const store = useMainStore()
+const isDrawerExpanded = ref(false)
 
 // Modal states
 const showEditProfile = ref(false)
 const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
-const showDesktopMenu = ref(false)
 
 // User stats (mock data - replace with real API calls)
 const userStats = ref({
@@ -343,21 +315,13 @@ const loadUserStats = async () => {
   }
 }
 
-const goToProfile = () => {
-  router.push('/profile');
-  showDesktopMenu.value = false;
-};
+function onDropdownToggled(isOpen) {
+  if (isOpen && isDrawerExpanded.value) {
+    isDrawerExpanded.value = false;
+  }
+}
 
-const goToSystemInfo = () => {
-  router.push('/system-info');
-  showDesktopMenu.value = false;
-};
-
-const handleLogoutAndClose = async () => {
-  await handleLogout();
-  showDesktopMenu.value = false;
-};
-
+// If you have a drawer toggle, add logic to close dropdown when drawer opens
 onMounted(() => {
   loadUserStats()
 })

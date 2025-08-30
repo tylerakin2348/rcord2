@@ -16,30 +16,26 @@
             </h1>
           </div>
           
-          <!-- Desktop Navigation -->
-          <div class="hidden md:flex items-center space-x-4">
-            <span class="text-sm text-gray-700">Hello, {{ store.user?.name }}</span>
-            <router-link 
-              to="/profile"
-              class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>Profile</span>
-            </router-link>
-            <router-link 
-              to="/system-info"
-              class="text-stone-500 hover:text-stone-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              System Info
-            </router-link>
-            <button 
-              @click="handleLogout"
-              class="text-stone-500 hover:text-stone-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              Logout
-            </button>
+          <!-- Desktop Navigation: Single Dropdown -->
+          <div class="hidden md:flex items-center relative">
+            <span class="text-sm text-gray-700 mr-2">Hello, {{ store.user?.name }}</span>
+            <div class="relative">
+              <button @click="showDesktopMenu = !showDesktopMenu" class="p-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <div v-if="showDesktopMenu" class="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[99999] flex flex-col py-2">
+                <button @click="goToProfile" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
+                  <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Profile</span>
+                </button>
+                <button @click="goToSystemInfo" class="px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">System Info</button>
+                <button @click="handleLogoutAndClose" class="px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">Logout</button>
+              </div>
+            </div>
           </div>
 
           <!-- Mobile Hamburger Menu -->
@@ -289,6 +285,20 @@ const isHeaderExpanded = computed(() => !isHeaderCollapsed.value);
 
 // Refs to child components
 const recordingsDrawer = ref(null);
+const showDesktopMenu = ref(false);
+
+const goToProfile = () => {
+  router.push('/profile');
+  showDesktopMenu.value = false;
+};
+const goToSystemInfo = () => {
+  router.push('/system-info');
+  showDesktopMenu.value = false;
+};
+const handleLogoutAndClose = async () => {
+  await handleLogout();
+  showDesktopMenu.value = false;
+};
 
 // Handle window resize
 const handleResize = () => {

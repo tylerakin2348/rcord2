@@ -21,7 +21,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'plan_id',
     ];
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

@@ -21,8 +21,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed recordings with sample data
-        $this->call([
-            RecordingsSeeder::class,
-        ]);
+            $this->call([
+                RecordingsSeeder::class,
+                PlansSeeder::class,
+            ]);
     }
 }

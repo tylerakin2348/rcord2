@@ -92,24 +92,20 @@
               Edit Account
             </button>
           </div>
-          
           <!-- Profile Details Grid -->
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div class="bg-stone-50 p-4 rounded-lg">
               <label class="block text-sm font-medium text-stone-700 mb-1">Full Name</label>
               <p class="text-stone-900 font-medium">{{ store.user?.name || 'N/A' }}</p>
             </div>
-            
             <div class="bg-stone-50 p-4 rounded-lg">
               <label class="block text-sm font-medium text-stone-700 mb-1">Email Address</label>
               <p class="text-stone-900 font-medium">{{ store.user?.email || 'N/A' }}</p>
             </div>
-            
             <div class="bg-stone-50 p-4 rounded-lg">
               <label class="block text-sm font-medium text-stone-700 mb-1">Member Since</label>
               <p class="text-stone-900 font-medium">{{ formatDate(store.user?.created_at) }}</p>
             </div>
-            
             <div class="bg-stone-50 p-4 rounded-lg">
               <label class="block text-sm font-medium text-stone-700 mb-1">User ID</label>
               <p class="text-stone-900 font-medium">#{{ store.user?.id || 'N/A' }}</p>
@@ -117,6 +113,42 @@
           </div>
         </div>
       </div>
+
+      <!-- Plan Information Panel -->
+      <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-8">
+        <div class="px-6 py-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-stone-900">Plan Information</h2>
+            <button
+              @click="showEditPlan = true"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            >
+              Edit Plan
+            </button>
+          </div>
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-blue-700 mb-1">Current Plan</label>
+              <p class="text-blue-900 font-bold text-lg">{{ store.user?.plan?.name || 'Free' }}</p>
+              <p class="text-blue-800 text-sm mt-1">{{ store.user?.plan?.description || 'Free plan with limited access' }}</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-blue-700 mb-1">Features</label>
+              <ul class="list-disc ml-4 text-blue-900 text-sm">
+                <li v-if="store.user?.plan?.name === 'full'">All features unlocked</li>
+                <li v-else-if="store.user?.plan?.name === 'base'">Standard features</li>
+                <li v-else>Limited features</li>
+              </ul>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <label class="block text-sm font-medium text-blue-700 mb-1">Permission</label>
+              <p class="text-blue-900 font-medium">{{ store.user?.plan?.permission?.name || 'free' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+  <!-- Edit Plan Modal -->
+  <EditPlanModal v-if="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
 
       <!-- Account Settings -->
       <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -195,6 +227,12 @@
 </template>
 
 <script setup>
+import EditPlanModal from './EditPlanModal.vue'
+const showEditPlan = ref(false)
+const handlePlanUpdate = () => {
+  showEditPlan.value = false
+  // Optionally refresh user data
+}
 import { ref, onMounted, computed } from 'vue'
 import { useMainStore } from '../stores/main'
 import ChangePasswordModal from './ChangePasswordModal.vue'

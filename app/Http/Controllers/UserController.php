@@ -10,6 +10,21 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     /**
+     * Update the authenticated user's plan.
+     */
+    public function updatePlan(Request $request)
+    {
+        $request->validate([
+            'plan_id' => ['required', 'exists:plans,id']
+        ]);
+
+        $user = $request->user();
+        $user->plan_id = $request->input('plan_id');
+        $user->save();
+
+        return response()->json(['message' => 'Plan updated successfully', 'plan_id' => $user->plan_id]);
+    }
+    /**
      * Display a listing of the resource.
      */
     public function index()

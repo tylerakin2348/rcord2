@@ -17,12 +17,20 @@ class AuthController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
+                'plan_id' => 'nullable|exists:plans,id',
             ]);
+
+            $planId = $request->input('plan_id');
+            if (!$planId) {
+                $freePlan = \App\Models\Plan::where('name', 'free')->first();
+                $planId = $freePlan ? $freePlan->id : null;
+            }
 
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'plan_id' => $planId,
             ]);
 
             Auth::login($user);

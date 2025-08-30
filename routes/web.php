@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\RecordingTypeController;
 use App\Http\Controllers\RecordingSessionController;
+use App\Http\Controllers\PlanController;
 
 Route::get('/', function () {
     return view('app');
@@ -82,6 +83,11 @@ Route::get('/api/stats', function () {
         'uptime' => 99.9
     ]);
 });
+
+Route::get('/api/plans', [PlanController::class, 'index'])->middleware('auth:web');
+
+// Update user plan
+Route::post('/api/user/plan', [UserController::class, 'updatePlan'])->middleware('auth:web');
 
 Route::get('/api/features', function () {
     return response()->json([

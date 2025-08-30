@@ -60,6 +60,9 @@
             required
           />
         </div>
+        <div v-if="isRegistering" class="mb-6">
+          <PlanSelect :selectedPlanId="form.plan_id" @update:selectedPlanId="form.plan_id = $event" />
+        </div>
 
         <button
           type="submit"
@@ -84,6 +87,7 @@
 </template>
 
 <script setup>
+import PlanSelect from './PlanSelect.vue'
 import { ref, reactive, watch } from 'vue'
 import { useMainStore } from '../stores/main.js'
 
@@ -105,7 +109,8 @@ const form = reactive({
   name: '',
   email: '',
   password: '',
-  password_confirmation: ''
+  password_confirmation: '',
+  plan_id: null
 })
 
 const resetForm = () => {
@@ -113,6 +118,7 @@ const resetForm = () => {
   form.email = ''
   form.password = ''
   form.password_confirmation = ''
+  form.plan_id = null
   error.value = ''
 }
 
@@ -134,6 +140,12 @@ const handleSubmit = async () => {
     if (isRegistering.value) {
       if (form.password !== form.password_confirmation) {
         throw new Error('Passwords do not match')
+      }
+      // Default to free plan if none selected
+      if (!form.plan_id) {
+        const response = await window.axios.get('/api/plans')
+        const freePlan = response.data.find(p => p.name === 'free')
+        form.plan_id = freePlan ? freePlan.id : null
       }
       await store.register(form)
     } else {

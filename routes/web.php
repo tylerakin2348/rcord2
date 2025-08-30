@@ -36,8 +36,8 @@ Route::get('/system-info/sessions', function () {
 });
 
 // Authentication routes
-Route::post('/api/register', [AuthController::class, 'register']);
-Route::post('/api/login', [AuthController::class, 'login']);
+Route::post('/api/register', [AuthController::class, 'register'])->middleware('web');
+Route::post('/api/login', [AuthController::class, 'login'])->middleware('web');
 Route::post('/api/logout', [AuthController::class, 'logout'])->middleware('auth:web');
 Route::get('/api/user', [AuthController::class, 'user'])->middleware('auth:web');
 Route::get('/api/user/stats', [UserController::class, 'stats'])->middleware('auth:web');

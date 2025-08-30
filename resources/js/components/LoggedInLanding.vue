@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-stone-100 flex flex-col relative">
     <!-- Header with User Profile Button -->
     <header 
-      class="bg-white shadow-sm border-b border-gray-200 transition-all duration-500"
+      class="bg-white shadow-sm border-b border-gray-200 z-10 transition-all duration-500"
       :class="{
         'transform translate-y-0': isHeaderExpanded,
         'transform -translate-y-full': !isHeaderExpanded
@@ -25,7 +25,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <div v-if="showDesktopMenu" class="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[99999] flex flex-col py-2">
+              <div v-if="showDesktopMenu && isHeaderExpanded" class="absolute right-0 mt-4 w-56 bg-white border border-gray-200 rounded-b-lg shadow-lg flex flex-col py-2">
                 <button @click="goToProfile" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
                   <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

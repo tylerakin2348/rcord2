@@ -2,9 +2,7 @@
   <div class="min-h-screen bg-stone-100 flex flex-col relative">
     <LoggedInHeaderNav 
       :userName="store.user?.name" 
-      :handleLogout="handleLogout" 
       :showHeaderToggle="true"
-      @dropdown-toggled="onDropdownToggled"
     />
 
     <!-- Main Content -->

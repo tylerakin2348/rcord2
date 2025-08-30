@@ -4,18 +4,10 @@
     <LoggedInHeaderNav :userName="store.user?.name" :handleLogout="handleLogout" :showHeaderToggle="false" />
 
     <!-- Back button and page title below header -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex flex-row items-center">
-      <button 
-        @click="$router.push('/')"
-        class="text-stone-500 hover:text-stone-700 p-2 rounded-lg transition-colors duration-200"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h1 class="text-2xl font-bold text-stone-700 ml-2">System Information</h1>
-    </div>
-
+    <PageHeader 
+      :pageTitle="'System Information'"
+    />
+   
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- System Stats -->
@@ -331,6 +323,7 @@ import { useMainStore } from '../stores/main'
 import UserFormModal from './UserFormModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
+import PageHeader from './PageHeader.vue'
 
 const router = useRouter()
 const store = useMainStore()

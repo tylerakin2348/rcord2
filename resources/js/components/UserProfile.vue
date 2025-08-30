@@ -7,18 +7,10 @@
       :showHeaderToggle="false"
       @dropdown-toggled="onDropdownToggled" 
     />
-    <!-- Back button and page title below header -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex flex-row items-center">
-      <button 
-        @click="$router.push('/')"
-        class="text-stone-500 hover:text-stone-700 p-2 rounded-lg transition-colors duration-200"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h1 class="text-2xl font-bold text-stone-700 ml-2">User Profile</h1>
-    </div>
+
+    <PageHeader 
+      :pageTitle="'User Profile'"
+    />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -208,6 +200,7 @@ import EditProfileModal from './EditProfileModal.vue'
 import ChangePasswordModal from './ChangePasswordModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
+import PageHeader from './PageHeader.vue'
 
 const store = useMainStore()
 const isDrawerExpanded = ref(false)

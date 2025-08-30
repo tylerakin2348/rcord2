@@ -1,33 +1,15 @@
 <template>
   <div class="min-h-screen bg-stone-100">
-    <!-- Sticky Header -->
-    <header class="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center py-4">
-          <div class="flex items-center space-x-4">
-            <button 
-              @click="$router.push('/system-info')"
-              class="text-stone-500 hover:text-stone-700 p-2 rounded-lg transition-colors duration-200"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h1 class="text-2xl font-bold text-stone-700">Session Management by User</h1>
-          </div>
-          
-          <!-- Navigation -->
-          <div class="flex items-center space-x-4">
-            <router-link 
-              to="/system-info"
-              class="text-stone-500 hover:text-stone-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              Back to System Info
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </header>
+    <LoggedInHeaderNav 
+     :userName="store.user?.name" 
+      :showHeaderToggle="false"
+    />
+
+    <!-- Back button and page title below header -->
+    <PageHeader 
+      :pageTitle="'User Sessions Report'"
+      :route="'/system-info'"
+    />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -176,6 +158,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
+import PageHeader from './PageHeader.vue'
+import { useMainStore } from '../stores/main';
+
+const store = useMainStore();
 
 const router = useRouter()
 const loading = ref(false)

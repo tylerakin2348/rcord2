@@ -108,13 +108,10 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useMainStore } from '../stores/main';
 const props = defineProps({
   userName: {
     type: String,
-    required: true
-  },
-  handleLogout: {
-    type: Function,
     required: true
   },
   showHeaderToggle: {
@@ -122,7 +119,7 @@ const props = defineProps({
     default: false
   }
 });
-const emit = defineEmits(['dropdown-toggled']);
+const store = useMainStore();
 const router = useRouter();
 const showDesktopMenu = ref(false);
 const isMobileMenuOpen = ref(false);
@@ -137,7 +134,7 @@ const toggleDesktopMenu = () => {
 };
 const toggleDesktopMenuAndEmit = () => {
   showDesktopMenu.value = !showDesktopMenu.value;
-  emit('dropdown-toggled', showDesktopMenu.value);
+  // No emit needed, handled internally
 };
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -151,7 +148,7 @@ const goToSystemInfo = () => {
   showDesktopMenu.value = false;
 };
 const handleLogoutAndClose = async () => {
-  await props.handleLogout();
+  await store.logout();
   showDesktopMenu.value = false;
 };
 const goToProfileAndCloseMobile = () => {
@@ -163,7 +160,7 @@ const goToSystemInfoAndCloseMobile = () => {
   isMobileMenuOpen.value = false;
 };
 const handleLogoutAndCloseMobile = async () => {
-  await props.handleLogout();
+  await store.logout();
   isMobileMenuOpen.value = false;
 };
 </script>

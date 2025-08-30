@@ -32,7 +32,12 @@
                   </svg>
                   <span>Profile</span>
                 </button>
-                <button @click="goToSystemInfo" class="px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">System Info</button>
+                <button @click="goToSystemInfo" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
+                  <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+                  </svg>
+                  <span>System Info</span>
+                </button>
                 <button @click="handleLogoutAndClose" class="px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">Logout</button>
               </div>
             </div>
@@ -249,7 +254,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted, computed, onMounted } from 'vue';
+import { ref, onUnmounted, computed, onMounted, watch } from 'vue';
 import { useMainStore } from '../stores/main';
 import { useRouter } from 'vue-router';
 import RecordingControls from './RecordingControls.vue';
@@ -286,6 +291,18 @@ const isHeaderExpanded = computed(() => !isHeaderCollapsed.value);
 // Refs to child components
 const recordingsDrawer = ref(null);
 const showDesktopMenu = ref(false);
+
+// Watchers to synchronize dropdown and drawer
+watch(showDesktopMenu, (val) => {
+  if (val && isDrawerExpanded.value) {
+    isDrawerExpanded.value = false;
+  }
+});
+watch(isDrawerExpanded, (val) => {
+  if (val && showDesktopMenu.value) {
+    showDesktopMenu.value = false;
+  }
+});
 
 const goToProfile = () => {
   router.push('/profile');

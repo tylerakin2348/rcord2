@@ -102,7 +102,7 @@
     <!-- Header Toggle Tab (absolutely positioned) -->
     <div 
       class="fixed left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500"
-      :style="{ top: isHeaderExpanded ? '88px' : '0px' }"
+      :style="{ top: isHeaderExpanded ? '70px' : '0px' }"
     >
       <button
         @click="toggleHeader"
@@ -151,7 +151,7 @@
         >
           <button
             @click="toggleDrawer"
-            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-8 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200"
+            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-4 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200"
           >
             <svg 
               class="w-5 h-5 transition-transform duration-300" 
@@ -265,7 +265,7 @@ const dragStartWidth = ref(0);
 
 // Computed drawer width with constraints
 const constrainedDrawerWidth = computed(() => {
-  return Math.max(0, Math.min(50, drawerWidth.value));
+  return Math.max(0, Math.min(48, drawerWidth.value));
 });
 
 // Header computed property for clearer template logic

@@ -38,7 +38,7 @@
 
         <!-- Recordings List with Scroll -->
         <div
-            class="flex-1 overflow-y-scroll"
+            class="flex-1 overflow-y-scroll pr-2"
             ref="scrollContainer"
         >
             <!-- Single Mode: Show individual recordings -->

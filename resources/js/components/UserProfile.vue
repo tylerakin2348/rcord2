@@ -4,18 +4,7 @@
     <header class="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
-          <div class="flex items-center space-x-4">
-            <button 
-              @click="$router.push('/')"
-              class="text-stone-500 hover:text-stone-700 p-2 rounded-lg transition-colors duration-200"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h1 class="text-2xl font-bold text-stone-700">User Profile</h1>
-          </div>
-          
+          <h1 class="text-2xl font-bold text-stone-700">ReCord</h1>
           <!-- Navigation -->
           <div class="flex items-center relative">
             <span class="text-sm text-gray-700 mr-2">Hello, {{ store.user?.name }}</span>
@@ -45,6 +34,18 @@
         </div>
       </div>
     </header>
+    <!-- Back button and page title below header -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex items-center space-x-4">
+      <button 
+        @click="$router.push('/')"
+        class="text-stone-500 hover:text-stone-700 p-2 rounded-lg transition-colors duration-200"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h1 class="text-2xl font-bold text-stone-700">User Profile</h1>
+    </div>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

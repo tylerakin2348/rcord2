@@ -127,20 +127,17 @@
             </button>
           </div>
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="plan in plans" :key="plan.id" :class="[ 'p-4 rounded-lg border', plan.id === store.user?.plan?.id ? 'border-stone-700 bg-white' : 'border-stone-300 bg-stone-50 text-stone-400' ]">
-              <label class="block text-sm font-medium mb-1" :class="plan.id === store.user?.plan?.id ? 'text-stone-700' : 'text-stone-400'">
-                {{ plan.id === store.user?.plan?.id ? 'Current Plan' : 'Available Plan' }}
+            <div v-for="plan in plans" :key="plan.id" :class="[ 'p-4 rounded-lg border', plan.id === store.user?.plan_id ? 'border-stone-700 bg-white' : 'border-stone-300 bg-stone-50 text-stone-400' ]">
+              <label class="block text-sm font-medium mb-1" :class="plan.id === store.user?.plan_id ? 'text-stone-700' : 'text-stone-400'">
+                {{ plan.id === store.user?.plan_id ? 'Current Plan' : 'Available Plan' }}
               </label>
-              <p :class="plan.id === store.user?.plan?.id ? 'text-stone-900 font-bold text-lg' : 'text-stone-400 font-bold text-lg'">{{ plan.name.charAt(0).toUpperCase() + plan.name.slice(1) }}</p>
-              <p :class="plan.id === store.user?.plan?.id ? 'text-stone-700 text-sm mt-1' : 'text-stone-400 text-sm mt-1'">{{ plan.description }}</p>
+              <p :class="plan.id === store.user?.plan_id ? 'text-stone-900 font-bold text-lg' : 'text-stone-400 font-bold text-lg'">{{ plan.name.charAt(0).toUpperCase() + plan.name.slice(1) }}</p>
+              <p :class="plan.id === store.user?.plan_id ? 'text-stone-700 text-sm mt-1' : 'text-stone-400 text-sm mt-1'">{{ plan.description }}</p>
               <ul class="list-disc ml-4 text-sm mt-2">
                 <li v-if="plan.name === 'full'">All features unlocked</li>
                 <li v-else-if="plan.name === 'base'">Standard features</li>
                 <li v-else>Limited features</li>
               </ul>
-              <div class="mt-2 text-xs">
-                Permission: <span :class="plan.id === store.user?.plan?.id ? 'text-stone-700' : 'text-stone-400'">{{ plan.permission?.name || 'free' }}</span>
-              </div>
             </div>
           </div>
         </div>

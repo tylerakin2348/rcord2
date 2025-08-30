@@ -67,37 +67,47 @@
             </button>
           </div>
         </div>
-
-        <!-- Mobile Menu Dropdown -->
-        <div 
-          v-show="isMobileMenuOpen"
-          class="md:hidden border-t border-gray-200 pt-4 pb-4 space-y-2"
-        >
-          <div class="text-sm text-gray-700 px-3 py-2">Hello, {{ store.user?.name }}</div>
-          <router-link 
-            to="/profile"
-            class="w-full text-left bg-stone-600 hover:bg-stone-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span>Profile</span>
-          </router-link>
-          <router-link 
-            to="/system-info"
-            class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-          >
-            System Info
-          </router-link>
-          <button 
-            @click="handleLogout; isMobileMenuOpen = false"
-            class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-          >
-            Logout
-          </button>
-        </div>
       </div>
     </header>
+    <!-- Mobile Menu Dropdown (moved outside header/main for full overlay) -->
+    <div 
+      v-show="isMobileMenuOpen"
+      class="md:hidden fixed left-0 top-0 w-full h-full z-[99999] bg-stone-900 bg-opacity-95 border-t border-gray-200 pt-4 pb-4 space-y-2 overflow-y-auto"
+      style="height: 100vh;"
+    >
+      <!-- Close (X) Button -->
+      <button
+        @click="isMobileMenuOpen = false"
+        class="absolute top-4 right-4 z-[100000] bg-stone-800 text-white rounded-full p-2 shadow-lg hover:bg-stone-700 focus:outline-none"
+        aria-label="Close menu"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <div class="text-sm text-gray-700 px-3 py-2 mt-8">Hello, {{ store.user?.name }}</div>
+      <router-link 
+        to="/profile"
+        class="w-full text-left bg-stone-600 hover:bg-stone-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <span>Profile</span>
+      </router-link>
+      <router-link 
+        to="/system-info"
+        class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+      >
+        System Info
+      </router-link>
+      <button 
+        @click="handleLogout; isMobileMenuOpen = false"
+        class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+      >
+        Logout
+      </button>
+    </div>
 
     <!-- Header Toggle Tab (absolutely positioned) -->
     <div 

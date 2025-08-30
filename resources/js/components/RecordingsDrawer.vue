@@ -166,7 +166,7 @@
                             </button>
                             <button
                                 @click="deleteFile(file)"
-                                class="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
+                                class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
                             >
                                 <svg
                                     class="w-5 h-5"
@@ -286,7 +286,7 @@
                         >
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3 flex-1">
-                                    <div class="p-2 rounded-lg bg-stone-100">
+                                    <div class="">
                                         <svg
                                             class="w-5 h-5 text-stone-600"
                                             fill="none"
@@ -321,12 +321,7 @@
                                     <!-- Play/Pause Button -->
                                     <button
                                         @click="playFile(session.recordings[0])"
-                                        class="p-2 rounded-full transition-colors duration-200"
-                                        :class="{
-                                            'bg-stone-100 text-stone-600': currentlyPlayingId !== session.recordings[0]?.id,
-                                            'bg-red-100 text-red-600 hover:bg-red-200': currentlyPlayingId === session.recordings[0]?.id,
-                                            'hover:bg-stone-200': currentlyPlayingId !== session.recordings[0]?.id
-                                        }"
+                                        class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                                     >
                                         <svg
                                             v-if="currentlyPlayingId !== session.recordings[0]?.id"
@@ -352,18 +347,18 @@
                                         class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                                     >
                                         <svg
-                                            class="w-5 h-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                            />
-                                        </svg>
+                                                class="w-5 h-5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                                />
+                                            </svg>
                                     </button>
 
                                     <!-- Delete Button -->
@@ -405,7 +400,7 @@
                         >
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3 flex-1">
-                                    <div class="p-2 rounded-lg bg-stone-100">
+                                    <div class="p-2">
                                         <svg
                                             class="w-5 h-5 text-stone-600"
                                             fill="none"
@@ -468,7 +463,7 @@
                                     </button>
                                     <button
                                         @click="deleteSession(session)"
-                                        class="p-2 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
+                                        class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
                                     >
                                         <svg
                                             class="w-5 h-5"
@@ -552,7 +547,7 @@
                                                     currentlyPlayingId !==
                                                     recording.id
                                                 "
-                                                class="w-4 h-4"
+                                                class="w-5 h-5"
                                                 fill="currentColor"
                                                 viewBox="0 0 24 24"
                                             >
@@ -561,7 +556,7 @@
                                             <!-- Pause Icon -->
                                             <svg
                                                 v-else
-                                                class="w-4 h-4"
+                                                class="w-5 h-5"
                                                 fill="currentColor"
                                                 viewBox="0 0 24 24"
                                             >
@@ -575,7 +570,7 @@
                                             class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                                         >
                                             <svg
-                                                class="w-4 h-4"
+                                                class="w-5 h-5"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
@@ -590,10 +585,10 @@
                                         </button>
                                         <button
                                             @click="deleteFile(recording)"
-                                            class="p-1.5 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
+                                            class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
                                         >
                                             <svg
-                                                class="w-4 h-4"
+                                                class="w-5 h-5"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"

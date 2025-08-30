@@ -119,31 +119,31 @@
         <div class="px-6 py-8">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-stone-900">Plan Information</h2>
-            <button
-              @click="showEditPlan = true"
-              class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              Edit Plan
-            </button>
           </div>
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="plan in plans" :key="plan.id" :class="[ 'p-4 rounded-lg border', plan.id === store.user?.plan_id ? 'border-stone-700 bg-white' : 'border-stone-300 bg-stone-50 text-stone-400' ]">
-              <label class="block text-sm font-medium mb-1" :class="plan.id === store.user?.plan_id ? 'text-stone-700' : 'text-stone-400'">
-                {{ plan.id === store.user?.plan_id ? 'Current Plan' : 'Available Plan' }}
-              </label>
-              <p :class="plan.id === store.user?.plan_id ? 'text-stone-900 font-bold text-lg' : 'text-stone-400 font-bold text-lg'">{{ plan.name.charAt(0).toUpperCase() + plan.name.slice(1) }}</p>
-              <p :class="plan.id === store.user?.plan_id ? 'text-stone-700 text-sm mt-1' : 'text-stone-400 text-sm mt-1'">{{ plan.description }}</p>
-              <ul class="list-disc ml-4 text-sm mt-2">
-                <li v-if="plan.name === 'full'">All features unlocked</li>
-                <li v-else-if="plan.name === 'base'">Standard features</li>
-                <li v-else>Limited features</li>
-              </ul>
+            <div v-for="plan in plans" :key="plan.id" class="p-4 rounded-lg border border-stone-300 bg-white text-stone-900 flex flex-col justify-between">
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  {{ plan.id === store.user?.plan_id ? 'Current Plan' : 'Available Plan' }}
+                </label>
+                <p class="font-bold text-lg">{{ plan.name.charAt(0).toUpperCase() + plan.name.slice(1) }}</p>
+                <p class="text-sm mt-1">{{ plan.description }}</p>
+                <ul class="list-disc ml-4 text-sm mt-2">
+                  <li v-if="plan.name === 'full'">All features unlocked</li>
+                  <li v-else-if="plan.name === 'base'">Standard features</li>
+                  <li v-else>Limited features</li>
+                </ul>
+              </div>
+              <div v-if="plan.id !== store.user?.plan_id" class="mt-4">
+                <button @click="openSwitchModal(plan)" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">Switch</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
   <!-- Edit Plan Modal -->
   <EditPlanModal v-if="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
+  <SwitchPlanModal v-if="showSwitchModal" :isOpen="showSwitchModal" :plan="selectedPlan" @close="closeSwitchModal" @success="handlePlanUpdate" />
 
       <!-- Account Settings -->
       <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -222,6 +222,17 @@
 </template>
 
 <script setup>
+import SwitchPlanModal from './SwitchPlanModal.vue'
+const showSwitchModal = ref(false)
+const selectedPlan = ref(null)
+const openSwitchModal = (plan) => {
+  selectedPlan.value = plan
+  showSwitchModal.value = true
+}
+const closeSwitchModal = () => {
+  showSwitchModal.value = false
+  selectedPlan.value = null
+}
 import { ref, onMounted, computed } from 'vue'
 import { useMainStore } from '../stores/main'
 import EditPlanModal from './EditPlanModal.vue'

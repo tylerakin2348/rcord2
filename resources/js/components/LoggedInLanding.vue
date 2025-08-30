@@ -72,9 +72,13 @@
     <!-- Mobile Menu Dropdown (moved outside header/main for full overlay) -->
     <div 
       v-show="isMobileMenuOpen"
-      class="md:hidden fixed left-0 top-0 w-full h-full z-[99999] bg-stone-900 bg-opacity-95 border-t border-gray-200 pt-4 pb-4 space-y-2 overflow-y-auto"
+      class="md:hidden fixed left-0 top-0 w-full h-full z-[99999] bg-stone-900 bg-opacity-95 border-t border-gray-200 pt-4 pb-4 overflow-y-auto transition-colors duration-500 flex flex-col"
       style="height: 100vh;"
     >
+      <!-- ReCord logo top left -->
+      <div class="absolute left-4 top-4 z-[100001]">
+        <h1 class="text-2xl font-bold text-white">ReCord</h1>
+      </div>
       <!-- Close (X) Button -->
       <button
         @click="isMobileMenuOpen = false"
@@ -85,28 +89,31 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-      <div class="text-sm text-gray-700 px-3 py-2 mt-8">Hello, {{ store.user?.name }}</div>
-      <router-link 
-        to="/profile"
-        class="w-full text-left bg-stone-600 hover:bg-stone-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-        <span>Profile</span>
-      </router-link>
-      <router-link 
-        to="/system-info"
-        class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-      >
-        System Info
-      </router-link>
-      <button 
-        @click="handleLogout; isMobileMenuOpen = false"
-        class="w-full text-left text-stone-500 hover:text-stone-700 hover:bg-stone-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-      >
-        Logout
-      </button>
+      <!-- Centered user profile above menu items -->
+      <div class="flex flex-col items-center justify-center w-full flex-1 space-y-6 mt-20">
+        <span class="text-lg text-white font-semibold text-center">Hello, {{ store.user?.name }}</span>
+        <router-link 
+          to="/profile"
+          class="w-3/4 text-center bg-stone-700 hover:bg-stone-800 text-white px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md"
+        >
+          <svg class="w-5 h-5 inline-block mr-2 align-middle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span class="align-middle">Profile</span>
+        </router-link>
+        <router-link 
+          to="/system-info"
+          class="w-3/4 text-center bg-stone-800 hover:bg-stone-900 text-stone-200 px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md"
+        >
+          System Info
+        </router-link>
+        <button 
+          @click="handleLogout; isMobileMenuOpen = false"
+          class="w-3/4 text-center bg-stone-700 hover:bg-stone-800 text-stone-200 px-4 py-3 rounded-xl text-base font-semibold transition-colors duration-200 shadow-md"
+        >
+          Logout
+        </button>
+      </div>
     </div>
 
     <!-- Header Toggle Tab (absolutely positioned) -->
@@ -195,11 +202,11 @@
         <!-- Mobile Drawer Toggle Button (floating) -->
         <div 
           v-show="isMobileView"
-          class="fixed top-1/2 right-4 z-50 transform -translate-y-1/2"
+          class="fixed top-1/2 right-0 z-50 transform -translate-y-1/2"
         >
           <button
             @click="toggleDrawer"
-            class="p-3 bg-stone-600 hover:bg-stone-700 text-white rounded-full shadow-lg transition-all duration-200"
+            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-4 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200"
           >
             <svg 
               class="w-5 h-5 transition-transform duration-300" 
@@ -221,14 +228,13 @@
             // Desktop styles
             'opacity-0 transform scale-x-0 pointer-events-none': !isDrawerExpanded && !isMobileView,
             // Mobile styles - floating overlay
-            'fixed inset-0 top-16 w-full z-40': isMobileView,
+            'fixed top-19 w-full z-40': isMobileView,
             'transform translate-x-full': isMobileView && !isDrawerExpanded,
             'transform translate-x-0': isMobileView && isDrawerExpanded
           }"
-          :style="isMobileView ? {} : { 
-            width: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0%',
-            height: 'calc(100vh - 69px)' 
-          }"
+          :style="isMobileView
+            ? (isDrawerExpanded ? { width: '92vw', maxWidth: '92vw' } : {})
+            : { width: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0%', height: 'calc(100vh - 69px)' }"
         >
           <RecordingsDrawer
             recording-mode="looped"

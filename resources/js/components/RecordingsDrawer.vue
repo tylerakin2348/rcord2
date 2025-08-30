@@ -1,31 +1,14 @@
 <template>
-    <div class="p-6 h-full flex flex-col">
+    <div 
+        class="p-6 h-full flex flex-col">
         <!-- Mobile close button -->
         <div
             v-if="isMobile"
             class="flex justify-between items-center mb-4"
         >
             <h3 class="text-xl font-semibold text-stone-800">
-               Saved Memos
+               Saved Recordings
             </h3>
-            <button
-                @click="$emit('close')"
-                class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-200 rounded-full transition-colors duration-200"
-            >
-                <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                    />
-                </svg>
-            </button>
         </div>
 
         <!-- Desktop header -->
@@ -33,7 +16,7 @@
             v-if="!isMobile"
             class="text-xl font-semibold text-stone-800 mb-6"
         >
-           Saved Memos
+           Saved Recordings
         </h3>
 
         <!-- Recordings List with Scroll -->

@@ -38,6 +38,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { onUnmounted, watch } from 'vue'
 const props = defineProps({
   isOpen: Boolean,
   plan: Object
@@ -57,6 +58,12 @@ const closeModal = () => {
   emit('close')
 }
 
+const handleEscape = (e) => {
+  if (e.key === 'Escape') {
+    closeModal()
+  }
+}
+
 const getStripePublishableKey = () => {
   const key = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || window.STRIPE_PUBLISHABLE_KEY || 'pk_test_REPLACE_WITH_YOUR_PUBLISHABLE_KEY'
   return key
@@ -64,7 +71,6 @@ const getStripePublishableKey = () => {
 
 
 const mountStripeElements = async () => {
-  console.log('after-enter')
   if (!window.Stripe) {
     error.value = 'Stripe.js not loaded'
     return
@@ -87,7 +93,6 @@ const mountStripeElements = async () => {
   cardElement = elements.create('card')
   cardElement.mount('#stripe-payment-element')
 
-  console.log('at end')
 }
 
 const name = ref('')
@@ -124,8 +129,8 @@ const submitPayment = async () => {
 }
 
 const formatAmount = (planName) => {
-  if (planName === 'base') return '$10.00';
-  if (planName === 'full') return '$20.00';
+  if (planName === 'base') return '$5.00';
+  if (planName === 'full') return '$10.00';
   return '$0.00';
 }
 
@@ -134,6 +139,21 @@ onMounted(() => {
     setTimeout(() => {
       mountStripeElements()
     }, 300)
+  }
+  if (props.isOpen) {
+    window.addEventListener('keydown', handleEscape)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleEscape)
+})
+
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    window.addEventListener('keydown', handleEscape)
+  } else {
+    window.removeEventListener('keydown', handleEscape)
   }
 })
 </script>

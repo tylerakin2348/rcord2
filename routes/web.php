@@ -119,4 +119,8 @@ Route::get('/api/features', function () {
     ]);
 });
 
-Route::middleware('auth:web')->post('/api/stripe/payment-intent', [StripeController::class, 'createPaymentIntent']);
+Route::middleware('auth:sanctum')->post('/api/stripe/payment-intent', [StripeController::class, 'createPaymentIntent']);
+
+Route::middleware(['auth:web','can:manage_users'])->group(function () {
+    Route::get('api/admin/users', [UserController::class, 'index']);
+});

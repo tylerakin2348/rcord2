@@ -9,6 +9,7 @@ import SystemInfo from '../components/SystemInfo.vue';
 import UserStorageReport from '../components/UserStorageReport.vue';
 import UserActivityReport from '../components/UserActivityReport.vue';
 import UserSessionsReport from '../components/UserSessionsReport.vue';
+import UserManagement from '../components/UserManagement.vue';
 
 const routes = [
   {
@@ -53,6 +54,13 @@ const routes = [
     component: UserSessionsReport,
     meta: { requiresAuth: true }
   }
+    ,
+    {
+      path: '/system-info/users',
+      name: 'user-management',
+      component: UserManagement,
+      meta: { requiresAuth: true }
+    }
 ];
 
 const router = createRouter({

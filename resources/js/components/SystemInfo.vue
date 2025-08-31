@@ -12,7 +12,10 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- System Stats -->
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+        <router-link 
+          to="/system-info/users" 
+          class="bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
+        >
           <div class="p-6">
             <div class="flex items-center">
               <div class="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
@@ -23,10 +26,11 @@
               <div class="ml-4">
                 <p class="text-sm font-medium text-stone-500">Total Users</p>
                 <p class="text-2xl font-bold text-stone-900">{{ systemStats.totalUsers }}</p>
+                <p class="text-xs text-stone-400 mt-1">Click for details →</p>
               </div>
             </div>
           </div>
-        </div>
+        </router-link>
 
         <router-link 
           to="/system-info/activity" 
@@ -156,8 +160,8 @@
         </div>
       </div>
 
-      <!-- User Management Section (Admin only) -->
-      <div v-if="isAdmin" class="bg-white shadow-sm rounded-lg mb-8">
+  <!-- User Management Section (Permission check) -->
+  <div v-if="canManageUsers" class="bg-white shadow-sm rounded-lg mb-8">
         <div class="px-6 py-8">
           <div class="flex justify-between items-center mb-6">
             <div>
@@ -357,8 +361,8 @@ const selectedUser = ref(null)
 const userToDelete = ref(null)
 
 // Computed
-const isAdmin = computed(() => {
-  return store.user?.role === 'admin'
+const canManageUsers = computed(() => {
+  return Array.isArray(store.user?.permissions) && store.user.permissions.includes('manage_users')
 })
 
 // Methods
@@ -409,7 +413,7 @@ const loadSystemStats = async () => {
 }
 
 const loadUsers = async () => {
-  if (!isAdmin.value) return
+  if (!canManageUsers.value) return
   
   loadingUsers.value = true
   try {
@@ -533,7 +537,7 @@ const handleLogoutAndClose = async () => {
 
 onMounted(async () => {
   await loadSystemStats()
-  if (isAdmin.value) {
+  if (canManageUsers.value) {
     await loadUsers()
   }
 })

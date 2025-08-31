@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-class UserController extends Controller
-{
+class UserController extends Controller {
+
     /**
      * Update the authenticated user's plan.
      */
@@ -106,19 +106,6 @@ class UserController extends Controller
         return response()->json([
             'user' => $user,
             'message' => 'User updated successfully'
-        ]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $user = User::findOrFail($id);
-        $user->delete();
-
-        return response()->json([
-            'message' => 'User deleted successfully'
         ]);
     }
 
@@ -347,5 +334,14 @@ class UserController extends Controller
                 'usersWithSessions' => $usersWithSessions,
             ]
         ]);
+    }
+    /**
+     * Soft delete the specified user.
+     */
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return response()->json(['message' => 'User deleted successfully']);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\RecordingTypeController;
 use App\Http\Controllers\RecordingSessionController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StripeController;
 
 Route::get('/', function () {
@@ -121,6 +122,10 @@ Route::get('/api/features', function () {
 
 Route::middleware('auth:sanctum')->post('/api/stripe/payment-intent', [StripeController::class, 'createPaymentIntent']);
 
-Route::middleware(['auth:web','can:manage_users'])->group(function () {
+// Route::middleware(['auth:sanctum','can:manage_users'])->group(function () {
     Route::get('api/admin/users', [UserController::class, 'index']);
-});
+// });
+
+Route::get('api/roles', [RoleController::class, 'index']);
+
+Route::delete('/api/admin/users/{id}', [App\Http\Controllers\UserController::class, 'destroy']);

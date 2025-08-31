@@ -1,3 +1,10 @@
+
+// Set Axios Authorization header from localStorage token on app load
+const token = localStorage.getItem('auth_token');
+if (token) {
+  window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
 import { defineStore } from 'pinia';
 
 export const useMainStore = defineStore('main', {
@@ -116,7 +123,11 @@ export const useMainStore = defineStore('main', {
         
         this.user = data.user;
         this.isAuthenticated = true;
-        
+        // Store token if present
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+          window.axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+        }
         return data;
       } catch (err) {
         this.error = err.message;
@@ -169,9 +180,12 @@ export const useMainStore = defineStore('main', {
           }
         });
         
-        this.user = null;
-        this.isAuthenticated = false;
-        this.users = [];
+  this.user = null;
+  this.isAuthenticated = false;
+  this.users = [];
+  // Remove token from localStorage and Axios
+  localStorage.removeItem('auth_token');
+  delete window.axios.defaults.headers.common['Authorization'];
       } catch (err) {
         console.error('Logout error:', err);
       } finally {

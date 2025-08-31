@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div v-if="isOpen" class="fixed inset-0 flex items-center justify-center z-50" :style="{ background: 'rgba(0,0,0,0.5)' }">
     <div class="bg-white rounded-lg p-8 w-full max-w-md mx-4">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900">
@@ -39,6 +39,13 @@
           />
         </div>
 
+        <div class="mb-4">
+          <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+          <select v-model="form.role_id" id="role" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+          </select>
+        </div>
+
         <div class="mb-6">
           <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
             Password {{ isEditing ? '(leave blank to keep current)' : '' }}
@@ -75,7 +82,31 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+
+const roles = ref([])
+
+onMounted(async () => {
+  try {
+    const response = await window.axios.get('/api/roles')
+    roles.value = response.data
+  } catch (error) {
+    // handle error
+  }
+})
+// Escape key closes modal
+const handleEscape = (e) => {
+  if (e.key === 'Escape' && props.isOpen) {
+    closeModal();
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleEscape)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleEscape)
+})
 import { useMainStore } from '../stores/main.js'
 
 const props = defineProps({
@@ -98,7 +129,8 @@ const error = ref('')
 const form = reactive({
   name: '',
   email: '',
-  password: ''
+  password: '',
+  role_id: ''
 })
 
 const isEditing = computed(() => !!props.user)
@@ -115,6 +147,7 @@ const populateForm = () => {
     form.name = props.user.name || ''
     form.email = props.user.email || ''
     form.password = ''
+    form.role_id = props.user.role_id || ''
   } else {
     resetForm()
   }

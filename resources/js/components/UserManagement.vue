@@ -15,6 +15,7 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
@@ -24,6 +25,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="user in users" :key="user.id" class="hover:bg-stone-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="h-10 w-10 rounded-full bg-stone-200 flex items-center justify-center">
@@ -31,7 +33,6 @@
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                      <div class="text-sm text-gray-500">#{{ user.id }}</div>
                     </div>
                   </div>
                 </td>
@@ -52,8 +53,8 @@
           </table>
         </div>
       </div>
-      <UserFormModal v-if="showEditUser" :user="selectedUser" @close="closeUserModal" @success="handleUserSuccess" />
-      <ConfirmModal v-if="showDeleteConfirm" title="Delete User" :message="`Are you sure you want to delete ${userToDelete?.name}? This action cannot be undone.`" confirmText="Delete User" confirmClass="bg-red-600 hover:bg-red-700" @close="showDeleteConfirm = false" @confirm="deleteUser" />
+  <UserFormModal :isOpen="showEditUser" :user="selectedUser" @close="closeUserModal" @success="handleUserSuccess" />
+  <ConfirmModal :isOpen="showDeleteConfirm" title="Delete User" :message="`Are you sure you want to delete ${userToDelete?.name}? This action cannot be undone.`" confirmText="Delete User" confirmClass="bg-red-600 hover:bg-red-700" @close="showDeleteConfirm = false" @confirm="deleteUser" />
     </main>
   </div>
 </template>

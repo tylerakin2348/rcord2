@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div v-if="isOpen" class="fixed inset-0 flex items-center justify-center z-50" :style="{ background: 'rgba(0,0,0,0.5)' }">
     <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
       <div class="flex items-center mb-4">
         <div class="flex-shrink-0">
@@ -37,7 +37,8 @@
 </template>
 
 <script setup>
-defineProps({
+import { onMounted, onUnmounted } from 'vue'
+const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false
@@ -52,5 +53,19 @@ defineProps({
   }
 })
 
-defineEmits(['close', 'confirm'])
+const emit = defineEmits(['close', 'confirm'])
+
+// Escape key closes modal
+const handleEscape = (e) => {
+  if (e.key === 'Escape' && props.isOpen) {
+    emit('close');
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleEscape)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleEscape)
+})
 </script>

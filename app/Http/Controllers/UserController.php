@@ -29,7 +29,7 @@ class UserController extends Controller {
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::with('roles')->get();
         return response()->json(['users' => $users]);
     }
 
@@ -95,6 +95,7 @@ class UserController extends Controller {
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
+            'role_id' => 'nullable|exists:roles,id',
         ]);
 
         $user->update([
@@ -103,8 +104,22 @@ class UserController extends Controller {
             'password' => $request->password ? Hash::make($request->password) : $user->password,
         ]);
 
+        // Sync role if provided
+        if ($request->filled('role_id')) {
+            $user->roles()->sync([$request->role_id]);
+        }
+
+        // Get the user's current role (first role, or null)
+        $role = $user->roles()->first();
+
         return response()->json([
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $role ? $role->name : null,
+                'role_id' => $role ? $role->id : null,
+            ],
             'message' => 'User updated successfully'
         ]);
     }

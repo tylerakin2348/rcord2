@@ -39,8 +39,8 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.email }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                        :class="user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'">
-                    {{ user.role || 'user' }}
+                        :class="user.roles[0]?.name === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'">
+                    {{ user.roles[0]?.name || 'user' }}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(user.created_at) }}</td>

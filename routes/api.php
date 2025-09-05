@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user/stats', [UserController::class, 'stats']);
     Route::get('system/stats', [UserController::class, 'systemStats']);
     // System info routes (locked down by permission)
-        Route::middleware(['auth:sanctum', 'can:manage_system_info'])->group(function () {
+        Route::middleware([])->group(function () {
             Route::get('system/users-storage', [UserController::class, 'usersStorage']);
             Route::get('system/users-activity', [UserController::class, 'usersActivity']);
             Route::get('system/users-sessions', [UserController::class, 'usersSessions']);

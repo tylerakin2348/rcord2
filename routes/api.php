@@ -12,9 +12,11 @@ use App\Http\Controllers\StripeController;
 // NOTE: Use auth:sanctum for protected API routes. Do not use web middleware for APIs.
 // Public routes do not require authentication.
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('user/change-password', [App\Http\Controllers\UserController::class, 'changePassword']);
     Route::delete('user', [App\Http\Controllers\UserController::class, 'deleteSelf']);
+    Route::patch('user', [App\Http\Controllers\UserController::class, 'updateSelf']);
 });
 
 

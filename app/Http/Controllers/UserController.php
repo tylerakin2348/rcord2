@@ -8,6 +8,28 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller {
+    /**
+     * Update the authenticated user's name or email.
+     */
+    public function updateSelf(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->only(['name', 'email']);
+        $rules = [];
+        if (array_key_exists('name', $data)) {
+            $rules['name'] = 'required|string|max:255';
+        }
+        if (array_key_exists('email', $data)) {
+            $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
+        }
+        if (empty($rules)) {
+            return response()->json(['message' => 'No valid fields to update.'], 422);
+        }
+        $validated = $request->validate($rules);
+        $user->fill($validated);
+        $user->save();
+        return response()->json(['message' => 'Account updated successfully.', 'user' => $user]);
+    }
 
     /**
      * Update the authenticated user's plan.

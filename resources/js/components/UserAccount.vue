@@ -85,37 +85,56 @@
         <div class="px-6 py-8">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-stone-900">Account Information</h2>
-            <button
-              @click="showEditAccount = true"
-              class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              Edit Account
-            </button>
           </div>
           <!-- Profile Details Grid -->
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="bg-stone-50 p-4 rounded-lg">
+            <!-- Name -->
+            <div class="bg-stone-50 p-4 rounded-lg flex flex-col relative">
               <label class="block text-sm font-medium text-stone-700 mb-1">Full Name</label>
-              <p class="text-stone-900 font-medium">{{ store.user?.name || 'N/A' }}</p>
+              <div class="flex items-center">
+                <p class="text-stone-900 font-medium">{{ store.user?.name || 'N/A' }}</p>
+                <button @click="showEditName = true" class="ml-2 text-stone-400 hover:text-stone-700" title="Edit Name">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-4.243 1.414 1.414-4.243a4 4 0 01.828-1.414z" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div class="bg-stone-50 p-4 rounded-lg">
+            <!-- Email -->
+            <div class="bg-stone-50 p-4 rounded-lg flex flex-col relative">
               <label class="block text-sm font-medium text-stone-700 mb-1">Email Address</label>
-              <p class="text-stone-900 font-medium">{{ store.user?.email || 'N/A' }}</p>
+              <div class="flex items-center">
+                <p class="text-stone-900 font-medium">{{ store.user?.email || 'N/A' }}</p>
+                <button @click="showEditEmail = true" class="ml-2 text-stone-400 hover:text-stone-700" title="Edit Email">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-4.243 1.414 1.414-4.243a4 4 0 01.828-1.414z" />
+                  </svg>
+                </button>
+              </div>
             </div>
+            <!-- Member Since -->
             <div class="bg-stone-50 p-4 rounded-lg">
               <label class="block text-sm font-medium text-stone-700 mb-1">Member Since</label>
               <p class="text-stone-900 font-medium">{{ formatDate(store.user?.created_at) }}</p>
             </div>
-            <div class="bg-stone-50 p-4 rounded-lg">
-              <label class="block text-sm font-medium text-stone-700 mb-1">User ID</label>
-              <p class="text-stone-900 font-medium">#{{ store.user?.id || 'N/A' }}</p>
+            <!-- Password -->
+            <div class="bg-stone-50 p-4 rounded-lg flex flex-col relative">
+              <label class="block text-sm font-medium text-stone-700 mb-1">Password</label>
+              <div class="flex items-center">
+                <span class="text-stone-400 font-mono">••••••••</span>
+                <button @click="showChangePassword = true" class="ml-2 text-stone-400 hover:text-stone-700" title="Change Password">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-4.243 1.414 1.414-4.243a4 4 0 01.828-1.414z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Plan Information Panel -->
-      <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-8">
+      <div class="bg-white overflow-hidden shadow-sm rounded-lg  mb-8">
         <div class="px-6 py-8">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-stone-900">Plan Information</h2>
@@ -141,43 +160,13 @@
           </div>
         </div>
       </div>
-  <!-- Edit Plan Modal -->
-  <EditPlanModal v-if="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
-  <SwitchPlanModal v-if="showSwitchModal" :isOpen="showSwitchModal" :plan="selectedPlan" @close="closeSwitchModal" @success="handlePlanUpdate" />
-  <PlanPaymentModal v-if="showPaymentModal" :isOpen="showPaymentModal" :plan="selectedPlan" @close="closePaymentModal" @success="handlePlanUpdate" />
 
-      <!-- Account Settings -->
+         <!-- Account Settings -->
       <div class="bg-white overflow-hidden shadow-sm rounded-lg">
         <div class="px-6 py-8">
           <h2 class="text-xl font-semibold text-stone-900 mb-6">Account Settings</h2>
           
           <div class="space-y-4">
-            <div class="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
-              <div>
-                <h3 class="font-medium text-stone-900">Change Password</h3>
-                <p class="text-sm text-stone-500">Update your account password</p>
-              </div>
-              <button
-                @click="showChangePassword = true"
-                class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-              >
-                Change Password
-              </button>
-            </div>
-<!-- 
-            <div class="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
-              <div>
-                <h3 class="font-medium text-stone-900">Export Data</h3>
-                <p class="text-sm text-stone-500">Download all your recordings and data</p>
-              </div>
-              <button
-                @click="exportUserData"
-                class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-              >
-                Export Data
-              </button>
-            </div> -->
-
             <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
               <div>
                 <h3 class="font-medium text-red-900">Delete Account</h3>
@@ -193,13 +182,25 @@
           </div>
         </div>
       </div>
+
+      <!-- Edit Plan Modal -->
+      <EditPlanModal v-if="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
+      <SwitchPlanModal v-if="showSwitchModal" :isOpen="showSwitchModal" :plan="selectedPlan" @close="closeSwitchModal" @success="handlePlanUpdate" />
+      <PlanPaymentModal v-if="showPaymentModal" :isOpen="showPaymentModal" :plan="selectedPlan" @close="closePaymentModal" @success="handlePlanUpdate" />
+
     </main>
 
-    <!-- Edit Account Modal -->
-    <EditAccountModal
-      v-if="showEditAccount"
-      @close="showEditAccount = false"
-      @success="handleAccountUpdate"
+    <!-- Edit Name Modal -->
+    <EditNameModal
+      :isOpen="showEditName"
+      @close="showEditName = false"
+      @success="handleNameUpdate"
+    />
+    <!-- Edit Email Modal -->
+    <EditEmailModal
+      :isOpen="showEditEmail"
+      @close="showEditEmail = false"
+      @success="handleEmailUpdate"
     />
 
     <!-- Change Password Modal -->
@@ -244,7 +245,8 @@ const closePaymentModal = () => {
 import { ref, onMounted, computed } from 'vue'
 import { useMainStore } from '../stores/main'
 import EditPlanModal from './EditPlanModal.vue'
-import EditAccountModal from './EditAccountModal.vue'
+import EditNameModal from './EditNameModal.vue'
+import EditEmailModal from './EditEmailModal.vue'
 import ChangePasswordModal from './ChangePasswordModal.vue'
 import DeleteAccountModal from './DeleteAccountModal.vue'
 const handleAccountDeleted = async () => {
@@ -273,7 +275,8 @@ onMounted(() => {
 })
 
 // Modal states
-const showEditAccount = ref(false)
+const showEditName = ref(false)
+const showEditEmail = ref(false)
 const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
 
@@ -325,9 +328,13 @@ const handleLogout = async () => {
   }
 }
 
-const handleAccountUpdate = () => {
-  showEditAccount.value = false
-  // Optionally refresh user data
+const handleNameUpdate = async () => {
+  showEditName.value = false
+  await store.fetchUser()
+}
+const handleEmailUpdate = async () => {
+  showEditEmail.value = false
+  await store.fetchUser()
 }
 
 const handlePasswordChange = () => {

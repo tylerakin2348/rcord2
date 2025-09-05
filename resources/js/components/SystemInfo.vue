@@ -160,57 +160,6 @@
         </div>
       </div>
 
-      <!-- System Settings -->
-      <div class="bg-white shadow-sm rounded-lg">
-        <div class="px-6 py-8">
-          <h2 class="text-xl font-semibold text-stone-900 mb-6">System Settings</h2>
-          
-          <div class="space-y-6">
-            <div class="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
-              <div>
-                <h3 class="font-medium text-stone-900">System Maintenance</h3>
-                <p class="text-sm text-stone-500">Run system maintenance tasks and cleanup</p>
-              </div>
-              <button
-                @click="runMaintenance"
-                class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                :disabled="maintenanceRunning"
-              >
-                <span v-if="maintenanceRunning">Running...</span>
-                <span v-else>Run Maintenance</span>
-              </button>
-            </div>
-
-            <div class="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
-              <div>
-                <h3 class="font-medium text-stone-900">System Backup</h3>
-                <p class="text-sm text-stone-500">Create a full system backup</p>
-              </div>
-              <button
-                @click="createBackup"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                :disabled="backupRunning"
-              >
-                <span v-if="backupRunning">Creating...</span>
-                <span v-else>Create Backup</span>
-              </button>
-            </div>
-
-            <div class="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
-              <div>
-                <h3 class="font-medium text-stone-900">Export System Data</h3>
-                <p class="text-sm text-stone-500">Export all system data for analysis</p>
-              </div>
-              <button
-                @click="exportSystemData"
-                class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-              >
-                Export Data
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </main>
 
     <!-- User Form Modal -->

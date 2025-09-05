@@ -1,7 +1,7 @@
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
     <!-- Background overlay -->
-    <div class="fixed inset-0 bg-black bg-opacity-50" @click="$emit('close')"></div>
+  <div class="fixed inset-0" style="background:rgba(0,0,0,0.5)" @click="$emit('close')"></div>
     
     <!-- Modal -->
     <div class="flex items-center justify-center min-h-screen p-4">

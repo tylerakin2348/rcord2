@@ -164,7 +164,7 @@
                 Change Password
               </button>
             </div>
-
+<!-- 
             <div class="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
               <div>
                 <h3 class="font-medium text-stone-900">Export Data</h3>
@@ -176,7 +176,7 @@
               >
                 Export Data
               </button>
-            </div>
+            </div> -->
 
             <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
               <div>
@@ -204,20 +204,17 @@
 
     <!-- Change Password Modal -->
     <ChangePasswordModal
-      v-if="showChangePassword"
+      :isOpen="showChangePassword"
       @close="showChangePassword = false"
       @success="handlePasswordChange"
     />
 
-    <!-- Delete Account Confirmation -->
-    <ConfirmModal
+    <!-- Delete Account Modal -->
+    <DeleteAccountModal
       v-if="showDeleteAccount"
-      title="Delete Account"
-      message="Are you sure you want to permanently delete your account? This action cannot be undone and will remove all your recordings and data."
-      confirmText="Delete Account"
-      confirmClass="bg-red-600 hover:bg-red-700"
+      :visible="showDeleteAccount"
       @close="showDeleteAccount = false"
-      @confirm="deleteAccount"
+      @success="handleAccountDeleted"
     />
   </div>
 </template>
@@ -249,7 +246,12 @@ import { useMainStore } from '../stores/main'
 import EditPlanModal from './EditPlanModal.vue'
 import EditAccountModal from './EditAccountModal.vue'
 import ChangePasswordModal from './ChangePasswordModal.vue'
-import ConfirmModal from './ConfirmModal.vue'
+import DeleteAccountModal from './DeleteAccountModal.vue'
+const handleAccountDeleted = async () => {
+  showDeleteAccount.value = false
+  await store.logout()
+  router.push('/')
+}
 import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
 import PageHeader from './PageHeader.vue'
 

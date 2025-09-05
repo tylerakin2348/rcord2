@@ -359,4 +359,34 @@ class UserController extends Controller {
         $user->delete();
         return response()->json(['message' => 'User deleted successfully']);
     }
+    /**
+     * Change the authenticated user's password.
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        }
+
+        $user->password = Hash::make($request->input('new_password'));
+        $user->save();
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
+    /**
+     * Delete the authenticated user's account.
+     */
+    public function deleteSelf(Request $request)
+    {
+        $user = $request->user();
+        $user->delete();
+        return response()->json(['message' => 'Account deleted successfully.']);
+    }
 }

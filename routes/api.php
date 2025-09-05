@@ -1,7 +1,7 @@
 
+
+
 <?php
-
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
@@ -12,22 +12,36 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StripeController;
 
-// Authentication routes
-Route::post('register', [AuthController::class, 'register'])->middleware('web');
-Route::post('login', [AuthController::class, 'login'])->middleware('web');
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:web');
-Route::get('user', [AuthController::class, 'user'])->middleware('auth:web');
-Route::get('user/stats', [UserController::class, 'stats'])->middleware('auth:web');
-Route::get('system/stats', [UserController::class, 'systemStats'])->middleware('auth:web');
+// NOTE: Use auth:sanctum for protected API routes. Do not use web middleware for APIs.
+// Public routes do not require authentication.
 
-// Detailed report routes (admin)
-Route::get('system/users-storage', [UserController::class, 'usersStorage'])->middleware('auth:web');
-Route::get('system/users-activity', [UserController::class, 'usersActivity'])->middleware('auth:web');
-Route::get('system/users-sessions', [UserController::class, 'usersSessions'])->middleware('auth:web');
+// Authentication routes (API - Sanctum)
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('user', [AuthController::class, 'user']);
+    Route::get('user/stats', [UserController::class, 'stats']);
+    Route::get('system/stats', [UserController::class, 'systemStats']);
+    // System info routes (locked down by permission)
+        Route::middleware(['auth:sanctum', 'can:manage_system_info'])->group(function () {
+            Route::get('system/users-storage', [UserController::class, 'usersStorage']);
+            Route::get('system/users-activity', [UserController::class, 'usersActivity']);
+            Route::get('system/users-sessions', [UserController::class, 'usersSessions']);
+        });
+    });
+
+    // User CRUD routes (protected)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('user', [AuthController::class, 'user']);
+        Route::get('user/stats', [UserController::class, 'stats']);
+        Route::apiResource('users', UserController::class);
+    });
 
 // User CRUD routes (protected)
-Route::middleware('auth:web')->group(function () {
-    Route::apiResource('api/users', UserController::class);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('users', UserController::class);
 });
 
 // Recording routes
@@ -38,11 +52,10 @@ Route::get('recordings/{recording}/stream', [RecordingController::class, 'stream
 // Recording types routes
 Route::get('recording-types', [RecordingTypeController::class, 'index']);
 
-Route::middleware('auth:web')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('recordings', [RecordingController::class, 'store']);
     Route::put('recordings/{recording}', [RecordingController::class, 'update']);
     Route::delete('recordings/{recording}', [RecordingController::class, 'destroy']);
-    
     // Recording session routes (all require authentication)
     Route::get('recording-sessions', [RecordingSessionController::class, 'index']);
     Route::get('recording-sessions/{session}', [RecordingSessionController::class, 'show']);
@@ -60,10 +73,11 @@ Route::get('stats', function () {
     ]);
 });
 
-Route::get('plans', [PlanController::class, 'index'])->middleware('auth:web');
-
-// Update user plan
-Route::post('user/plan', [UserController::class, 'updatePlan'])->middleware('auth:web');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('plans', [PlanController::class, 'index']);
+    // Update user plan
+    Route::post('user/plan', [UserController::class, 'updatePlan']);
+});
 
 Route::get('features', function () {
     return response()->json([
@@ -94,12 +108,10 @@ Route::get('features', function () {
     ]);
 });
 
-Route::middleware('auth:sanctum')->post('stripe/payment-intent', [StripeController::class, 'createPaymentIntent']);
-
-// Route::middleware(['auth:sanctum','can:manage_users'])->group(function () {
-    Route::get('api/admin/users', [UserController::class, 'index']);
-// });
-
-Route::get('api/roles', [RoleController::class, 'index']);
-
-Route::delete('admin/users/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('stripe/payment-intent', [StripeController::class, 'createPaymentIntent']);
+    // Admin routes
+    Route::get('admin/users', [UserController::class, 'index']);
+    Route::get('roles', [RoleController::class, 'index']);
+    Route::delete('admin/users/{id}', [UserController::class, 'destroy']);
+});

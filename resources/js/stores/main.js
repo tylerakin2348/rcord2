@@ -1,8 +1,20 @@
-
 // Set Axios Authorization header from localStorage token on app load
 const token = localStorage.getItem('auth_token');
 if (token) {
   window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+// Always update Axios Authorization header before each request
+if (window.axios && window.axios.interceptors) {
+  window.axios.interceptors.request.use(config => {
+    const latestToken = localStorage.getItem('auth_token');
+    if (latestToken) {
+      config.headers['Authorization'] = `Bearer ${latestToken}`;
+    } else {
+      delete config.headers['Authorization'];
+    }
+    return config;
+  });
 }
 
 import { defineStore } from 'pinia';
@@ -85,12 +97,16 @@ export const useMainStore = defineStore('main', {
 
     async fetchUser() {
       try {
-        const response = await fetch('/api/user');
-        
+        const response = await fetch('/api/user', {
+          headers: authHeaders(),
+        });
         if (response.ok) {
           const data = await response.json();
           this.user = data.user;
           this.isAuthenticated = true;
+          if (data.permissions) {
+            this.user.permissions = data.permissions;
+          }
         } else {
           this.user = null;
           this.isAuthenticated = false;
@@ -104,7 +120,6 @@ export const useMainStore = defineStore('main', {
     async login(credentials) {
       this.isLoading = true;
       this.error = null;
-      
       try {
         const response = await fetch('/api/login', {
           method: 'POST',
@@ -114,15 +129,15 @@ export const useMainStore = defineStore('main', {
           },
           body: JSON.stringify(credentials)
         });
-        
         const data = await response.json();
-        
         if (!response.ok) {
           throw new Error(data.message || 'Login failed');
         }
-        
         this.user = data.user;
         this.isAuthenticated = true;
+        if (data.permissions) {
+          this.user.permissions = data.permissions;
+        }
         // Store token if present
         if (data.token) {
           localStorage.setItem('auth_token', data.token);
@@ -140,7 +155,6 @@ export const useMainStore = defineStore('main', {
     async register(userData) {
       this.isLoading = true;
       this.error = null;
-      
       try {
         const response = await fetch('/api/register', {
           method: 'POST',
@@ -150,16 +164,15 @@ export const useMainStore = defineStore('main', {
           },
           body: JSON.stringify(userData)
         });
-        
         const data = await response.json();
-        
         if (!response.ok) {
           throw new Error(data.message || 'Registration failed');
         }
-        
         this.user = data.user;
         this.isAuthenticated = true;
-        
+        if (data.permissions) {
+          this.user.permissions = data.permissions;
+        }
         return data;
       } catch (err) {
         this.error = err.message;
@@ -196,9 +209,10 @@ export const useMainStore = defineStore('main', {
     // User CRUD operations
     async fetchUsers() {
       this.isLoading = true;
-      
       try {
-        const response = await fetch('/api/users');
+        const response = await fetch('/api/users', {
+          headers: authHeaders(),
+        });
         const data = await response.json();
         
         if (response.ok) {
@@ -216,14 +230,13 @@ export const useMainStore = defineStore('main', {
     async createUser(userData) {
       this.isLoading = true;
       this.error = null;
-      
       try {
         const response = await fetch('/api/users', {
           method: 'POST',
-          headers: {
+          headers: authHeaders({
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          }),
           body: JSON.stringify(userData)
         });
         
@@ -246,14 +259,13 @@ export const useMainStore = defineStore('main', {
     async updateUser(id, userData) {
       this.isLoading = true;
       this.error = null;
-      
       try {
         const response = await fetch(`/api/users/${id}`, {
           method: 'PUT',
-          headers: {
+          headers: authHeaders({
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          }),
           body: JSON.stringify(userData)
         });
         
@@ -276,13 +288,12 @@ export const useMainStore = defineStore('main', {
     async deleteUser(id) {
       this.isLoading = true;
       this.error = null;
-      
       try {
         const response = await fetch(`/api/users/${id}`, {
           method: 'DELETE',
-          headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          }
+          headers: authHeaders({
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          })
         });
         
         const data = await response.json();
@@ -326,3 +337,10 @@ export const useMainStore = defineStore('main', {
     }
   }
 });
+
+function authHeaders(extra = {}) {
+  const token = localStorage.getItem('auth_token');
+  return token
+    ? { ...extra, Authorization: `Bearer ${token}` }
+    : { ...extra };
+}

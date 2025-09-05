@@ -22,6 +22,9 @@
           <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
             Contact
           </a>
+          <a v-if="canManageSystemInfo" href="/system-info" class="text-gray-600 hover:text-blue-700 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
+            System Info
+          </a>
         </div>
 
         <div class="flex items-center space-x-4">
@@ -47,11 +50,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useMainStore } from '../stores/main';
 
 defineEmits(['login'])
 
 const isDark = ref(false);
+const store = useMainStore();
+
+const canManageSystemInfo = computed(() => {
+  return store.user && store.permissions && store.permissions.includes('manage_system_info');
+});
 
 const toggleTheme = () => {
   isDark.value = !isDark.value;

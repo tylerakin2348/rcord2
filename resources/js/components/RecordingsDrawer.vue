@@ -890,10 +890,14 @@ export default {
                 loadingMoreSessions.value = true;
             }
 
+         let f = localStorage.getItem('auth_token');
+
+            console.log(f, 'token')
             try {
                 const response = await window.axios.get(
                     '/api/recording-sessions',
                     {
+                        // headers: { Authorization: `Bearer ${token}` },
                         params: {
                             type: 'looped',
                             page: page,

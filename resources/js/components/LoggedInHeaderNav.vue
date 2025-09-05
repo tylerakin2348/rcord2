@@ -21,7 +21,7 @@
                     </svg>
                     <span>Account</span>
                   </button>
-                  <button @click="goToSystemInfo" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
+                  <button v-if="canManageSystemInfo" @click="goToSystemInfo" class="flex items-center gap-2 px-4 py-2 text-stone-700 hover:bg-stone-100 transition-colors duration-200 text-left">
                     <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
                     </svg>
@@ -109,6 +109,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMainStore } from '../stores/main';
+import { computed } from 'vue';
 const props = defineProps({
   userName: {
     type: String,
@@ -129,6 +130,11 @@ const toggleHeader = () => {
   isHeaderCollapsed.value = !isHeaderCollapsed.value;
   isHeaderExpanded.value = !isHeaderCollapsed.value;
 };
+
+const canManageSystemInfo = computed(() =>
+  store.user && store.user.permissions && store.user.permissions.includes('manage_system_info')
+);
+
 const toggleDesktopMenu = () => {
   showDesktopMenu.value = !showDesktopMenu.value;
 };

@@ -34,9 +34,14 @@ class AuthController extends Controller
             ]);
 
             Auth::login($user);
+            // Create Sanctum token for API clients
+            $token = $user->createToken('api_token')->plainTextToken;
 
+            $user->load('permissions');
             return response()->json([
                 'user' => $user,
+                'permissions' => $user->permissions->pluck('name'),
+                'token' => $token,
                 'message' => 'Registration successful'
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -61,9 +66,14 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
+        // Create Sanctum token for API clients
+        $token = $user->createToken('api_token')->plainTextToken;
 
+        $user->load('permissions');
         return response()->json([
             'user' => $user,
+            'permissions' => $user->permissions->pluck('name'),
+            'token' => $token,
             'message' => 'Login successful'
         ]);
     }
@@ -82,8 +92,11 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
+        $user = Auth::user();
+        $user->load('permissions');
         return response()->json([
-            'user' => Auth::user()
+            'user' => $user,
+            'permissions' => $user->permissions->pluck('name'),
         ]);
     }
 }

@@ -9,34 +9,7 @@
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Rcord</h1>
         </div>
 
-        <div class="hidden md:flex items-center space-x-8">
-          <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
-            Home
-          </a>
-          <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
-            Features
-          </a>
-          <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
-            About
-          </a>
-          <a href="#" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
-            Contact
-          </a>
-          <a v-if="canManageSystemInfo" href="/system-info" class="text-gray-600 hover:text-blue-700 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
-            System Info
-          </a>
-        </div>
-
         <div class="flex items-center space-x-4">
-          <button
-            @click="toggleTheme"
-            class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
-            title="Toggle theme"
-          >
-            <span v-if="isDark" class="text-yellow-500">☀️</span>
-            <span v-else class="text-gray-600">🌙</span>
-          </button>
-          
           <button 
             @click="$emit('login')"
             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"

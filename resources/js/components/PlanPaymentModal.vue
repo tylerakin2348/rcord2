@@ -40,6 +40,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { onUnmounted, watch } from 'vue'
+import { getStripeInstance, getStripeElements, mountCardElement, unmountCardElement, getCardElement } from '../stripe.js'
 const props = defineProps({
   isOpen: Boolean,
   plan: Object
@@ -48,15 +49,10 @@ const emit = defineEmits(['close', 'success'])
 const error = ref('')
 const successMessage = ref('')
 const loading = ref(false)
-let stripe = null
-let elements = null
-let cardElement = null
+// Stripe is now managed by a singleton helper
 
 const closeModal = () => {
-  if (cardElement) {
-    cardElement.unmount()
-    cardElement = null
-  }
+  unmountCardElement()
   emit('close')
 }
 
@@ -72,7 +68,7 @@ const getStripePublishableKey = () => {
 }
 
 
-const mountStripeElements = async () => {
+const mountStripeElements = () => {
   if (!window.Stripe) {
     error.value = 'Stripe.js not loaded'
     return
@@ -82,19 +78,7 @@ const mountStripeElements = async () => {
     error.value = 'Stripe container not found.'
     return
   }
-  if (cardElement) {
-    cardElement.unmount()
-    cardElement = null
-  }
-  stripe = window.Stripe(getStripePublishableKey())
-  if (typeof stripe.elements !== 'function') {
-    error.value = 'Stripe initialization failed. Check your publishable key.'
-    return
-  }
-  elements = stripe.elements()
-  cardElement = elements.create('card')
-  cardElement.mount('#stripe-payment-element')
-
+  mountCardElement('stripe-payment-element')
 }
 
 const name = ref('')
@@ -113,6 +97,8 @@ const submitPayment = async () => {
     loading.value = false
     return
   }
+  const stripe = getStripeInstance()
+  const cardElement = getCardElement()
   const { error: stripeError } = await stripe.confirmCardPayment(clientSecret, {
     payment_method: {
       card: cardElement,
@@ -147,6 +133,7 @@ const formatAmount = (planName) => {
   return '$0.00';
 }
 
+
 onMounted(() => {
   if (props.isOpen) {
     setTimeout(() => {
@@ -164,9 +151,13 @@ onUnmounted(() => {
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
+    setTimeout(() => {
+      mountStripeElements()
+    }, 300)
     window.addEventListener('keydown', handleEscape)
   } else {
     window.removeEventListener('keydown', handleEscape)
+    unmountCardElement()
   }
 })
 </script>

@@ -24,6 +24,7 @@
             <div id="stripe-payment-element"></div>
           </div>
           <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{{ error }}</div>
+          <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{{ successMessage }}</div>
           <div class="flex justify-end space-x-3">
             <button type="button" @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
             <button type="submit" :disabled="loading" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
@@ -45,6 +46,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'success'])
 const error = ref('')
+const successMessage = ref('')
 const loading = ref(false)
 let stripe = null
 let elements = null
@@ -101,6 +103,7 @@ const email = ref('')
 const submitPayment = async () => {
   loading.value = true
   error.value = ''
+  successMessage.value = ''
   let clientSecret
   try {
     const response = await window.axios.post('/api/stripe/payment-intent', { plan_id: props.plan.id, name: name.value, email: email.value })
@@ -110,7 +113,7 @@ const submitPayment = async () => {
     loading.value = false
     return
   }
-  const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+  const { error: stripeError } = await stripe.confirmCardPayment(clientSecret, {
     payment_method: {
       card: cardElement,
       billing_details: {
@@ -124,7 +127,17 @@ const submitPayment = async () => {
     loading.value = false
     return
   }
-  emit('success')
+  // Update user plan after successful payment
+  try {
+    await window.axios.post('/api/user/plan', { plan_id: props.plan.id })
+    successMessage.value = 'Payment successful! Your plan has been upgraded.'
+    setTimeout(() => {
+      emit('success')
+      closeModal()
+    }, 1500)
+  } catch (e) {
+    error.value = 'Payment succeeded, but failed to update your plan. Please contact support.'
+  }
   loading.value = false
 }
 

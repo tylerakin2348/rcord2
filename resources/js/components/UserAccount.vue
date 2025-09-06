@@ -260,9 +260,9 @@ import PageHeader from './PageHeader.vue'
 const store = useMainStore()
 const isDrawerExpanded = ref(false)
 const showEditPlan = ref(false)
-const handlePlanUpdate = () => {
+const handlePlanUpdate = async () => {
   showEditPlan.value = false
-  // Optionally refresh user data
+  await store.fetchUser()
 }
 const plans = ref([])
 const fetchPlans = async () => {

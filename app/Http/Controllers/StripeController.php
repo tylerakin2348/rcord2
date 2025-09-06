@@ -18,8 +18,8 @@ class StripeController extends Controller
         }
         // Example: Set price based on plan (replace with your actual pricing logic)
         $amount = match($plan->name) {
-            'base' => 1000, // $10.00
-            'full' => 2000, // $20.00
+            'base' => 500, // $5.00
+            'full' => 1000, // $10.00
             default => 0,
         };
         if ($amount <= 0) {

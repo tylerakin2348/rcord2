@@ -235,6 +235,10 @@ export default {
       type: String,
       required: true,
       validator: (value) => ['single', 'looped'].includes(value)
+    },
+    useIndexedDb: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['recording-complete'],
@@ -793,7 +797,9 @@ export default {
           console.error('Response data:', error.response.data)
           
           if (error.response.status === 401) {
-            alert('Authentication required. Please log in and try again.')
+            if (!props.useIndexedDb) {
+              alert('Authentication required. Please log in and try again.')
+            }
           } else if (error.response.status === 422) {
             console.error('Validation errors:', error.response.data.errors)
             alert('Invalid recording data. Please check the console for details.')

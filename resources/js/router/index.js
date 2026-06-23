@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useMainStore } from '../stores/main';
 
 // Import components
-import LoggedInLanding from '../components/LoggedInLanding.vue';
+import LandingPage from '../components/LandingPage.vue';
 import RecordingsPage from '../components/RecordingsPage.vue';
 import UserAccount from '../components/UserAccount.vue';
 import SystemInfo from '../components/SystemInfo.vue';
@@ -10,12 +10,19 @@ import UserStorageReport from '../components/UserStorageReport.vue';
 import UserActivityReport from '../components/UserActivityReport.vue';
 import UserSessionsReport from '../components/UserSessionsReport.vue';
 import UserManagement from '../components/UserManagement.vue';
+import DemoLoggedInLanding from '../components/DemoLoggedInLanding.vue';
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: LoggedInLanding,
+    component: LandingPage,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/demo',
+    name: 'demo',
+    component: DemoLoggedInLanding,
     meta: { requiresAuth: false }
   },
   {

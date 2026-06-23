@@ -750,6 +750,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        useIndexedDb: {
+            type: Boolean,
+            default: false,
+        },
     },
     emits: ['close'],
     setup(props) {
@@ -1168,9 +1172,9 @@ export default {
                 } catch (error) {
                     console.error('Error deleting session:', error);
                     if (error.response?.status === 401) {
-                        alert(
-                            'Authentication required. Please log in and try again.'
-                        );
+                        if (!props.useIndexedDb) {
+                            alert('Authentication required. Please log in and try again.');
+                        }
                     } else {
                         alert('Error deleting session. Please try again.');
                     }
@@ -1209,9 +1213,9 @@ export default {
                 } catch (error) {
                     console.error('Error deleting file:', error);
                     if (error.response?.status === 401) {
-                        alert(
-                            'Authentication required. Please log in and try again.'
-                        );
+                        if (!props.useIndexedDb) {
+                            alert('Authentication required. Please log in and try again.');
+                        }
                     } else {
                         alert('Error deleting recording. Please try again.');
                     }

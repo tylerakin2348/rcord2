@@ -27,20 +27,18 @@ const handleAuthSuccess = () => {
 };
 
 // Watch for route changes and update body overflow
-// watch(
-//   () => route.path,
-//   (newPath) => {
-//     const body = document.getElementById('app-body') || document.body;
-//     if (scrollableRoutes.includes(newPath)) {
-//       // Remove overflow-hidden to allow scrolling
-//       body.classList.remove('overflow-hidden');
-//     } else {
-//       // Add overflow-hidden for main recording interface
-//       body.classList.add('overflow-hidden');
-//     }
-//   },
-//   { immediate: true }
-// );
+watch(
+  () => route.path,
+  (newPath) => {
+    const body = document.getElementById('app-body') || document.body
+    if (scrollableRoutes.includes(newPath)) {
+      body.classList.remove('overflow-hidden')
+    } else {
+      body.classList.add('overflow-hidden')
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   store.initialize();

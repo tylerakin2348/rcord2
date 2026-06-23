@@ -101,19 +101,21 @@ const draw = () => {
     ctx.fillRect(0, 0, width, height)
   }
 
-  const barWidth = width / maxPoints.value
+  const barCount = maxPoints.value
+  const slotWidth = width / barCount
+  const barDrawWidth = Math.max(1, slotWidth * (2 / 3))
+  const heightScale = isBackground.value ? 0.9 : 0.9
+  const minBarHeight = isBackground.value ? 2 : 3
+
   ctx.fillStyle = isBackground.value
     ? 'rgba(168, 162, 158, 0.28)'
     : '#57534e'
 
-  const heightScale = isBackground.value ? 0.75 : 0.9
-  const minBarHeight = isBackground.value ? 2 : 3
-
   waveformData.forEach((value, index) => {
     const barHeight = Math.max(minBarHeight, value * height * heightScale)
-    const x = index * barWidth
+    const x = index * slotWidth
     const y = (height - barHeight) / 2
-    ctx.fillRect(x, y, Math.max(barWidth - 0.5, 1), barHeight)
+    ctx.fillRect(x, y, barDrawWidth, barHeight)
   })
 
   animationId = requestAnimationFrame(draw)

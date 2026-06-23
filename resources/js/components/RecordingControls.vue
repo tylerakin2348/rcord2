@@ -1,7 +1,6 @@
 <template>
-  <div class="flex flex-col h-full">
-    <!-- Recording area with background waveform -->
-    <div class="flex-1 relative flex flex-col items-center justify-center px-8 overflow-hidden min-h-0">
+  <div class="flex flex-col h-full min-h-0">
+    <div class="flex-1 relative overflow-hidden min-h-0 bg-stone-100">
       <LiveWaveform
         v-if="isRecording"
         :analyser="analyserNode"
@@ -9,228 +8,158 @@
         variant="background"
       />
 
-      <div class="relative z-10 flex flex-col items-center justify-center w-full">
-        <!-- Recording Button Group -->
-    <div class="relative mb-8 flex items-center gap-4">
-      <!-- Loop Button (only visible for looped mode when recording and first loop) -->
-      <button 
-        v-if="isRecording && recordingMode === 'looped' && currentLoop === 1"
-        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300 hover:rotate-12 hover:scale-105"
-        :class="{ 'bg-stone-400 cursor-not-allowed focus:ring-stone-200': savingLoop }"
-        :disabled="savingLoop"
-        @click="saveCurrentLoopAndContinue"
-        :aria-label="'Save current loop and continue recording'"
-      >
-        <div class="w-15 h-15 bg-stone-50 rounded-full flex items-center justify-center">
-          <svg 
-            class="w-8 h-8 text-stone-600 pointer-events-none transition-transform duration-300" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+      <div class="relative z-10 flex flex-col items-center justify-center h-full px-8 pointer-events-none">
+        <div class="pointer-events-auto flex flex-col items-center">
+          <div class="relative mb-8 flex items-center gap-4">
+            <button
+              v-if="isRecording && recordingMode === 'looped' && currentLoop === 1"
+              class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300 hover:rotate-12 hover:scale-105"
+              :class="{ 'bg-stone-400 cursor-not-allowed focus:ring-stone-200': savingLoop }"
+              :disabled="savingLoop"
+              @click="saveCurrentLoopAndContinue"
+              :aria-label="'Save current loop and continue recording'"
+            >
+              <div class="w-15 h-15 bg-stone-50 rounded-full flex items-center justify-center">
+                <svg
+                  class="w-8 h-8 text-stone-600 pointer-events-none transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </div>
+            </button>
+
+            <button
+              class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50"
+              :class="{
+                'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'single',
+                'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'looped',
+                'bg-red-200 w-16 h-16 animate-pulse focus:ring-red-300': isRecording && recordingMode === 'single',
+                'bg-red-200 w-16 h-16 focus:ring-red-300': isRecording && recordingMode === 'looped'
+              }"
+              @click="handleMainButtonClick"
+              :aria-label="getMainButtonAriaLabel()"
+            >
+              <div
+                v-if="!isRecording"
+                class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center"
+              >
+                <div class="w-16 h-16 bg-red-500 rounded-full"></div>
+              </div>
+
+              <div
+                v-else
+                class="w-5 h-5 bg-stone-50 flex items-center justify-center rounded-sm"
+              >
+                <div class="w-0 h-0 rounded-sm bg-red-600"></div>
+              </div>
+            </button>
+          </div>
+
+          <div
+            v-if="recordingMode === 'looped' && isRecording"
+            class="text-center text-sm text-stone-500"
           >
-            <path 
-              stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-width="2" 
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-            />
-          </svg>
+            Loop {{ currentLoop }}
+          </div>
         </div>
-      </button>
-      
-      <!-- Main Record/Stop Button -->
-      <button 
-        class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50"
-        :class="{
-          'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'single',
-          'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'looped',
-          'bg-red-200 w-16 h-16 animate-pulse focus:ring-red-300': isRecording && recordingMode === 'single',
-          'bg-red-200 w-16 h-16 focus:ring-red-300': isRecording && recordingMode === 'looped'
-        }"
-        @click="handleMainButtonClick"
-        :aria-label="getMainButtonAriaLabel()"
-      >
-        <!-- Not Recording State -->
-        <div 
-          v-if="!isRecording"
-          class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center"
-        >
-          <div class="w-16 h-16 bg-red-500 rounded-full" v-if="recordingMode === 'single'"></div>
-          <div class="w-16 h-16 bg-red-500 rounded-full" v-else></div>
-        </div>
-        
-        <!-- Recording State - Always show stop button (square) when recording -->
-        <div 
-          v-else
-          class="w-5 h-5 bg-stone-50 flex items-center justify-center rounded-sm"
-        >
-          <div 
-            class="w-0 h-0 rounded-sm"
-            :class="{
-              'bg-red-600': recordingMode === 'single',
-              'bg-red-600': recordingMode === 'looped'
-            }"
-          ></div>
-        </div>
-      </button>
-    </div>
-
-    <!-- Recording Status -->
-    <div class="text-center mb-6">
-      <div v-if="recordingMode === 'looped' && isRecording" class="text-sm text-stone-500 mt-2">
-        <div>Loop {{ currentLoop }}</div>
-      </div>
-    </div>
       </div>
     </div>
 
-    <!-- Footer Section with Time Counter and Progress Indicators -->
     <div class="relative z-10 p-4 border-t border-stone-200 bg-stone-50 shrink-0">
-    <!-- Looped Recording Layout -->
-    <div v-if="recordingMode === 'looped'" class="flex items-center justify-between">
-      <!-- Loop Progress (Left) -->
-      <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording || currentLoop === 1 }">
-        <div class="text-xs mb-2" :class="(isRecording && currentLoop > 1) ? 'text-stone-600' : 'text-stone-400'">Loop Progress</div>
-        <div class="relative w-16 h-16">
-          <!-- Background circle -->
-          <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              :stroke="(isRecording && currentLoop > 1) ? '#d6d3d1' : '#e7e5e4'"
-              stroke-width="3"
-            />
-            <!-- Loop progress fill circle - only show if we have a loop duration and are on loop 2+ -->
-            <circle
-              v-if="loopDuration && currentLoop > 1"
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              :stroke="isRecording ? '#78716c' : '#a8a29e'"
-              stroke-width="3"
-              stroke-linecap="round"
-              :stroke-dasharray="`${2 * Math.PI * 28}`"
-              :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - (recordingTime / loopDuration))}` : `${2 * Math.PI * 28}`"
-              class="transition-all duration-1000"
-            />
-          </svg>
-          <!-- Center percentage -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-xs font-mono" :class="(isRecording && currentLoop > 1 && loopDuration) ? 'text-stone-700' : 'text-stone-400'">
-              {{ (isRecording && currentLoop > 1 && loopDuration) ? Math.round((recordingTime / loopDuration) * 100) : 0 }}%
-            </span>
+      <div v-if="recordingMode === 'looped'" class="flex items-center justify-between">
+        <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording || currentLoop === 1 }">
+          <div class="text-xs mb-2" :class="(isRecording && currentLoop > 1) ? 'text-stone-600' : 'text-stone-400'">Loop Progress</div>
+          <div class="relative w-16 h-16">
+            <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                :stroke="(isRecording && currentLoop > 1) ? '#d6d3d1' : '#e7e5e4'"
+                stroke-width="3"
+              />
+              <circle
+                v-if="loopDuration && currentLoop > 1"
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                :stroke="isRecording ? '#78716c' : '#a8a29e'"
+                stroke-width="3"
+                stroke-linecap="round"
+                :stroke-dasharray="`${2 * Math.PI * 28}`"
+                :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - (recordingTime / loopDuration))}` : `${2 * Math.PI * 28}`"
+                class="transition-all duration-1000"
+              />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-xs font-mono" :class="(isRecording && currentLoop > 1 && loopDuration) ? 'text-stone-700' : 'text-stone-400'">
+                {{ (isRecording && currentLoop > 1 && loopDuration) ? Math.round((recordingTime / loopDuration) * 100) : 0 }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center flex-1 mx-4">
+          <div class="text-3xl font-mono font-bold text-stone-800">
+            {{ formatTime(recordingTime) }}
+          </div>
+          <div v-if="isRecording" class="text-sm text-stone-500 mt-1">
+            Total: {{ formatTime(totalRecordingTime) }}
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
+          <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Audio Level</div>
+          <div class="relative w-16 h-16">
+            <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
+                stroke-width="3"
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                :stroke="isRecording ? '#78716c' : '#a8a29e'"
+                stroke-width="3"
+                stroke-linecap="round"
+                :stroke-dasharray="`${2 * Math.PI * 28}`"
+                :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - audioLevel / 100)}` : `${2 * Math.PI * 28}`"
+                class="transition-all duration-150"
+              />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
+                {{ isRecording ? Math.round(audioLevel) : 0 }}%
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Recording Time Counter (Center) -->
-      <div class="text-center flex-1 mx-4">
-        <div class="text-3xl font-mono font-bold text-stone-800">
-          {{ formatTime(recordingTime) }}
-        </div>
-        <div v-if="isRecording" class="text-sm text-stone-500 mt-1">
-          Total: {{ formatTime(totalRecordingTime) }}
-        </div>
-      </div>
-
-      <!-- Audio Level (Right) -->
-      <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
-        <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Audio Level</div>
-        <div class="relative w-16 h-16">
-          <!-- Background circle -->
-          <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
-              stroke-width="3"
-            />
-            <!-- Audio level fill circle -->
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              :stroke="isRecording ? '#78716c' : '#a8a29e'"
-              stroke-width="3"
-              stroke-linecap="round"
-              :stroke-dasharray="`${2 * Math.PI * 28}`"
-              :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - audioLevel / 100)}` : `${2 * Math.PI * 28}`"
-              class="transition-all duration-150"
-            />
-          </svg>
-          <!-- Center percentage text -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
-              {{ isRecording ? Math.round(audioLevel) : 0 }}%
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Single Recording Layout -->
-    <div v-else-if="recordingMode === 'single'" class="flex items-center justify-between">
-      <!-- Recording Time Counter (Left) -->
-      <div class="text-left">
+      <div v-else class="text-center">
         <div class="text-3xl font-mono font-bold text-stone-800">
           {{ formatTime(recordingTime) }}
         </div>
       </div>
-
-      <!-- Audio Level (Right) -->
-      <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
-        <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Audio Level</div>
-        <div class="relative w-16 h-16">
-          <!-- Background circle -->
-          <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
-              stroke-width="3"
-            />
-            <!-- Audio level fill circle -->
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              :stroke="isRecording ? '#f59e0b' : '#a8a29e'"
-              stroke-width="3"
-              stroke-linecap="round"
-              :stroke-dasharray="`${2 * Math.PI * 28}`"
-              :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - audioLevel / 100)}` : `${2 * Math.PI * 28}`"
-              class="transition-all duration-150"
-            />
-          </svg>
-          <!-- Center percentage text -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
-              {{ isRecording ? Math.round(audioLevel) : 0 }}%
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Fallback (should not normally be reached) -->
-    <div v-else class="text-center">
-      <div class="text-3xl font-mono font-bold text-stone-800">
-        {{ formatTime(recordingTime) }}
-      </div>
-    </div>
     </div>
   </div>
 </template>
-
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import LiveWaveform from './LiveWaveform.vue'

@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-stone-100 flex flex-col relative">
+  <div class="h-screen bg-stone-100 flex flex-col overflow-hidden relative">
     <LoggedInHeaderNav 
       :userName="store.user?.name" 
       :showHeaderToggle="true"
     />
 
     <!-- Main Content -->
-    <main class="flex-1 flex overflow-hidden relative">
+    <main class="flex-1 min-h-0 flex overflow-hidden relative">
       <!-- Main rcord Interface -->
-      <div class="flex w-full items-stretch">
+      <div class="flex flex-1 min-h-0 w-full h-full items-stretch">
         <!-- Left Half: Recording Controls -->
         <div 
-          class="flex flex-col h-full transition-all duration-200"
+          class="flex flex-col min-h-0 h-full flex-1 transition-all duration-200"
           :class="{ 
             'w-full': !isDrawerExpanded
           }"
@@ -19,7 +19,19 @@
             width: isDrawerExpanded && !isMobileView ? `${100 - constrainedDrawerWidth}%` : '100%'
           }"
         >
-          <RecordingControls 
+          <RecordingPlayback
+            v-if="playbackRecording"
+            ref="playbackView"
+            :title="playbackRecording.title"
+            :subtitle="playbackRecording.subtitle"
+            :url="playbackRecording.url"
+            @close="stopPlayback"
+            @play="isPlaybackPlaying = true"
+            @pause="isPlaybackPlaying = false"
+            @finish="stopPlayback"
+          />
+          <RecordingControls
+            v-else
             recording-mode="looped"
             @recording-complete="onRecordingComplete"
           />
@@ -91,7 +103,7 @@
 
         <!-- Right Half: Recordings Drawer -->
         <div 
-          class="h-full bg-stone-50 shadow-lg flex flex-col transition-all duration-200"
+          class="h-full min-h-0 bg-stone-50 shadow-lg flex flex-col transition-all duration-200"
           :class="{ 
             // Desktop styles
             'opacity-0 transform scale-x-0 pointer-events-none': !isDrawerExpanded && !isMobileView,
@@ -102,12 +114,15 @@
           }"
           :style="isMobileView
             ? (isDrawerExpanded ? { width: '92vw', maxWidth: '92vw' } : {})
-            : { width: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0%', height: 'calc(100vh - 69px)' }"
+            : { width: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0%' }"
         >
           <RecordingsDrawer
             recording-mode="looped"
             :is-mobile="isMobileView"
+            :playing-recording-id="playbackRecording?.id ?? null"
+            :is-player-playing="isPlaybackPlaying"
             @close="toggleDrawer"
+            @play-recording="onPlayRecording"
             ref="recordingsDrawer"
           />
         </div>
@@ -124,6 +139,7 @@
 import { ref, onUnmounted, computed, onMounted, watch } from 'vue';
 import { useMainStore } from '../stores/main';
 import RecordingControls from './RecordingControls.vue';
+import RecordingPlayback from './RecordingPlayback.vue';
 import RecordingsDrawer from './RecordingsDrawer.vue';
 import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
 const store = useMainStore();
@@ -155,6 +171,10 @@ const isHeaderExpanded = computed(() => !isHeaderCollapsed.value);
 
 // Refs to child components
 const recordingsDrawer = ref(null);
+const playbackView = ref(null);
+const playbackRecording = ref(null);
+const playbackBlobUrl = ref(null);
+const isPlaybackPlaying = ref(false);
 const showDesktopMenu = ref(false);
 
 // Watchers to synchronize dropdown and drawer
@@ -264,6 +284,66 @@ const onRecordingComplete = async () => {
   }
 };
 
+const resolvePlaybackUrl = async (file) => {
+  if (file.url) {
+    return file.url;
+  }
+
+  if (!file.id) {
+    return null;
+  }
+
+  const response = await window.axios.get(
+    `/api/recordings/${file.id}/stream`,
+    { responseType: 'blob' }
+  );
+  const blobUrl = URL.createObjectURL(response.data);
+  playbackBlobUrl.value = blobUrl;
+  return blobUrl;
+};
+
+const stopPlayback = () => {
+  playbackView.value?.stop();
+  playbackRecording.value = null;
+  isPlaybackPlaying.value = false;
+
+  if (playbackBlobUrl.value) {
+    URL.revokeObjectURL(playbackBlobUrl.value);
+    playbackBlobUrl.value = null;
+  }
+};
+
+const onPlayRecording = async (file) => {
+  try {
+    if (playbackRecording.value?.id === file.id) {
+      playbackView.value?.toggle();
+      return;
+    }
+
+    stopPlayback();
+
+    const url = await resolvePlaybackUrl(file);
+    if (!url) return;
+
+    const subtitle = [
+      file.formatted_duration || file.duration,
+      file.formatted_file_size || file.size,
+    ]
+      .filter(Boolean)
+      .join(' • ');
+
+    playbackRecording.value = {
+      id: file.id,
+      title: file.title || file.name,
+      subtitle,
+      url,
+    };
+  } catch (error) {
+    console.error('Error loading recording for playback:', error);
+    stopPlayback();
+  }
+};
+
 const handleLogout = async () => {
   try {
     await store.logout();
@@ -274,7 +354,7 @@ const handleLogout = async () => {
 
 // Cleanup on component unmount
 onUnmounted(() => {
-  // Remove event listeners
+  stopPlayback();
   window.removeEventListener('resize', handleResize);
   document.removeEventListener('mousemove', handleMouseMove);
   document.removeEventListener('mouseup', handleMouseUp);

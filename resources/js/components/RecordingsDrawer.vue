@@ -112,7 +112,7 @@
                             >
                                 <!-- Play Icon -->
                                 <svg
-                                    v-if="!(currentlyPlayingId === file.id && isPlayerPlaying)"
+                                    v-if="!(playingRecordingId === file.id && isPlayerPlaying)"
                                     class="w-5 h-5"
                                     fill="currentColor"
                                     viewBox="0 0 24 24"
@@ -307,7 +307,7 @@
                                         class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                                     >
                                         <svg
-                                            v-if="!(currentlyPlayingId === session.recordings[0]?.id && isPlayerPlaying)"
+                                            v-if="!(playingRecordingId === session.recordings[0]?.id && isPlayerPlaying)"
                                             class="w-5 h-5"
                                             fill="currentColor"
                                             viewBox="0 0 24 24"
@@ -528,7 +528,7 @@
                                             <svg
                                                 v-if="
                                                     !(
-                                                        currentlyPlayingId === recording.id &&
+                                                        playingRecordingId === recording.id &&
                                                         isPlayerPlaying
                                                     )
                                                 "
@@ -692,24 +692,6 @@
             </div>
         </div>
 
-        <!-- Now playing -->
-        <div
-            v-if="currentlyPlayingFile"
-            class="mt-4 pt-4 border-t border-stone-200 shrink-0"
-        >
-            <div class="text-sm font-medium text-stone-700 mb-2 truncate">
-                {{ currentlyPlayingFile.title }}
-            </div>
-            <WaveformPlayer
-                ref="waveformPlayer"
-                :key="currentlyPlayingFile.id"
-                :url="currentlyPlayingFile.url"
-                @finish="stopPlayback"
-                @play="isPlayerPlaying = true"
-                @pause="isPlayerPlaying = false"
-            />
-        </div>
-
         <!-- Delete Confirmation Modal -->
         <div 
             v-if="showDeleteModal"
@@ -757,13 +739,9 @@
 
 <script>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import WaveformPlayer from './WaveformPlayer.vue';
 
 export default {
     name: 'RecordingsDrawer',
-    components: {
-        WaveformPlayer,
-    },
     props: {
         recordingMode: {
             type: String,
@@ -774,21 +752,24 @@ export default {
             type: Boolean,
             default: false,
         },
+        playingRecordingId: {
+            type: Number,
+            default: null,
+        },
+        isPlayerPlaying: {
+            type: Boolean,
+            default: false,
+        },
         useIndexedDb: {
             type: Boolean,
             default: false,
         },
     },
-    emits: ['close'],
-    setup(props) {
+    emits: ['close', 'play-recording'],
+    setup(props, { emit }) {
         const recordings = ref([]);
         const sessions = ref([]);
         const expandedSessions = ref(new Set());
-        const currentlyPlayingId = ref(null);
-        const currentlyPlayingFile = ref(null);
-        const currentlyPlayingBlobUrl = ref(null);
-        const isPlayerPlaying = ref(false);
-        const waveformPlayer = ref(null);
 
         // Infinite scroll state for recordings
         const loadingRecordings = ref(false);
@@ -829,7 +810,6 @@ export default {
             if (sessionsObserver.value) {
                 sessionsObserver.value.disconnect();
             }
-            stopPlayback();
         });
 
         // Watch for recordingMode changes to reload data
@@ -1052,63 +1032,8 @@ export default {
             }, 100);
         };
 
-        const stopPlayback = () => {
-            currentlyPlayingId.value = null;
-            currentlyPlayingFile.value = null;
-            isPlayerPlaying.value = false;
-
-            if (currentlyPlayingBlobUrl.value) {
-                URL.revokeObjectURL(currentlyPlayingBlobUrl.value);
-                currentlyPlayingBlobUrl.value = null;
-            }
-        };
-
-        const resolveAudioUrl = async (file) => {
-            if (file.url) {
-                return file.url;
-            }
-
-            if (!file.id) {
-                return null;
-            }
-
-            const response = await window.axios.get(
-                `/api/recordings/${file.id}/stream`,
-                { responseType: 'blob' }
-            );
-            const blobUrl = URL.createObjectURL(response.data);
-            currentlyPlayingBlobUrl.value = blobUrl;
-            return blobUrl;
-        };
-
-        const playFile = async (file) => {
-            try {
-                if (
-                    currentlyPlayingId.value === file.id &&
-                    waveformPlayer.value
-                ) {
-                    waveformPlayer.value.toggle();
-                    return;
-                }
-
-                stopPlayback();
-
-                const audioUrl = await resolveAudioUrl(file);
-                if (!audioUrl) return;
-
-                currentlyPlayingId.value = file.id;
-                currentlyPlayingFile.value = {
-                    id: file.id,
-                    url: audioUrl,
-                    title: file.title || file.name,
-                };
-
-                await nextTick();
-                isPlayerPlaying.value = waveformPlayer.value?.isPlaying() ?? false;
-            } catch (error) {
-                console.error('Error playing file:', error);
-                stopPlayback();
-            }
+        const playFile = (file) => {
+            emit('play-recording', file);
         };
 
         const downloadFile = async (file) => {
@@ -1282,11 +1207,6 @@ export default {
             recordings,
             sessions,
             expandedSessions,
-            currentlyPlayingId,
-            currentlyPlayingFile,
-            isPlayerPlaying,
-            waveformPlayer,
-            stopPlayback,
             loadingRecordings,
             loadingMore,
             hasMoreRecordings,

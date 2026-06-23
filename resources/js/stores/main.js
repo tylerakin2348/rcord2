@@ -173,6 +173,10 @@ export const useMainStore = defineStore('main', {
         if (data.permissions) {
           this.user.permissions = data.permissions;
         }
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+          window.axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+        }
         return data;
       } catch (err) {
         this.error = err.message;

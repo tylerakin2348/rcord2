@@ -258,10 +258,9 @@ const handleMouseUp = () => {
   }
 };
 
-const onRecordingComplete = (recordingData) => {
-  // Refresh the recordings drawer to show the new recording
+const onRecordingComplete = async () => {
   if (recordingsDrawer.value) {
-    recordingsDrawer.value.refreshData();
+    await recordingsDrawer.value.refreshData();
   }
 };
 

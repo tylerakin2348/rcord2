@@ -1,7 +1,16 @@
 <template>
-  <!-- Recording Controls - centered in full space -->
-  <div class="flex-1 flex flex-col items-center justify-center px-8">
-    <!-- Recording Button Group -->
+  <div class="flex flex-col h-full">
+    <!-- Recording area with background waveform -->
+    <div class="flex-1 relative flex flex-col items-center justify-center px-8 overflow-hidden min-h-0">
+      <LiveWaveform
+        v-if="isRecording"
+        :analyser="analyserNode"
+        :active="isRecording"
+        variant="background"
+      />
+
+      <div class="relative z-10 flex flex-col items-center justify-center w-full">
+        <!-- Recording Button Group -->
     <div class="relative mb-8 flex items-center gap-4">
       <!-- Loop Button (only visible for looped mode when recording and first loop) -->
       <button 
@@ -70,17 +79,13 @@
     <div class="text-center mb-6">
       <div v-if="recordingMode === 'looped' && isRecording" class="text-sm text-stone-500 mt-2">
         <div>Loop {{ currentLoop }}</div>
-        <!-- <div v-if="savingLoop" class="text-xs text-stone-400 mt-1">Saving loop...</div>
-        <div v-else class="text-xs text-stone-400 mt-1">
-          Click to save loop & continue<br>
-          <span class="text-stone-300">Double-click to stop</span>
-        </div> -->
       </div>
     </div>
-  </div>
+      </div>
+    </div>
 
-  <!-- Footer Section with Time Counter and Progress Indicators -->
-  <div class="p-4 border-t border-stone-200 bg-stone-50">
+    <!-- Footer Section with Time Counter and Progress Indicators -->
+    <div class="relative z-10 p-4 border-t border-stone-200 bg-stone-50 shrink-0">
     <!-- Looped Recording Layout -->
     <div v-if="recordingMode === 'looped'" class="flex items-center justify-between">
       <!-- Loop Progress (Left) -->
@@ -222,14 +227,19 @@
         {{ formatTime(recordingTime) }}
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import LiveWaveform from './LiveWaveform.vue'
 
 export default {
   name: 'RecordingControls',
+  components: {
+    LiveWaveform,
+  },
   props: {
     recordingMode: {
       type: String,
@@ -251,6 +261,7 @@ export default {
     const loopDuration = ref(null) // Will be set based on first loop completion
     const savingLoop = ref(false) // Indicates when a loop is being saved
     const lastClickTime = ref(0) // Track click timing for double-click detection
+    const analyserNode = ref(null)
     
     // Session management for looped recordings
     const currentSession = ref(null)
@@ -281,7 +292,8 @@ export default {
         microphone = audioContext.createMediaStreamSource(stream)
         microphone.connect(analyser)
         
-        analyser.fftSize = 256
+        analyser.fftSize = 2048
+        analyserNode.value = analyser
         const bufferLength = analyser.frequencyBinCount
         const dataArray = new Uint8Array(bufferLength)
         
@@ -313,7 +325,7 @@ export default {
           mediaRecorder.start()
         }
         
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
           // Only process final recording if we're actually stopping (not just saving a loop)
           if (!isRecording.value) {
             // For looped recordings, only save the current incomplete loop (if any)
@@ -369,16 +381,13 @@ export default {
               fileData.loopNumber = currentLoop.value
             }
             
-            // Save to API
-          console.log(fileData, '333333fkaldxf - FINAL SAVE')
-          console.log('before 11 - FINAL SAVE')
-          saveRecordingToAPI(fileData)
-          console.log('after 22 - FINAL SAVE')
+            // Save to API, then refresh sidebar only after the session exists
+            const saved = await saveRecordingToAPI(fileData)
+            if (saved) {
+              emit('recording-complete', fileData)
+            }
             
-            // Emit completion event
-            emit('recording-complete', fileData)
-            
-            // Reset after successful save
+            // Reset after save attempt
             recordedChunks = []
             allRecordedChunks = []
             recordingTime.value = 0
@@ -386,6 +395,7 @@ export default {
             currentLoop.value = 1
             loopDuration.value = null // Reset loop duration for next session
             audioLevel.value = 0
+            resetSession()
             
             // Clean up
             stream.getTracks().forEach(track => track.stop())
@@ -393,6 +403,7 @@ export default {
               audioContext.close()
               audioContext = null
             }
+            analyserNode.value = null
           }
         }
         
@@ -787,7 +798,8 @@ export default {
             currentSession.value.recordings_count = (currentSession.value.recordings_count || 0) + 1
           }
         }
-        
+
+        return true
       } catch (error) {
         console.error('Error saving recording to API:', error)
         
@@ -809,6 +821,8 @@ export default {
         } else {
           alert('Network error. Please check your connection and try again.')
         }
+
+        return false
       }
     }
     
@@ -862,6 +876,7 @@ export default {
       sessionDescription,
       savingLoop,
       lastClickTime,
+      analyserNode,
       handleButtonClick,
       handleMainButtonClick,
       getButtonAriaLabel,

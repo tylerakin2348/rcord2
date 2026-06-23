@@ -112,7 +112,7 @@
                             >
                                 <!-- Play Icon -->
                                 <svg
-                                    v-if="currentlyPlayingId !== file.id"
+                                    v-if="!(currentlyPlayingId === file.id && isPlayerPlaying)"
                                     class="w-5 h-5"
                                     fill="currentColor"
                                     viewBox="0 0 24 24"
@@ -307,7 +307,7 @@
                                         class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
                                     >
                                         <svg
-                                            v-if="currentlyPlayingId !== session.recordings[0]?.id"
+                                            v-if="!(currentlyPlayingId === session.recordings[0]?.id && isPlayerPlaying)"
                                             class="w-5 h-5"
                                             fill="currentColor"
                                             viewBox="0 0 24 24"
@@ -346,7 +346,7 @@
 
                                     <!-- Delete Button -->
                                     <button
-                                        @click="deleteSession(session.id)"
+                                        @click="deleteSession(session)"
                                         class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
                                     >
                                         <svg
@@ -527,8 +527,10 @@
                                             <!-- Play Icon -->
                                             <svg
                                                 v-if="
-                                                    currentlyPlayingId !==
-                                                    recording.id
+                                                    !(
+                                                        currentlyPlayingId === recording.id &&
+                                                        isPlayerPlaying
+                                                    )
                                                 "
                                                 class="w-5 h-5"
                                                 fill="currentColor"
@@ -690,6 +692,24 @@
             </div>
         </div>
 
+        <!-- Now playing -->
+        <div
+            v-if="currentlyPlayingFile"
+            class="mt-4 pt-4 border-t border-stone-200 shrink-0"
+        >
+            <div class="text-sm font-medium text-stone-700 mb-2 truncate">
+                {{ currentlyPlayingFile.title }}
+            </div>
+            <WaveformPlayer
+                ref="waveformPlayer"
+                :key="currentlyPlayingFile.id"
+                :url="currentlyPlayingFile.url"
+                @finish="stopPlayback"
+                @play="isPlayerPlaying = true"
+                @pause="isPlayerPlaying = false"
+            />
+        </div>
+
         <!-- Delete Confirmation Modal -->
         <div 
             v-if="showDeleteModal"
@@ -737,9 +757,13 @@
 
 <script>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import WaveformPlayer from './WaveformPlayer.vue';
 
 export default {
     name: 'RecordingsDrawer',
+    components: {
+        WaveformPlayer,
+    },
     props: {
         recordingMode: {
             type: String,
@@ -761,7 +785,10 @@ export default {
         const sessions = ref([]);
         const expandedSessions = ref(new Set());
         const currentlyPlayingId = ref(null);
-        const currentAudio = ref(null);
+        const currentlyPlayingFile = ref(null);
+        const currentlyPlayingBlobUrl = ref(null);
+        const isPlayerPlaying = ref(false);
+        const waveformPlayer = ref(null);
 
         // Infinite scroll state for recordings
         const loadingRecordings = ref(false);
@@ -802,9 +829,7 @@ export default {
             if (sessionsObserver.value) {
                 sessionsObserver.value.disconnect();
             }
-            if (currentAudio.value) {
-                currentAudio.value.pause();
-            }
+            stopPlayback();
         });
 
         // Watch for recordingMode changes to reload data
@@ -894,10 +919,7 @@ export default {
                 loadingMoreSessions.value = true;
             }
 
-         let f = localStorage.getItem('auth_token');
-
-            console.log(f, 'token')
-            try {
+         try {
                 const response = await window.axios.get(
                     '/api/recording-sessions',
                     {
@@ -1030,66 +1052,62 @@ export default {
             }, 100);
         };
 
+        const stopPlayback = () => {
+            currentlyPlayingId.value = null;
+            currentlyPlayingFile.value = null;
+            isPlayerPlaying.value = false;
+
+            if (currentlyPlayingBlobUrl.value) {
+                URL.revokeObjectURL(currentlyPlayingBlobUrl.value);
+                currentlyPlayingBlobUrl.value = null;
+            }
+        };
+
+        const resolveAudioUrl = async (file) => {
+            if (file.url) {
+                return file.url;
+            }
+
+            if (!file.id) {
+                return null;
+            }
+
+            const response = await window.axios.get(
+                `/api/recordings/${file.id}/stream`,
+                { responseType: 'blob' }
+            );
+            const blobUrl = URL.createObjectURL(response.data);
+            currentlyPlayingBlobUrl.value = blobUrl;
+            return blobUrl;
+        };
+
         const playFile = async (file) => {
             try {
-                // If this file is currently playing, pause it
                 if (
                     currentlyPlayingId.value === file.id &&
-                    currentAudio.value
+                    waveformPlayer.value
                 ) {
-                    currentAudio.value.pause();
-                    currentAudio.value = null;
-                    currentlyPlayingId.value = null;
+                    waveformPlayer.value.toggle();
                     return;
                 }
 
-                // Stop any currently playing audio
-                if (currentAudio.value) {
-                    currentAudio.value.pause();
-                    currentAudio.value = null;
-                }
+                stopPlayback();
 
-                let audioUrl = file.url;
+                const audioUrl = await resolveAudioUrl(file);
+                if (!audioUrl) return;
 
-                // If file doesn't have a URL (from API), fetch it
-                if (!audioUrl && file.id) {
-                    const response = await window.axios.get(
-                        `/api/recordings/${file.id}/stream`,
-                        {
-                            responseType: 'blob',
-                        }
-                    );
-                    audioUrl = URL.createObjectURL(response.data);
-                }
+                currentlyPlayingId.value = file.id;
+                currentlyPlayingFile.value = {
+                    id: file.id,
+                    url: audioUrl,
+                    title: file.title || file.name,
+                };
 
-                if (audioUrl) {
-                    const audio = new Audio(audioUrl);
-
-                    // Set up event listeners
-                    audio.addEventListener('ended', () => {
-                        currentlyPlayingId.value = null;
-                        currentAudio.value = null;
-                    });
-
-                    audio.addEventListener('pause', () => {
-                        if (currentlyPlayingId.value === file.id) {
-                            currentlyPlayingId.value = null;
-                            currentAudio.value = null;
-                        }
-                    });
-
-                    // Start playing
-                    currentAudio.value = audio;
-                    currentlyPlayingId.value = file.id;
-
-                    audio.play().catch((error) => {
-                        console.error('Error playing audio:', error);
-                        currentlyPlayingId.value = null;
-                        currentAudio.value = null;
-                    });
-                }
+                await nextTick();
+                isPlayerPlaying.value = waveformPlayer.value?.isPlaying() ?? false;
             } catch (error) {
                 console.error('Error playing file:', error);
+                stopPlayback();
             }
         };
 
@@ -1238,13 +1256,12 @@ export default {
         };
 
         // Method to refresh data (called from parent when a new recording is saved)
-        const refreshData = () => {
-            // Reset pagination and reload first page
+        const refreshData = async () => {
             currentRecordingsPage.value = 1;
             currentSessionsPage.value = 1;
             hasMoreRecordings.value = true;
             hasMoreSessions.value = true;
-            loadDataFromAPI();
+            await loadDataFromAPI();
         };
 
         // Toggle session expansion
@@ -1266,6 +1283,10 @@ export default {
             sessions,
             expandedSessions,
             currentlyPlayingId,
+            currentlyPlayingFile,
+            isPlayerPlaying,
+            waveformPlayer,
+            stopPlayback,
             loadingRecordings,
             loadingMore,
             hasMoreRecordings,

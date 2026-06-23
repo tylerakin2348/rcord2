@@ -78,8 +78,9 @@ Route::get('stats', function () {
     ]);
 });
 
+Route::get('plans', [PlanController::class, 'index']);
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('plans', [PlanController::class, 'index']);
     // Update user plan
     Route::post('user/plan', [UserController::class, 'updatePlan']);
 });

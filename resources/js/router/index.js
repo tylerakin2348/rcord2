@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useMainStore } from '../stores/main';
 
 // Import components
-import LandingPage from '../components/LandingPage.vue';
+import HomePage from '../components/HomePage.vue';
 import RecordingsPage from '../components/RecordingsPage.vue';
 import UserAccount from '../components/UserAccount.vue';
 import SystemInfo from '../components/SystemInfo.vue';
@@ -16,7 +16,7 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    component: LandingPage,
+    component: HomePage,
     meta: { requiresAuth: false }
   },
   {
@@ -75,16 +75,23 @@ const router = createRouter({
   routes
 });
 
+let authChecked = false;
+
 // Navigation guard for authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const store = useMainStore();
-  
-  if (to.meta.requiresAuth && !store.isLoggedIn) {
-    // If route requires auth and user is not logged in, redirect to home
-    next('/');
-  } else {
-    next();
+
+  if (!authChecked) {
+    await store.fetchUser();
+    authChecked = true;
   }
+
+  if (to.meta.requiresAuth && !store.isLoggedIn) {
+    next('/');
+    return;
+  }
+
+  next();
 });
 
 export default router;

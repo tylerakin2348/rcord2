@@ -2,45 +2,45 @@
   <div class="min-h-screen bg-stone-100 flex flex-col relative">
     <Header :showHeaderToggle="false" />
 
-    <div class="bg-white border-b border-stone-200 px-4 py-2 shrink-0">
-      <div class="max-w-xs mx-auto">
-        <div
-          class="flex rounded-lg border border-stone-200 bg-stone-100 p-0.5"
-          role="tablist"
-          aria-label="Main view"
+    <div class="bg-white border-b border-stone-200/80">
+      <nav
+        class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center gap-7 h-11"
+        role="tablist"
+        aria-label="Main view"
+      >
+        <button
+          type="button"
+          role="tab"
+          class="relative py-2 text-sm transition-colors duration-200"
+          :class="activeView === 'record'
+            ? 'text-stone-900 font-medium'
+            : 'text-stone-400 hover:text-stone-600 font-normal'"
+          :aria-selected="activeView === 'record'"
+          @click="activeView = 'record'"
         >
-          <button
-            type="button"
-            role="tab"
-            class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150"
-            :class="activeView === 'record'
-              ? 'bg-white text-red-600 shadow-sm'
-              : 'text-stone-500 hover:text-stone-700'"
-            :aria-selected="activeView === 'record'"
-            @click="activeView = 'record'"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            Record
-          </button>
-          <button
-            type="button"
-            role="tab"
-            class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150"
-            :class="activeView === 'library'
-              ? 'bg-white text-stone-800 shadow-sm'
-              : 'text-stone-500 hover:text-stone-700'"
-            :aria-selected="activeView === 'library'"
-            @click="activeView = 'library'"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-            Library
-          </button>
-        </div>
-      </div>
+          Record
+          <span
+            class="absolute -bottom-px left-0 right-0 h-px rounded-full transition-opacity duration-200"
+            :class="activeView === 'record' ? 'bg-stone-800 opacity-100' : 'opacity-0'"
+          />
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="relative py-2 text-sm transition-colors duration-200"
+          :class="activeView === 'library'
+            ? 'text-stone-900 font-medium'
+            : 'text-stone-400 hover:text-stone-600 font-normal'"
+          :aria-selected="activeView === 'library'"
+          @click="activeView = 'library'"
+        >
+          Library
+          <span
+            class="absolute -bottom-px left-0 right-0 h-px rounded-full transition-opacity duration-200"
+            :class="activeView === 'library' ? 'bg-stone-800 opacity-100' : 'opacity-0'"
+          />
+        </button>
+      </nav>
     </div>
 
     <main class="flex-1 min-h-0 flex flex-col overflow-hidden">

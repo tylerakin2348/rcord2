@@ -77,101 +77,125 @@
             </div>
 
             <template v-else-if="currentFolder">
-                <div
-                    v-if="currentFolder.recordings?.length"
-                    :class="gridClasses"
-                >
-                    <div
-                        v-for="recording in currentFolder.recordings"
-                        :key="recording.id"
-                        :class="cellClasses(recording.id)"
+                <div v-if="groupedFolderRecordings.length">
+                    <section
+                        v-for="group in groupedFolderRecordings"
+                        :key="group.key"
+                        class="mb-8 last:mb-0"
                     >
-                        <LibraryRecordingCard
-                            :recording="recording"
-                            :title="`Loop ${recording.loop_number}`"
-                            :view-mode="viewMode"
-                            :is-playing="inlinePlayingId === recording.id && inlinePlaying"
-                            :is-expanded="expandedId === recording.id"
-                            :playback-url="urlCache[recording.id] || ''"
-                            @toggle-play="toggleInlinePlay(recording)"
-                            @toggle-expand="toggleExpand(recording)"
-                            @open-full="openFullPlayer(recording)"
-                            @download="downloadFile(recording)"
-                            @delete="deleteFile(recording)"
-                            @waveform-play="onWaveformPlay(recording.id)"
-                            @waveform-pause="onWaveformPause"
-                            @waveform-finish="onWaveformFinish(recording.id)"
-                        />
-                    </div>
+                        <h3 class="text-sm font-semibold text-stone-700 mb-3">
+                            {{ group.label }}
+                        </h3>
+                        <div :class="gridClasses">
+                            <div
+                                v-for="recording in group.items"
+                                :key="recording.id"
+                                :class="cellClasses(recording.id)"
+                            >
+                                <LibraryRecordingCard
+                                    :recording="recording"
+                                    :title="`Loop ${recording.loop_number}`"
+                                    :view-mode="viewMode"
+                                    :is-playing="inlinePlayingId === recording.id && inlinePlaying"
+                                    :is-expanded="expandedId === recording.id"
+                                    :playback-url="urlCache[recording.id] || ''"
+                                    @toggle-play="toggleInlinePlay(recording)"
+                                    @toggle-expand="toggleExpand(recording)"
+                                    @open-full="openFullPlayer(recording)"
+                                    @download="downloadFile(recording)"
+                                    @delete="deleteFile(recording)"
+                                    @waveform-play="onWaveformPlay(recording.id)"
+                                    @waveform-pause="onWaveformPause"
+                                    @waveform-finish="onWaveformFinish(recording.id)"
+                                />
+                            </div>
+                        </div>
+                    </section>
                 </div>
                 <p v-else class="text-center py-16 text-stone-400 text-sm">No recordings in this session</p>
             </template>
 
             <template v-else>
-                <div
-                    v-if="recordingMode === 'single' && recordings.length > 0"
-                    :class="gridClasses"
-                >
-                    <div
-                        v-for="file in recordings"
-                        :key="file.id"
-                        :class="cellClasses(file.id)"
+                <div v-if="recordingMode === 'single' && groupedRecordings.length">
+                    <section
+                        v-for="group in groupedRecordings"
+                        :key="group.key"
+                        class="mb-8 last:mb-0"
                     >
-                        <LibraryRecordingCard
-                            :recording="file"
-                            :title="file.title || file.name"
-                            :subtitle="file.recording_type?.display_name"
-                            :view-mode="viewMode"
-                            :is-playing="inlinePlayingId === file.id && inlinePlaying"
-                            :is-expanded="expandedId === file.id"
-                            :playback-url="urlCache[file.id] || ''"
-                            @toggle-play="toggleInlinePlay(file)"
-                            @toggle-expand="toggleExpand(file)"
-                            @open-full="openFullPlayer(file)"
-                            @download="downloadFile(file)"
-                            @delete="deleteFile(file)"
-                            @waveform-play="onWaveformPlay(file.id)"
-                            @waveform-pause="onWaveformPause"
-                            @waveform-finish="onWaveformFinish(file.id)"
-                        />
-                    </div>
+                        <h3 class="text-sm font-semibold text-stone-700 mb-3">
+                            {{ group.label }}
+                        </h3>
+                        <div :class="gridClasses">
+                            <div
+                                v-for="file in group.items"
+                                :key="file.id"
+                                :class="cellClasses(file.id)"
+                            >
+                                <LibraryRecordingCard
+                                    :recording="file"
+                                    :title="file.title || file.name"
+                                    :subtitle="file.recording_type?.display_name"
+                                    :view-mode="viewMode"
+                                    :is-playing="inlinePlayingId === file.id && inlinePlaying"
+                                    :is-expanded="expandedId === file.id"
+                                    :playback-url="urlCache[file.id] || ''"
+                                    @toggle-play="toggleInlinePlay(file)"
+                                    @toggle-expand="toggleExpand(file)"
+                                    @open-full="openFullPlayer(file)"
+                                    @download="downloadFile(file)"
+                                    @delete="deleteFile(file)"
+                                    @waveform-play="onWaveformPlay(file.id)"
+                                    @waveform-pause="onWaveformPause"
+                                    @waveform-finish="onWaveformFinish(file.id)"
+                                />
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
-                <div
-                    v-else-if="recordingMode === 'looped' && sessions.length > 0"
-                    :class="gridClasses"
-                >
-                    <div
-                        v-for="session in sessions"
-                        :key="session.id"
-                        :class="viewMode === 'grid' ? 'h-full min-h-[152px]' : ''"
+                <div v-else-if="recordingMode === 'looped' && groupedSessions.length">
+                    <section
+                        v-for="group in groupedSessions"
+                        :key="group.key"
+                        class="mb-8 last:mb-0"
                     >
-                        <LibraryRecordingCard
-                            v-if="session.recordings_count === 1"
-                            :recording="session.recordings[0]"
-                            :title="session.title"
-                            :subtitle="session.formatted_session_duration"
-                            :view-mode="viewMode"
-                            :is-playing="inlinePlayingId === session.recordings[0]?.id && inlinePlaying"
-                            :is-expanded="expandedId === session.recordings[0]?.id"
-                            :playback-url="urlCache[session.recordings[0]?.id] || ''"
-                            @toggle-play="toggleInlinePlay(session.recordings[0])"
-                            @toggle-expand="toggleExpand(session.recordings[0])"
-                            @open-full="openFullPlayer(session.recordings[0])"
-                            @download="downloadFile(session.recordings[0])"
-                            @delete="deleteSession(session)"
-                            @waveform-play="onWaveformPlay(session.recordings[0]?.id)"
-                            @waveform-pause="onWaveformPause"
-                            @waveform-finish="onWaveformFinish(session.recordings[0]?.id)"
-                        />
-                        <LibraryFolderCard
-                            v-else
-                            :session="session"
-                            :view-mode="viewMode"
-                            @open="openFolder(session)"
-                            @delete="deleteSession(session)"
-                        />
-                    </div>
+                        <h3 class="text-sm font-semibold text-stone-700 mb-3">
+                            {{ group.label }}
+                        </h3>
+                        <div :class="gridClasses">
+                            <div
+                                v-for="session in group.items"
+                                :key="session.id"
+                                :class="viewMode === 'grid' ? 'h-full min-h-[152px]' : ''"
+                            >
+                                <LibraryRecordingCard
+                                    v-if="session.recordings_count === 1"
+                                    :recording="session.recordings[0]"
+                                    :title="session.title"
+                                    :subtitle="session.formatted_session_duration"
+                                    :view-mode="viewMode"
+                                    :is-playing="inlinePlayingId === session.recordings[0]?.id && inlinePlaying"
+                                    :is-expanded="expandedId === session.recordings[0]?.id"
+                                    :playback-url="urlCache[session.recordings[0]?.id] || ''"
+                                    @toggle-play="toggleInlinePlay(session.recordings[0])"
+                                    @toggle-expand="toggleExpand(session.recordings[0])"
+                                    @open-full="openFullPlayer(session.recordings[0])"
+                                    @download="downloadFile(session.recordings[0])"
+                                    @delete="deleteSession(session)"
+                                    @waveform-play="onWaveformPlay(session.recordings[0]?.id)"
+                                    @waveform-pause="onWaveformPause"
+                                    @waveform-finish="onWaveformFinish(session.recordings[0]?.id)"
+                                />
+                                <LibraryFolderCard
+                                    v-else
+                                    :session="session"
+                                    :view-mode="viewMode"
+                                    @open="openFolder(session)"
+                                    @delete="deleteSession(session)"
+                                />
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
                 <div
@@ -237,6 +261,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import LibraryRecordingCard from './LibraryRecordingCard.vue';
 import LibraryFolderCard from './LibraryFolderCard.vue';
+import { groupItemsByDay, getSessionActivityDate } from '../utils/libraryDates.js';
 
 export default {
     name: 'RecordingsDrawer',
@@ -310,6 +335,14 @@ export default {
                 expandedId.value === id ? 'col-span-full' : '',
             ];
         };
+
+        const groupedRecordings = computed(() => groupItemsByDay(recordings.value));
+        const groupedSessions = computed(() =>
+            groupItemsByDay(sessions.value, getSessionActivityDate)
+        );
+        const groupedFolderRecordings = computed(() =>
+            groupItemsByDay(currentFolder.value?.recordings || [])
+        );
 
         onMounted(() => {
             loadDataFromAPI();
@@ -670,6 +703,9 @@ export default {
             hasItems,
             gridClasses,
             cellClasses,
+            groupedRecordings,
+            groupedSessions,
+            groupedFolderRecordings,
             scrollTrigger,
             scrollContainer,
             openFolder,

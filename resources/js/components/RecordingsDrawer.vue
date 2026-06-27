@@ -1,67 +1,81 @@
 <template>
     <div class="h-full flex flex-col bg-stone-50">
         <!-- Toolbar -->
-        <div class="shrink-0 px-4 sm:px-6 pt-4 pb-3 border-b border-stone-200 bg-white">
-            <div class="flex items-center justify-between gap-3 mb-3">
-                <div class="min-w-0 flex-1">
-                    <nav v-if="currentFolder" class="flex items-center gap-1.5 text-sm mb-1">
+        <div class="shrink-0 px-4 sm:px-6 py-3 border-b border-stone-200/80 bg-white">
+            <template v-if="currentFolder">
+                <div class="flex items-center justify-between gap-3 mb-2.5">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800 transition-colors -ml-1"
+                        @click="closeFolder"
+                    >
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Library
+                    </button>
+                    <div class="inline-flex rounded-md border border-stone-200 bg-stone-50 p-0.5 shrink-0">
                         <button
                             type="button"
-                            class="text-stone-500 hover:text-stone-800 transition-colors truncate"
-                            @click="closeFolder"
+                            class="p-1.5 rounded transition-colors"
+                            :class="viewMode === 'grid' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'"
+                            aria-label="Grid view"
+                            @click="viewMode = 'grid'"
                         >
-                            Library
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
                         </button>
-                        <svg class="w-4 h-4 text-stone-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span class="font-medium text-stone-800 truncate">{{ currentFolder.title }}</span>
-                    </nav>
-                    <h2 class="text-lg font-semibold text-stone-800">
-                        {{ currentFolder ? currentFolder.title : 'Saved Recordings' }}
+                        <button
+                            type="button"
+                            class="p-1.5 rounded transition-colors"
+                            :class="viewMode === 'list' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'"
+                            aria-label="List view"
+                            @click="viewMode = 'list'"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="min-w-0 pl-0">
+                    <h2 class="text-base font-semibold text-stone-900 truncate">
+                        {{ displaySessionTitle(currentFolder) }}
                     </h2>
-                    <p v-if="currentFolder" class="text-xs text-stone-500 mt-0.5">
+                    <p class="text-sm text-stone-400 mt-0.5">
                         {{ currentFolder.recordings_count }} loops · {{ currentFolder.formatted_session_duration }}
                     </p>
                 </div>
+            </template>
 
-                <div class="flex items-center gap-1 shrink-0">
+            <div v-else class="flex items-center justify-between gap-3">
+                <h2 class="text-base font-semibold text-stone-900">Saved Recordings</h2>
+                <div class="inline-flex rounded-md border border-stone-200 bg-stone-50 p-0.5 shrink-0">
                     <button
                         type="button"
-                        class="p-2 rounded-lg transition-colors"
-                        :class="viewMode === 'grid' ? 'bg-stone-200 text-stone-800' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'"
+                        class="p-1.5 rounded transition-colors"
+                        :class="viewMode === 'grid' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'"
                         aria-label="Grid view"
                         @click="viewMode = 'grid'"
                     >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
                     </button>
                     <button
                         type="button"
-                        class="p-2 rounded-lg transition-colors"
-                        :class="viewMode === 'list' ? 'bg-stone-200 text-stone-800' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'"
+                        class="p-1.5 rounded transition-colors"
+                        :class="viewMode === 'list' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'"
                         aria-label="List view"
                         @click="viewMode = 'list'"
                     >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
             </div>
-
-            <button
-                v-if="currentFolder"
-                type="button"
-                class="flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors"
-                @click="closeFolder"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to library
-            </button>
         </div>
 
         <!-- Scrollable content -->

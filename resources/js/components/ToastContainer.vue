@@ -87,6 +87,7 @@ const handleAction = async (toast) => {
 
     try {
         await toast.onAction();
+        toastStore.dismiss(toast.id);
     } catch (error) {
         console.error('Toast action failed:', error);
         toastStore.error('Download failed. Please try again.');

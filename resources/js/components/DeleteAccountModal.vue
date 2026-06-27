@@ -16,7 +16,9 @@
           @click.stop
         >
           <h2 class="text-xl font-semibold text-red-700 mb-4">Delete Account</h2>
-          <p class="mb-6 text-red-600">Are you sure you want to permanently delete your account? This action cannot be undone.</p>
+          <p class="mb-6 text-red-600">
+            Are you sure you want to permanently delete your account? This action cannot be undone.
+          </p>
           <div class="flex justify-end gap-2">
             <button
               type="button"
@@ -43,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
@@ -56,6 +58,20 @@ const error = ref('')
 
 watch(() => props.visible, (val) => {
   if (!val) error.value = ''
+})
+
+const handleEscape = (event) => {
+  if (event.key === 'Escape' && props.visible) {
+    emit('close')
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleEscape)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleEscape)
 })
 
 async function deleteAccount() {

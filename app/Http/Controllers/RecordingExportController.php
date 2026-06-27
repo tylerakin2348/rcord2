@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RecordingExportController extends Controller
 {
@@ -61,7 +61,7 @@ class RecordingExportController extends Controller
         ]);
     }
 
-    public function download(RecordingExport $export): JsonResponse|BinaryFileResponse
+    public function download(RecordingExport $export): JsonResponse|StreamedResponse
     {
         $this->authorizeExport($export);
 

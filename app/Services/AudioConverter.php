@@ -10,10 +10,7 @@ class AudioConverter
 {
     public function isAvailable(): bool
     {
-        $process = new Process([$this->binary(), '-version']);
-        $process->run();
-
-        return $process->isSuccessful();
+        return $this->binaryWorks($this->binary());
     }
 
     public function supportedFormats(): array
@@ -152,6 +149,42 @@ class AudioConverter
 
     private function binary(): string
     {
-        return config('services.ffmpeg.path', 'ffmpeg');
+        $configured = config('services.ffmpeg.path', 'ffmpeg');
+
+        if ($configured !== 'ffmpeg' && $this->binaryWorks($configured)) {
+            return $configured;
+        }
+
+        if ($this->binaryWorks('ffmpeg')) {
+            return 'ffmpeg';
+        }
+
+        foreach ($this->candidateBinaries() as $candidate) {
+            if ($this->binaryWorks($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $configured;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidateBinaries(): array
+    {
+        return array_values(array_unique(array_filter([
+            '/opt/homebrew/bin/ffmpeg',
+            '/usr/local/bin/ffmpeg',
+            '/usr/bin/ffmpeg',
+        ])));
+    }
+
+    private function binaryWorks(string $binary): bool
+    {
+        $process = new Process([$binary, '-version']);
+        $process->run();
+
+        return $process->isSuccessful();
     }
 }

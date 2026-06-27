@@ -184,9 +184,9 @@
       </div>
 
       <!-- Edit Plan Modal -->
-      <EditPlanModal v-if="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
-      <SwitchPlanModal v-if="showSwitchModal" :isOpen="showSwitchModal" :plan="selectedPlan" @close="closeSwitchModal" @success="handlePlanUpdate" />
-      <PlanPaymentModal v-if="showPaymentModal" :isOpen="showPaymentModal" :plan="selectedPlan" @close="closePaymentModal" @success="handlePlanUpdate" />
+      <EditPlanModal :isOpen="showEditPlan" @close="showEditPlan = false" @success="handlePlanUpdate" />
+      <SwitchPlanModal :isOpen="showSwitchModal" :plan="selectedPlan" @close="closeSwitchModal" @success="handlePlanUpdate" />
+      <PlanPaymentModal :isOpen="showPaymentModal" :plan="selectedPlan" @close="closePaymentModal" @success="handlePlanUpdate" />
 
     </main>
 
@@ -212,7 +212,6 @@
 
     <!-- Delete Account Modal -->
     <DeleteAccountModal
-      v-if="showDeleteAccount"
       :visible="showDeleteAccount"
       @close="showDeleteAccount = false"
       @success="handleAccountDeleted"

@@ -2,42 +2,44 @@
   <div class="flex flex-col h-full min-h-0">
     <div class="flex-1 relative overflow-hidden min-h-0 bg-stone-100">
       <LiveWaveform
-        v-if="isRecording"
+        v-if="isRecording && analyserNode"
         :analyser="analyserNode"
-        :active="isRecording"
+        :active="isCapturing && !isCountingIn"
         variant="background"
       />
 
       <div class="relative z-10 flex flex-col items-center justify-center h-full px-8 pointer-events-none">
         <div class="pointer-events-auto flex flex-col items-center">
           <div class="relative mb-8 flex items-center gap-4">
-            <button
-              v-if="isRecording && recordingMode === 'looped' && currentLoop === 1"
-              class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300 hover:rotate-12 hover:scale-105"
-              :class="{ 'bg-stone-400 cursor-not-allowed focus:ring-stone-200': savingLoop }"
-              :disabled="savingLoop"
-              @click="saveCurrentLoopAndContinue"
-              :aria-label="'Save current loop and continue recording'"
-            >
-              <div class="w-15 h-15 bg-stone-50 rounded-full flex items-center justify-center">
-                <svg
-                  class="w-8 h-8 text-stone-600 pointer-events-none transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </div>
-            </button>
+            <div class="w-16 h-16 flex items-center justify-center shrink-0">
+              <button
+                v-if="isRecording && recordingMode === 'looped' && currentLoop === 1"
+                class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 bg-stone-500 w-16 h-16 hover:bg-stone-600 focus:ring-stone-300 hover:rotate-12 hover:scale-105"
+                :class="{ 'bg-stone-400 cursor-not-allowed focus:ring-stone-200': savingLoop }"
+                :disabled="savingLoop"
+                @click="saveCurrentLoopAndContinue"
+                aria-label="Save current loop and continue recording"
+              >
+                <div class="w-15 h-15 bg-stone-50 rounded-full flex items-center justify-center">
+                  <svg
+                    class="w-8 h-8 text-stone-600 pointer-events-none transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </div>
 
             <button
-              class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50"
+              class="rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border-0 focus:outline-none focus:ring-4 focus:ring-opacity-50 shrink-0"
               :class="{
                 'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'single',
                 'bg-red-100 w-20 h-20 hover:bg-red-200 focus:ring-red-300': !isRecording && recordingMode === 'looped',
@@ -61,13 +63,82 @@
                 <div class="w-0 h-0 rounded-sm bg-red-600"></div>
               </div>
             </button>
+
+            <div class="w-16 h-16 flex items-center justify-center shrink-0">
+              <button
+                v-if="showExtendLoopButton"
+                class="rounded-full flex flex-col items-center justify-center transition-all duration-200 shadow-md border border-amber-200/80 focus:outline-none focus:ring-4 focus:ring-amber-200 w-16 h-16 select-none touch-none"
+                :class="isExtendingLoop
+                  ? 'bg-amber-500 border-amber-400 scale-105 shadow-lg'
+                  : 'bg-amber-50 hover:bg-amber-100'"
+                aria-label="Hold to extend loop"
+                @mousedown.prevent="startExtendLoop"
+                @mouseup.prevent="releaseExtendLoop"
+                @mouseleave="releaseExtendLoop"
+                @touchstart.prevent="startExtendLoop"
+                @touchend.prevent="releaseExtendLoop"
+                @touchcancel.prevent="releaseExtendLoop"
+              >
+                <svg
+                  class="w-7 h-7 pointer-events-none transition-colors"
+                  :class="isExtendingLoop ? 'text-white' : 'text-amber-700'"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <!-- Loop arc with extension past the boundary -->
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.75"
+                    d="M7 12a5 5 0 0110 0"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.75"
+                    d="M17 12h4"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.75"
+                    d="M19.5 9.5L22 12l-2.5 2.5"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-width="1.75"
+                    d="M12 7V5"
+                  />
+                </svg>
+                <span
+                  class="text-[9px] font-semibold uppercase tracking-wide pointer-events-none mt-0.5"
+                  :class="isExtendingLoop ? 'text-amber-50' : 'text-amber-600/80'"
+                >
+                  Hold
+                </span>
+              </button>
+            </div>
           </div>
 
           <div
-            v-if="recordingMode === 'looped' && isRecording"
+            v-if="isCountingIn"
+            class="text-center"
+          >
+            <div class="text-5xl font-mono font-bold text-stone-700 tabular-nums">
+              {{ countInRemaining }}
+            </div>
+            <div class="text-xs uppercase tracking-wide text-stone-400 mt-2">
+              Count-in
+            </div>
+          </div>
+
+          <div
+            v-else-if="recordingMode === 'looped' && isRecording"
             class="text-center text-sm text-stone-500"
           >
             Loop {{ currentLoop }}
+            <span v-if="isExtendingLoop" class="block text-amber-600 text-xs mt-1">Extending…</span>
           </div>
         </div>
       </div>
@@ -97,13 +168,13 @@
                 stroke-width="3"
                 stroke-linecap="round"
                 :stroke-dasharray="`${2 * Math.PI * 28}`"
-                :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - (recordingTime / loopDuration))}` : `${2 * Math.PI * 28}`"
+                :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - loopProgressRatio)}` : `${2 * Math.PI * 28}`"
                 class="transition-all duration-1000"
               />
             </svg>
             <div class="absolute inset-0 flex items-center justify-center">
               <span class="text-xs font-mono" :class="(isRecording && currentLoop > 1 && loopDuration) ? 'text-stone-700' : 'text-stone-400'">
-                {{ (isRecording && currentLoop > 1 && loopDuration) ? Math.round((recordingTime / loopDuration) * 100) : 0 }}%
+                {{ (isRecording && currentLoop > 1 && loopDuration) ? Math.round(loopProgressRatio * 100) : 0 }}%
               </span>
             </div>
           </div>
@@ -115,6 +186,33 @@
           </div>
           <div v-if="isRecording" class="text-sm text-stone-500 mt-1">
             Total: {{ formatTime(totalRecordingTime) }}
+          </div>
+          <div v-if="!isRecording" class="mt-3">
+            <div class="text-xs text-stone-500 mb-1.5">Count-in</div>
+            <div
+              class="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5"
+              role="group"
+              aria-label="Count-in duration"
+            >
+              <button
+                v-for="option in countInOptions"
+                :key="option.value"
+                type="button"
+                class="px-3 py-1 text-xs font-medium rounded-md transition-colors duration-150"
+                :class="countInSeconds === option.value
+                  ? 'bg-white text-stone-800 shadow-sm'
+                  : 'text-stone-500 hover:text-stone-700'"
+                @click="countInSeconds = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+          </div>
+          <div
+            v-else-if="countInSeconds > 0"
+            class="text-xs text-stone-400 mt-2"
+          >
+            {{ countInSeconds }}s count-in
           </div>
         </div>
 
@@ -161,7 +259,7 @@
   </div>
 </template>
 <script>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import LiveWaveform from './LiveWaveform.vue'
 
 export default {
@@ -188,146 +286,328 @@ export default {
     const audioLevel = ref(0)
     const currentLoop = ref(1)
     const loopDuration = ref(null) // Will be set based on first loop completion
-    const savingLoop = ref(false) // Indicates when a loop is being saved
-    const lastClickTime = ref(0) // Track click timing for double-click detection
+    const savingLoop = ref(false)
+    const lastClickTime = ref(0)
     const analyserNode = ref(null)
-    
-    // Session management for looped recordings
+    const countInSeconds = ref(0)
+    const isCountingIn = ref(false)
+    const countInRemaining = ref(0)
+    const isCapturing = ref(false)
+    const isExtendingLoop = ref(false)
+    const loopBoundaryPassedWhileExtending = ref(false)
+
+    const countInOptions = [
+      { value: 0, label: 'Off' },
+      { value: 2, label: '2s' },
+      { value: 4, label: '4s' },
+      { value: 8, label: '8s' },
+    ]
+
+    const showWaveform = computed(() =>
+      isRecording.value && isCapturing.value && !isCountingIn.value
+    )
+
     const currentSession = ref(null)
     const sessionTitle = ref('')
     const sessionDescription = ref('')
-    
-    // MediaRecorder and Audio
+
     let mediaRecorder = null
     let audioContext = null
     let analyser = null
     let microphone = null
     let recordingTimer = null
+    let countInTimer = null
     let recordedChunks = []
     let allRecordedChunks = []
+    let activeStream = null
+
+    const showExtendLoopButton = computed(() =>
+      props.recordingMode === 'looped'
+      && isRecording.value
+      && loopDuration.value
+      && currentLoop.value > 1
+      && !isCountingIn.value
+      && !savingLoop.value
+    )
+
+    const loopProgressRatio = computed(() => {
+      if (!loopDuration.value || currentLoop.value <= 1) return 0
+      return Math.min(1, recordingTime.value / loopDuration.value)
+    })
+
+    const clearCountInTimer = () => {
+      if (countInTimer) {
+        clearTimeout(countInTimer)
+        countInTimer = null
+      }
+    }
+
+    const runCountIn = (onComplete) => new Promise((resolve) => {
+      if (!countInSeconds.value) {
+        onComplete()
+        resolve()
+        return
+      }
+
+      clearCountInTimer()
+      isCapturing.value = false
+      audioLevel.value = 0
+      isCountingIn.value = true
+
+      let remaining = countInSeconds.value
+      countInRemaining.value = remaining
+
+      const finish = async () => {
+        clearCountInTimer()
+        isCountingIn.value = false
+        countInRemaining.value = 0
+        await onComplete()
+        resolve()
+      }
+
+      const tick = () => {
+        remaining--
+        if (remaining <= 0) {
+          finish()
+          return
+        }
+        countInRemaining.value = remaining
+        countInTimer = setTimeout(tick, 1000)
+      }
+
+      countInTimer = setTimeout(tick, 1000)
+    })
+
+    const restartLoopCapture = async () => {
+      if (!isRecording.value || !mediaRecorder || mediaRecorder.state !== 'inactive') return
+
+      if (audioContext?.state === 'suspended') {
+        await audioContext.resume()
+      }
+
+      mediaRecorder.start(1000)
+      isCapturing.value = true
+    }
+
+    const afterLoopSaveRestart = () => {
+      savingLoop.value = false
+
+      const resume = () => restartLoopCapture()
+
+      if (countInSeconds.value > 0) {
+        runCountIn(resume)
+      } else {
+        resume()
+      }
+    }
+
+    const initiateLoopSave = () => {
+      if (savingLoop.value) return
+      if (!mediaRecorder || mediaRecorder.state !== 'recording') return
+
+      if (recordedChunks.length === 0) {
+        recordingTime.value = 0
+        currentLoop.value++
+        afterLoopSaveRestart()
+        return
+      }
+
+      savingLoop.value = true
+      isExtendingLoop.value = false
+      loopBoundaryPassedWhileExtending.value = false
+      isCapturing.value = false
+      audioLevel.value = 0
+
+      const originalOnStop = mediaRecorder.onstop
+      const savedLoopNumber = currentLoop.value
+      const savedDuration = recordingTime.value
+
+      mediaRecorder.onstop = async () => {
+        try {
+          const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
+
+          if (currentLoopBlob.size === 0) {
+            recordedChunks = []
+            recordingTime.value = 0
+            currentLoop.value++
+            return
+          }
+
+          const now = new Date()
+          const fileName = `loop-${savedLoopNumber}-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
+          const loopFileData = {
+            id: Date.now(),
+            name: fileName,
+            blob: currentLoopBlob,
+            duration: formatTime(savedDuration),
+            size: formatFileSize(currentLoopBlob.size),
+            timestamp: now,
+            mode: props.recordingMode,
+            loops: 1,
+            loopNumber: savedLoopNumber,
+          }
+
+          await saveRecordingToAPI(loopFileData)
+          emit('recording-complete', loopFileData)
+        } catch (error) {
+          console.error('Error saving loop:', error)
+        } finally {
+          recordedChunks = []
+          recordingTime.value = 0
+          currentLoop.value++
+          mediaRecorder.onstop = originalOnStop
+          afterLoopSaveRestart()
+        }
+      }
+
+      mediaRecorder.stop()
+    }
+
+    const maybeCompleteLoop = () => {
+      if (!loopDuration.value || recordingTime.value < loopDuration.value) return
+      if (isExtendingLoop.value) {
+        loopBoundaryPassedWhileExtending.value = true
+        return
+      }
+      initiateLoopSave()
+    }
+
+    const startExtendLoop = () => {
+      if (!showExtendLoopButton.value) return
+      isExtendingLoop.value = true
+      if (recordingTime.value >= loopDuration.value) {
+        loopBoundaryPassedWhileExtending.value = true
+      }
+    }
+
+    const releaseExtendLoop = () => {
+      if (!isExtendingLoop.value) return
+      isExtendingLoop.value = false
+
+      if (loopBoundaryPassedWhileExtending.value || recordingTime.value >= loopDuration.value) {
+        loopBoundaryPassedWhileExtending.value = false
+        initiateLoopSave()
+      }
+    }
+
+    const startRecordingTimer = () => {
+      recordingTimer = setInterval(() => {
+        if (isCountingIn.value) return
+
+        recordingTime.value++
+        if (props.recordingMode === 'looped') {
+          totalRecordingTime.value++
+          maybeCompleteLoop()
+        }
+      }, 1000)
+    }
     
     const startRecording = async () => {
       try {
+        savingLoop.value = false
+        isCapturing.value = false
+        isCountingIn.value = false
+        countInRemaining.value = 0
+
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        
-        // Set up MediaRecorder
+        activeStream = stream
+
         mediaRecorder = new MediaRecorder(stream, {
           mimeType: 'audio/webm;codecs=opus'
         })
-        
-        // Set up audio analysis
+
         audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume()
+        }
         analyser = audioContext.createAnalyser()
         microphone = audioContext.createMediaStreamSource(stream)
         microphone.connect(analyser)
-        
+
         analyser.fftSize = 2048
         analyserNode.value = analyser
         const bufferLength = analyser.frequencyBinCount
         const dataArray = new Uint8Array(bufferLength)
-        
-        // Audio level monitoring
+
         const updateAudioLevel = () => {
           if (!isRecording.value) return
-          
-          analyser.getByteFrequencyData(dataArray)
-          const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength
-          audioLevel.value = (average / 255) * 100
-          
+
+          if (isCapturing.value && !isCountingIn.value) {
+            analyser.getByteFrequencyData(dataArray)
+            const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength
+            audioLevel.value = (average / 255) * 100
+          } else {
+            audioLevel.value = 0
+          }
+
           requestAnimationFrame(updateAudioLevel)
         }
-        
-        // Recording event handlers
+
         mediaRecorder.ondataavailable = (event) => {
-          // console.log(`Data available: ${event.data.size} bytes, timecode: ${event.timecode}`)
           if (event.data.size > 0) {
             recordedChunks.push(event.data)
             allRecordedChunks.push(event.data)
-            // console.log(`Total chunks: ${recordedChunks.length}, All chunks: ${allRecordedChunks.length}`)
           }
         }
-        
-        // Request data every second for loop saving capability
-        if (props.recordingMode === 'looped') {
-          mediaRecorder.start(1000) // Collect data every second
-        } else {
-          mediaRecorder.start()
-        }
-        
+
         mediaRecorder.onstop = async () => {
-          // Only process final recording if we're actually stopping (not just saving a loop)
           if (!isRecording.value) {
-            // For looped recordings, only save the current incomplete loop (if any)
-            // For single recordings, save the complete recording
             const chunksToUse = props.recordingMode === 'looped' ? recordedChunks : allRecordedChunks
             const blob = new Blob(chunksToUse, { type: 'audio/webm' })
-            
-            // Skip saving if there's no audio data (empty current loop)
+
             if (blob.size === 0 && props.recordingMode === 'looped') {
-              console.log('No final loop audio to save')
-              
-              // Reset after successful save
               recordedChunks = []
               allRecordedChunks = []
               recordingTime.value = 0
               totalRecordingTime.value = 0
               currentLoop.value = 1
-              loopDuration.value = null // Reset loop duration for next session
+              loopDuration.value = null
               audioLevel.value = 0
-              
               return
             }
-            
-            // Create file record
+
             const now = new Date()
             let fileName, duration
-            
+
             if (props.recordingMode === 'looped') {
-              // For looped mode, this is the final partial loop
               fileName = `loop-${currentLoop.value}-final-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
               duration = formatTime(recordingTime.value)
             } else {
-              // For single mode, this is the complete recording
               fileName = `${props.recordingMode}-recording-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
               duration = formatTime(recordingTime.value)
             }
-            
-            const fileSize = formatFileSize(blob.size)
-            
+
             const fileData = {
               id: Date.now(),
               name: fileName,
-              blob: blob,
-              duration: duration,
-              size: fileSize,
+              blob,
+              duration,
+              size: formatFileSize(blob.size),
               timestamp: now,
-              mode: props.recordingMode
+              mode: props.recordingMode,
             }
-            
-            // Add loop info for looped recordings
+
             if (props.recordingMode === 'looped') {
-              fileData.loops = 1 // This is just the final partial loop
+              fileData.loops = 1
               fileData.loopNumber = currentLoop.value
             }
-            
-            // Save to API, then refresh sidebar only after the session exists
+
             const saved = await saveRecordingToAPI(fileData)
             if (saved) {
               emit('recording-complete', fileData)
             }
-            
-            // Reset after save attempt
+
             recordedChunks = []
             allRecordedChunks = []
             recordingTime.value = 0
             totalRecordingTime.value = 0
             currentLoop.value = 1
-            loopDuration.value = null // Reset loop duration for next session
+            loopDuration.value = null
             audioLevel.value = 0
             resetSession()
-            
-            // Clean up
-            stream.getTracks().forEach(track => track.stop())
+
+            activeStream?.getTracks().forEach(track => track.stop())
+            activeStream = null
             if (audioContext) {
               audioContext.close()
               audioContext = null
@@ -335,128 +615,28 @@ export default {
             analyserNode.value = null
           }
         }
-        
-        // MediaRecorder is started above based on mode
+
         isRecording.value = true
-        
-        // Start timer with loop handling for looped recordings
-        recordingTimer = setInterval(async () => {
-          recordingTime.value++
-          if (props.recordingMode === 'looped') {
-            totalRecordingTime.value++
-            
-            // Check if we've completed a loop
-            if (loopDuration.value && recordingTime.value >= loopDuration.value) {
-              // console.log(`Auto-saving loop ${currentLoop.value} after ${loopDuration.value} seconds`)
-              // console.log(`recordedChunks length: ${recordedChunks.length}`)
-              
-              // Make sure we have data to save
-              if (recordedChunks.length === 0) {
-                // console.warn('No recorded chunks available for auto-save, skipping...')
-                // Reset for next loop anyway
-                recordingTime.value = 0
-                currentLoop.value++
-                return
-              }
-              
-              // Save the current loop automatically
-              try {
-                // Stop the current recording to get final data and start fresh for next loop
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                  // Temporarily store current onstop handler
-                  const originalOnStop = mediaRecorder.onstop
-                  
-                  mediaRecorder.onstop = async () => {
-                    try {
-                      // Save the current loop as an individual recording
-                      const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
-                      console.log(`Loop blob size: ${currentLoopBlob.size} bytes`)
-                      
-                      // Make sure we have a valid blob with data
-                      if (currentLoopBlob.size === 0) {
-                        console.warn('Empty blob created, skipping save...')
-                        // Reset for next loop anyway
-                        recordedChunks = []
-                        recordingTime.value = 0
-                        currentLoop.value++
-                        
-                        // Restart recording for next loop
-                        if (isRecording.value) {
-                          mediaRecorder.start(1000)
-                        }
-                        return
-                      }
-                      
-                      // Create file record for current loop
-                      const now = new Date()
-                      const fileName = `loop-${currentLoop.value}-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
-                      const fileSize = formatFileSize(currentLoopBlob.size)
-                      
-                      const loopFileData = {
-                        id: Date.now(),
-                        name: fileName,
-                        blob: currentLoopBlob,
-                        duration: formatTime(recordingTime.value),
-                        size: fileSize,
-                        timestamp: now,
-                        mode: props.recordingMode,
-                        loops: 1, // This is a single loop
-                        loopNumber: currentLoop.value
-                      }
-                      
-                      console.log(loopFileData, '1111fkaldxf - AUTO SAVE')
-                      // Save current loop to API
-                      console.log('before - AUTO SAVE')
-                      await saveRecordingToAPI(loopFileData)
-                      console.log('after - AUTO SAVE')
-                      
-                      // Emit completion event for current loop
-                      emit('recording-complete', loopFileData)
-                      
-                      console.log(`Auto-saved loop ${currentLoop.value}, starting loop ${currentLoop.value + 1}`)
-                      
-                    } catch (error) {
-                      console.error('Error auto-saving current loop:', error)
-                      if (error.response) {
-                        console.error('Response status:', error.response.status)
-                        console.error('Response data:', error.response.data)
-                      }
-                    }
-                    
-                    // Reset for next loop and restart recording
-                    recordedChunks = [] // Clear chunks for next loop
-                    recordingTime.value = 0 // Reset loop timer
-                    currentLoop.value++ // Increment loop counter
-                    
-                    // Restore original onstop handler
-                    mediaRecorder.onstop = originalOnStop
-                    
-                    // Restart recording for next loop if still recording
-                    if (isRecording.value) {
-                      mediaRecorder.start(1000)
-                    }
-                  }
-                  
-                  // Stop to trigger the save and restart cycle
-                  mediaRecorder.stop()
-                }
-              } catch (error) {
-                console.error('Error in auto-save process:', error)
-                // Reset for next loop anyway
-                recordedChunks = []
-                recordingTime.value = 0
-                currentLoop.value++
-              }
-            } else if (!loopDuration.value && currentLoop.value === 1) {
-              // First loop - duration will be set when user saves the loop
-              // No automatic loop progression yet
-            }
-          }
-        }, 1000)
-        
-        // Start audio level monitoring
+        startRecordingTimer()
         updateAudioLevel()
-        
+
+        const beginCapture = async () => {
+          if (audioContext?.state === 'suspended') {
+            await audioContext.resume()
+          }
+          if (props.recordingMode === 'looped') {
+            mediaRecorder.start(1000)
+          } else {
+            mediaRecorder.start()
+          }
+          isCapturing.value = true
+        }
+
+        if (props.recordingMode === 'looped' && countInSeconds.value > 0) {
+          await runCountIn(() => beginCapture())
+        } else {
+          await beginCapture()
+        }
       } catch (error) {
         console.error('Error starting recording:', error)
         alert('Error accessing microphone. Please check permissions.')
@@ -464,12 +644,21 @@ export default {
     }
     
     const stopRecording = () => {
+      isExtendingLoop.value = false
+      loopBoundaryPassedWhileExtending.value = false
+      clearCountInTimer()
+      isCountingIn.value = false
+      countInRemaining.value = 0
+      isCapturing.value = false
+      savingLoop.value = false
+      audioLevel.value = 0
+
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop()
       }
-      
+
       isRecording.value = false
-      
+
       if (recordingTimer) {
         clearInterval(recordingTimer)
         recordingTimer = null
@@ -575,84 +764,14 @@ export default {
     
     const saveCurrentLoopAndContinue = async () => {
       if (!mediaRecorder || mediaRecorder.state !== 'recording') return
-      
-      savingLoop.value = true
-      
-      try {
-        // If this is the first loop completion, set the loop duration
-        if (currentLoop.value === 1 && !loopDuration.value) {
-          loopDuration.value = recordingTime.value
-          // console.log(`Loop duration set to ${loopDuration.value} seconds based on first loop`)
-        }
-        
-        // Save current onstop handler for restoration later
-        const originalOnStop = mediaRecorder.onstop
-        
-        // Set temporary onstop handler for loop save and restart
-        mediaRecorder.onstop = async () => {
-          try {
-            // Save the current loop as an individual recording
-            const currentLoopBlob = new Blob(recordedChunks, { type: 'audio/webm' })
-            
-            // Create file record for current loop
-            const now = new Date()
-            const fileName = `loop-${currentLoop.value}-${now.toISOString().slice(0, 19).replace(/[:.]/g, '-')}.webm`
-            const fileSize = formatFileSize(currentLoopBlob.size)
-            
-            const loopFileData = {
-              id: Date.now(),
-              name: fileName,
-              blob: currentLoopBlob,
-              duration: formatTime(recordingTime.value),
-              size: fileSize,
-              timestamp: now,
-              mode: props.recordingMode,
-              loops: 1, // This is a single loop
-              loopNumber: currentLoop.value
-            }
-            
-            console.log(loopFileData, '22222fkaldxf - MANUAL SAVE')
-            // Save current loop to API
-            console.log('before 1 - MANUAL SAVE')
-            await saveRecordingToAPI(loopFileData)
-            console.log('after 2 - MANUAL SAVE')
-            
-            // Emit completion event for current loop
-            emit('recording-complete', loopFileData)
-            
-            console.log(`Manual saved loop ${currentLoop.value}, starting loop ${currentLoop.value + 1}`)
-            
-          } catch (error) {
-            console.error('Error saving current loop:', error)
-            if (error.response) {
-              console.error('Response status:', error.response.status)
-              console.error('Response data:', error.response.data)
-            }
-          }
-          
-          // Reset for next loop and restart recording
-          recordedChunks = [] // Clear chunks for next loop
-          recordingTime.value = 0 // Reset loop timer
-          currentLoop.value++ // Increment loop counter
-          
-          // Restore original onstop handler
-          mediaRecorder.onstop = originalOnStop
-          
-          // Restart recording for next loop if still recording
-          if (isRecording.value) {
-            mediaRecorder.start(1000)
-          }
-          
-          savingLoop.value = false
-        }
-        
-        // Stop to trigger the save and restart cycle
-        mediaRecorder.stop()
-        
-      } catch (error) {
-        console.error('Error in manual save process:', error)
-        savingLoop.value = false
+      if (savingLoop.value) return
+
+      if (currentLoop.value === 1 && !loopDuration.value) {
+        if (recordingTime.value < 1) return
+        loopDuration.value = recordingTime.value
       }
+
+      initiateLoopSave()
     }
     
     const saveRecordingToAPI = async (fileData) => {
@@ -776,7 +895,14 @@ export default {
       sessionTitle.value = ''
       sessionDescription.value = ''
       totalRecordingTime.value = 0
-      loopDuration.value = null // Reset loop duration
+      loopDuration.value = null
+      isExtendingLoop.value = false
+      loopBoundaryPassedWhileExtending.value = false
+      savingLoop.value = false
+      isCapturing.value = false
+      clearCountInTimer()
+      isCountingIn.value = false
+      countInRemaining.value = 0
     }
     
     // Watch for recording mode changes to reset session
@@ -788,11 +914,12 @@ export default {
     
     // Cleanup on unmount
     onUnmounted(() => {
+      clearCountInTimer()
       if (isRecording.value) {
         stopRecording()
       }
     })
-    
+
     return {
       isRecording,
       recordingTime,
@@ -800,12 +927,21 @@ export default {
       audioLevel,
       currentLoop,
       loopDuration,
+      loopProgressRatio,
       currentSession,
       sessionTitle,
       sessionDescription,
       savingLoop,
       lastClickTime,
       analyserNode,
+      countInSeconds,
+      countInOptions,
+      isCountingIn,
+      countInRemaining,
+      showWaveform,
+      isCapturing,
+      isExtendingLoop,
+      showExtendLoopButton,
       handleButtonClick,
       handleMainButtonClick,
       getButtonAriaLabel,
@@ -813,6 +949,8 @@ export default {
       toggleRecording,
       resetSession,
       saveCurrentLoopAndContinue,
+      startExtendLoop,
+      releaseExtendLoop,
       formatTime
     }
   }

@@ -1,10 +1,14 @@
 <template>
-  <div>
-    <transition name="slide-up">
-      <header v-show="isHeaderExpanded" class="bg-white shadow-sm border-b border-gray-200 z-10 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center py-4">
-            <h1 class="text-2xl font-bold text-stone-700">ReCord</h1>
+  <div class="shrink-0 relative">
+    <div
+      class="grid transition-[grid-template-rows] duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+      :style="{ gridTemplateRows: isHeaderExpanded ? '1fr' : '0fr' }"
+    >
+      <div class="overflow-hidden min-h-0">
+        <header ref="headerEl" class="bg-white shadow-sm border-b border-gray-200 z-10 relative">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+              <h1 class="text-2xl font-bold text-stone-700">ReCord</h1>
             <!-- Desktop Navigation -->
             <div class="hidden md:flex items-center relative">
               <span class="text-sm text-gray-700 mr-2">Hello, {{ userName }}</span>
@@ -40,15 +44,16 @@
                 </svg>
               </button>
             </div>
+            </div>
           </div>
-        </div>
-      </header>
-    </transition>
+        </header>
+      </div>
+    </div>
     <!-- Header Toggle Tab (conditionally visible) -->
     <div 
       v-if="showHeaderToggle"
-      class="fixed left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500"
-      :style="{ top: isHeaderExpanded ? '70px' : '0px' }"
+      class="fixed left-1/2 -translate-x-1/2 z-50 transition-[top] duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+      :style="{ top: isHeaderExpanded ? `${headerHeight}px` : '0px' }"
     >
       <button
         @click="toggleHeader"
@@ -106,10 +111,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMainStore } from '../stores/main';
 import { computed } from 'vue';
+
 const props = defineProps({
   userName: {
     type: String,
@@ -120,16 +126,46 @@ const props = defineProps({
     default: false
   }
 });
+
+const emit = defineEmits(['header-toggle']);
+
 const store = useMainStore();
 const router = useRouter();
 const showDesktopMenu = ref(false);
 const isMobileMenuOpen = ref(false);
 const isHeaderCollapsed = ref(false);
 const isHeaderExpanded = ref(true);
+const headerEl = ref(null);
+const headerHeight = ref(69);
+let headerResizeObserver = null;
+
+const measureHeader = () => {
+  if (headerEl.value) {
+    headerHeight.value = headerEl.value.offsetHeight;
+  }
+};
+
 const toggleHeader = () => {
   isHeaderCollapsed.value = !isHeaderCollapsed.value;
   isHeaderExpanded.value = !isHeaderCollapsed.value;
+  emit('header-toggle', isHeaderExpanded.value);
 };
+
+onMounted(() => {
+  nextTick(measureHeader);
+  if (headerEl.value) {
+    headerResizeObserver = new ResizeObserver(measureHeader);
+    headerResizeObserver.observe(headerEl.value);
+  }
+});
+
+onUnmounted(() => {
+  headerResizeObserver?.disconnect();
+});
+
+watch(isHeaderExpanded, () => {
+  nextTick(measureHeader);
+});
 
 const canManageSystemInfo = computed(() =>
   store.user && store.user.permissions && store.user.permissions.includes('manage_system_info')
@@ -171,16 +207,3 @@ const handleLogoutAndCloseMobile = async () => {
 };
 </script>
 
-<style>
-.slide-up-enter-active, .slide-up-leave-active {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.slide-up-enter-from, .slide-up-leave-to {
-  transform: translateY(-100%);
-  opacity: 0;
-}
-.slide-up-enter-to, .slide-up-leave-from {
-  transform: translateY(0);
-  opacity: 1;
-}
-</style>

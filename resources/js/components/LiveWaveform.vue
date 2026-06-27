@@ -141,6 +141,19 @@ const stop = () => {
     cancelAnimationFrame(animationId)
     animationId = null
   }
+
+  waveformData.length = 0
+
+  if (canvas.value) {
+    const ctx = canvas.value.getContext('2d')
+    const width = canvas.value.clientWidth
+    const height = canvas.value.clientHeight
+    if (ctx && width > 0 && height > 0) {
+      ctx.clearRect(0, 0, width, height)
+      ctx.fillStyle = isBackground.value ? 'rgba(245, 245, 244, 0.45)' : '#e7e5e4'
+      ctx.fillRect(0, 0, width, height)
+    }
+  }
 }
 
 watch(

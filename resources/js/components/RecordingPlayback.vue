@@ -51,7 +51,7 @@
           class="pointer-events-auto mt-8 text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors duration-200"
           @click="$emit('close')"
         >
-          Back to recording
+          {{ backLabel }}
         </button>
       </div>
     </div>
@@ -84,6 +84,10 @@ const props = defineProps({
   autoplay: {
     type: Boolean,
     default: true,
+  },
+  backLabel: {
+    type: String,
+    default: 'Back to recording',
   },
 })
 

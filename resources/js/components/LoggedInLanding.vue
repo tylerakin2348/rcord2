@@ -5,278 +5,103 @@
       :showHeaderToggle="true"
     />
 
-    <!-- Main Content -->
-    <main class="flex-1 min-h-0 flex overflow-hidden relative">
-      <!-- Main rcord Interface -->
-      <div class="flex flex-1 min-h-0 w-full h-full items-stretch">
-        <!-- Left Half: Recording Controls -->
-        <div 
-          class="flex flex-col min-h-0 h-full flex-1 transition-all duration-200"
-          :class="{ 
-            'w-full': !isDrawerExpanded
-          }"
-          :style="{ 
-            width: isDrawerExpanded && !isMobileView ? `${100 - constrainedDrawerWidth}%` : '100%'
-          }"
-        >
-          <RecordingPlayback
-            v-if="playbackRecording"
-            ref="playbackView"
-            :title="playbackRecording.title"
-            :subtitle="playbackRecording.subtitle"
-            :url="playbackRecording.url"
-            @close="stopPlayback"
-            @play="isPlaybackPlaying = true"
-            @pause="isPlaybackPlaying = false"
-            @finish="stopPlayback"
-          />
-          <RecordingControls
-            v-else
-            recording-mode="looped"
-            @recording-complete="onRecordingComplete"
-          />
-        </div>
-
-        <!-- Drawer Toggle Button (absolutely positioned) -->
-        <div 
-          v-show="!isMobileView"
-          class="absolute top-1/2 z-20"
-          :style="{
-            right: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0px',
-            transform: 'translateY(-50%)'
-          }"
-        >
-          <button
-            @click="toggleDrawer"
-            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-4 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200"
-          >
-            <svg 
-              class="w-5 h-5 transition-transform duration-300" 
-              :class="{ 'rotate-180': !isDrawerExpanded }"
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Resize Handle -->
-        <div 
-          v-show="!isMobileView && isDrawerExpanded"
-          class="absolute top-0 z-30 h-full cursor-col-resize group"
-          :style="{
-            right: `${constrainedDrawerWidth}%`,
-            transform: 'translateX(50%)'
-          }"
-          @mousedown="startDragging"
-        >
-          <div 
-            class="w-1 h-full bg-transparent group-hover:bg-stone-300 transition-colors duration-200"
-            :class="{ 'bg-stone-400': isDragging }"
-          ></div>
-          <div class="absolute inset-y-0 -left-1 -right-1"></div> <!-- Invisible wider hit area -->
-        </div>
-
-        <!-- Mobile Drawer Toggle Button (floating) -->
-        <div 
-          v-show="isMobileView"
-          class="fixed top-1/2 right-0 z-50 transform -translate-y-1/2"
-        >
-          <button
-            @click="toggleDrawer"
-            class="bg-white hover:bg-gray-50 text-stone-600 hover:text-stone-800 px-2 py-4 rounded-l-lg border-l border-t border-b border-gray-200 shadow-sm transition-colors duration-200"
-          >
-            <svg 
-              class="w-5 h-5 transition-transform duration-300" 
-              :class="{ 'rotate-180': !isDrawerExpanded }"
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
-
-
-        <!-- Right Half: Recordings Drawer -->
-        <div 
-          class="h-full min-h-0 bg-stone-50 shadow-lg flex flex-col transition-all duration-200"
-          :class="{ 
-            // Desktop styles
-            'opacity-0 transform scale-x-0 pointer-events-none': !isDrawerExpanded && !isMobileView,
-            // Mobile styles - floating overlay
-            'fixed top-19 w-full z-40': isMobileView,
-            'transform translate-x-full': isMobileView && !isDrawerExpanded,
-            'transform translate-x-0': isMobileView && isDrawerExpanded
-          }"
-          :style="isMobileView
-            ? (isDrawerExpanded ? { width: '92vw', maxWidth: '92vw' } : {})
-            : { width: isDrawerExpanded ? `${constrainedDrawerWidth}%` : '0%' }"
-        >
-          <RecordingsDrawer
-            recording-mode="looped"
-            :is-mobile="isMobileView"
-            :playing-recording-id="playbackRecording?.id ?? null"
-            :is-player-playing="isPlaybackPlaying"
-            @close="toggleDrawer"
-            @play-recording="onPlayRecording"
-            ref="recordingsDrawer"
-          />
-        </div>
+    <main
+      class="flex-1 min-h-0 flex flex-col overflow-hidden relative transition-[flex-grow] duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+    >
+      <div class="flex-1 min-h-0 overflow-hidden relative">
+        <RecordingPlayback
+          v-if="playbackRecording"
+          class="h-full"
+          ref="playbackView"
+          :title="playbackRecording.title"
+          :subtitle="playbackRecording.subtitle"
+          :url="playbackRecording.url"
+          back-label="Back to library"
+          @close="stopPlayback"
+          @play="isPlaybackPlaying = true"
+          @pause="isPlaybackPlaying = false"
+          @finish="stopPlayback"
+        />
+        <RecordingControls
+          v-show="!playbackRecording && activeView === 'record'"
+          class="h-full"
+          recording-mode="looped"
+          @recording-complete="onRecordingComplete"
+        />
+        <RecordingsDrawer
+          v-show="!playbackRecording && activeView === 'library'"
+          class="h-full"
+          recording-mode="looped"
+          @expand-recording="onExpandRecording"
+          ref="recordingsDrawer"
+        />
       </div>
+
+      <nav
+        v-if="!playbackRecording"
+        class="shrink-0 bg-white border-t border-stone-200 safe-area-bottom"
+      >
+        <div class="flex max-w-lg mx-auto">
+          <button
+            type="button"
+            class="flex-1 flex flex-col items-center gap-1 py-3 transition-colors duration-200"
+            :class="activeView === 'record'
+              ? 'text-red-600'
+              : 'text-stone-400 hover:text-stone-600'"
+            @click="activeView = 'record'"
+          >
+            <div
+              class="p-1.5 rounded-full transition-colors"
+              :class="activeView === 'record' ? 'bg-red-50' : ''"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </div>
+            <span class="text-xs font-medium">Record</span>
+          </button>
+
+          <button
+            type="button"
+            class="flex-1 flex flex-col items-center gap-1 py-3 transition-colors duration-200"
+            :class="activeView === 'library'
+              ? 'text-stone-800'
+              : 'text-stone-400 hover:text-stone-600'"
+            @click="activeView = 'library'"
+          >
+            <div
+              class="p-1.5 rounded-full transition-colors"
+              :class="activeView === 'library' ? 'bg-stone-100' : ''"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+            <span class="text-xs font-medium">Library</span>
+          </button>
+        </div>
+      </nav>
     </main>
-
-    <!-- Dashboard Modal -->
-    <!-- Removed dashboard modal - now using separate routes -->
-
   </div>
 </template>
 
 <script setup>
-import { ref, onUnmounted, computed, onMounted, watch } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { useMainStore } from '../stores/main';
 import RecordingControls from './RecordingControls.vue';
 import RecordingPlayback from './RecordingPlayback.vue';
 import RecordingsDrawer from './RecordingsDrawer.vue';
-import LoggedInHeaderNav from './LoggedInHeaderNav.vue'
+import LoggedInHeaderNav from './LoggedInHeaderNav.vue';
+
 const store = useMainStore();
 
-// Mobile state
-const isMobileMenuOpen = ref(false);
-const windowWidth = ref(window.innerWidth);
+const activeView = ref('record');
 
-// Computed for mobile view detection
-const isMobileView = computed(() => windowWidth.value < 768);
-
-// Drawer state
-const isDrawerExpanded = ref(true);
-const isHeaderCollapsed = ref(false);
-
-// Draggable sidebar state
-const drawerWidth = ref(30); // Default 30%
-const isDragging = ref(false);
-const dragStartX = ref(0);
-const dragStartWidth = ref(0);
-
-// Computed drawer width with constraints
-const constrainedDrawerWidth = computed(() => {
-  return Math.max(0, Math.min(48, drawerWidth.value));
-});
-
-// Header computed property for clearer template logic
-const isHeaderExpanded = computed(() => !isHeaderCollapsed.value);
-
-// Refs to child components
 const recordingsDrawer = ref(null);
 const playbackView = ref(null);
 const playbackRecording = ref(null);
 const playbackBlobUrl = ref(null);
 const isPlaybackPlaying = ref(false);
-const showDesktopMenu = ref(false);
-
-// Watchers to synchronize dropdown and drawer
-watch(showDesktopMenu, (val) => {
-  if (val && isDrawerExpanded.value) {
-    isDrawerExpanded.value = false;
-  }
-});
-watch(isDrawerExpanded, (val) => {
-  if (val) {
-    showDesktopMenu.value = false;
-  }
-});
-
-const goToAccount = () => {
-  router.push('/account');
-  showDesktopMenu.value = false;
-};
-const goToSystemInfo = () => {
-  router.push('/system-info');
-  showDesktopMenu.value = false;
-};
-const handleLogoutAndClose = async () => {
-  await handleLogout();
-  showDesktopMenu.value = false;
-};
-
-// Handle window resize
-const handleResize = () => {
-  windowWidth.value = window.innerWidth;
-  // Close mobile menu on resize to desktop
-  if (!isMobileView.value) {
-    isMobileMenuOpen.value = false;
-  }
-  // Close drawer on mobile by default
-  if (isMobileView.value) {
-    isDrawerExpanded.value = false;
-  }
-};
-
-onMounted(() => {
-  window.addEventListener('resize', handleResize);
-  // Set initial drawer state based on screen size
-  if (isMobileView.value) {
-    isDrawerExpanded.value = false;
-  }
-  
-  // Add mouse event listeners for dragging
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
-});
-
-function onDropdownToggled(isOpen) {
-  if (isOpen && isDrawerExpanded.value) {
-    isDrawerExpanded.value = false;
-  }
-}
-const toggleDrawer = () => {
-  // Always close dropdown when opening drawer
-  if (showDesktopMenu.value) {
-    showDesktopMenu.value = false;
-  }
-  isDrawerExpanded.value = !isDrawerExpanded.value;
-};
-
-const toggleHeader = () => {
-  isHeaderCollapsed.value = !isHeaderCollapsed.value;
-};
-
-// Draggable functionality
-const startDragging = (event) => {
-  if (isMobileView.value) return;
-  
-  isDragging.value = true;
-  dragStartX.value = event.clientX;
-  dragStartWidth.value = drawerWidth.value;
-  event.preventDefault();
-};
-
-const handleMouseMove = (event) => {
-  if (!isDragging.value || isMobileView.value) return;
-  
-  const deltaX = dragStartX.value - event.clientX;
-  const windowWidthPx = windowWidth.value;
-  const deltaPercent = (deltaX / windowWidthPx) * 100;
-  
-  drawerWidth.value = dragStartWidth.value + deltaPercent;
-  
-  // Auto-collapse if dragged to less than 5%
-  if (constrainedDrawerWidth.value < 5) {
-    isDrawerExpanded.value = false;
-    drawerWidth.value = 30; // Reset to default
-  } else if (!isDrawerExpanded.value && constrainedDrawerWidth.value >= 5) {
-    isDrawerExpanded.value = true;
-  }
-};
-
-const handleMouseUp = () => {
-  if (isDragging.value) {
-    isDragging.value = false;
-  }
-};
 
 const onRecordingComplete = async () => {
   if (recordingsDrawer.value) {
@@ -284,28 +109,11 @@ const onRecordingComplete = async () => {
   }
 };
 
-const resolvePlaybackUrl = async (file) => {
-  if (file.url) {
-    return file.url;
-  }
-
-  if (!file.id) {
-    return null;
-  }
-
-  const response = await window.axios.get(
-    `/api/recordings/${file.id}/stream`,
-    { responseType: 'blob' }
-  );
-  const blobUrl = URL.createObjectURL(response.data);
-  playbackBlobUrl.value = blobUrl;
-  return blobUrl;
-};
-
 const stopPlayback = () => {
   playbackView.value?.stop();
   playbackRecording.value = null;
   isPlaybackPlaying.value = false;
+  activeView.value = 'library';
 
   if (playbackBlobUrl.value) {
     URL.revokeObjectURL(playbackBlobUrl.value);
@@ -313,50 +121,30 @@ const stopPlayback = () => {
   }
 };
 
-const onPlayRecording = async (file) => {
-  try {
-    if (playbackRecording.value?.id === file.id) {
-      playbackView.value?.toggle();
-      return;
-    }
+const onExpandRecording = (file) => {
+  playbackView.value?.stop();
 
-    stopPlayback();
-
-    const url = await resolvePlaybackUrl(file);
-    if (!url) return;
-
-    const subtitle = [
-      file.formatted_duration || file.duration,
-      file.formatted_file_size || file.size,
-    ]
-      .filter(Boolean)
-      .join(' • ');
-
-    playbackRecording.value = {
-      id: file.id,
-      title: file.title || file.name,
-      subtitle,
-      url,
-    };
-  } catch (error) {
-    console.error('Error loading recording for playback:', error);
-    stopPlayback();
+  if (playbackBlobUrl.value && playbackBlobUrl.value !== file.url) {
+    URL.revokeObjectURL(playbackBlobUrl.value);
   }
+  playbackBlobUrl.value = file.url?.startsWith('blob:') ? file.url : null;
+
+  const subtitle = [
+    file.formatted_duration || file.duration,
+    file.formatted_file_size || file.size,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+
+  playbackRecording.value = {
+    id: file.id,
+    title: file.title || file.name,
+    subtitle,
+    url: file.url,
+  };
 };
 
-const handleLogout = async () => {
-  try {
-    await store.logout();
-  } catch (error) {
-    console.error('Logout failed:', error);
-  }
-};
-
-// Cleanup on component unmount
 onUnmounted(() => {
   stopPlayback();
-  window.removeEventListener('resize', handleResize);
-  document.removeEventListener('mousemove', handleMouseMove);
-  document.removeEventListener('mouseup', handleMouseUp);
 });
 </script>

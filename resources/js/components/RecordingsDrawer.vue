@@ -1,736 +1,232 @@
 <template>
-    <div 
-        class="p-6 h-full flex flex-col">
-        <!-- Mobile close button -->
-        <div
-            v-if="isMobile"
-            class="flex justify-between items-center mb-4"
-        >
-            <h3 class="text-xl font-semibold text-stone-800">
-               Saved Recordings
-            </h3>
-        </div>
-
-        <!-- Desktop header -->
-        <h3
-            v-if="!isMobile"
-            class="text-xl font-semibold text-stone-800 mb-6"
-        >
-           Saved Recordings
-        </h3>
-
-        <!-- Recordings List with Scroll -->
-        <div
-            class="flex-1 overflow-y-scroll pr-2"
-            ref="scrollContainer"
-        >
-            <!-- Single Mode: Show individual recordings -->
-            <div
-                v-if="recordingMode === 'single'"
-                class="space-y-3"
-            >
-                <!-- Loading state for initial load -->
-                <div
-                    v-if="loadingRecordings && recordings.length === 0"
-                    class="flex justify-center py-12"
-                >
-                    <div class="flex items-center space-x-3 text-stone-500">
-                        <svg
-                            class="w-6 h-6 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
+    <div class="h-full flex flex-col bg-stone-50">
+        <!-- Toolbar -->
+        <div class="shrink-0 px-4 sm:px-6 pt-4 pb-3 border-b border-stone-200 bg-white">
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <div class="min-w-0 flex-1">
+                    <nav v-if="currentFolder" class="flex items-center gap-1.5 text-sm mb-1">
+                        <button
+                            type="button"
+                            class="text-stone-500 hover:text-stone-800 transition-colors truncate"
+                            @click="closeFolder"
                         >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                            ></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
+                            Library
+                        </button>
+                        <svg class="w-4 h-4 text-stone-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                        <span class="text-sm font-medium"
-                            >Loading recordings...</span
-                        >
-                    </div>
+                        <span class="font-medium text-stone-800 truncate">{{ currentFolder.title }}</span>
+                    </nav>
+                    <h2 class="text-lg font-semibold text-stone-800">
+                        {{ currentFolder ? currentFolder.title : 'Saved Recordings' }}
+                    </h2>
+                    <p v-if="currentFolder" class="text-xs text-stone-500 mt-0.5">
+                        {{ currentFolder.recordings_count }} loops · {{ currentFolder.formatted_session_duration }}
+                    </p>
                 </div>
 
-                <!-- Recordings list -->
+                <div class="flex items-center gap-1 shrink-0">
+                    <button
+                        type="button"
+                        class="p-2 rounded-lg transition-colors"
+                        :class="viewMode === 'grid' ? 'bg-stone-200 text-stone-800' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'"
+                        aria-label="Grid view"
+                        @click="viewMode = 'grid'"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </button>
+                    <button
+                        type="button"
+                        class="p-2 rounded-lg transition-colors"
+                        :class="viewMode === 'list' ? 'bg-stone-200 text-stone-800' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'"
+                        aria-label="List view"
+                        @click="viewMode = 'list'"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button
+                v-if="currentFolder"
+                type="button"
+                class="flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors"
+                @click="closeFolder"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to library
+            </button>
+        </div>
+
+        <!-- Scrollable content -->
+        <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4" ref="scrollContainer">
+            <div v-if="isLoading" class="flex justify-center py-16">
+                <div class="flex items-center gap-3 text-stone-500">
+                    <svg class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span class="text-sm font-medium">Loading...</span>
+                </div>
+            </div>
+
+            <template v-else-if="currentFolder">
                 <div
-                    v-else-if="recordings.length > 0"
-                    class="space-y-3"
+                    v-if="currentFolder.recordings?.length"
+                    :class="gridClasses"
+                >
+                    <div
+                        v-for="recording in currentFolder.recordings"
+                        :key="recording.id"
+                        :class="cellClasses(recording.id)"
+                    >
+                        <LibraryRecordingCard
+                            :recording="recording"
+                            :title="`Loop ${recording.loop_number}`"
+                            :view-mode="viewMode"
+                            :is-playing="inlinePlayingId === recording.id && inlinePlaying"
+                            :is-expanded="expandedId === recording.id"
+                            :playback-url="urlCache[recording.id] || ''"
+                            @toggle-play="toggleInlinePlay(recording)"
+                            @toggle-expand="toggleExpand(recording)"
+                            @open-full="openFullPlayer(recording)"
+                            @download="downloadFile(recording)"
+                            @delete="deleteFile(recording)"
+                            @waveform-play="onWaveformPlay(recording.id)"
+                            @waveform-pause="onWaveformPause"
+                            @waveform-finish="onWaveformFinish(recording.id)"
+                        />
+                    </div>
+                </div>
+                <p v-else class="text-center py-16 text-stone-400 text-sm">No recordings in this session</p>
+            </template>
+
+            <template v-else>
+                <div
+                    v-if="recordingMode === 'single' && recordings.length > 0"
+                    :class="gridClasses"
                 >
                     <div
                         v-for="file in recordings"
                         :key="file.id"
-                        class="flex items-center justify-between p-4 bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
+                        :class="cellClasses(file.id)"
                     >
-                        <div class="flex items-center space-x-3">
-                            <div class="p-2 rounded-lg bg-stone-100">
-                                <svg
-                                    class="w-5 h-5 text-stone-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="font-medium text-stone-900">
-                                    {{ file.title || file.name }}
-                                </div>
-                                <div class="text-sm text-stone-500">
-                                    {{
-                                        file.formatted_duration || file.duration
-                                    }}
-                                    •
-                                    {{ file.formatted_file_size || file.size }}
-                                </div>
-                                <div
-                                    v-if="file.recording_type"
-                                    class="text-xs text-stone-400"
-                                >
-                                    {{ file.recording_type.display_name }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button
-                                @click="playFile(file)"
-                                class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
-                            >
-                                <!-- Play Icon -->
-                                <svg
-                                    v-if="!(playingRecordingId === file.id && isPlayerPlaying)"
-                                    class="w-5 h-5"
-                                    fill="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path d="M8 5v14l11-7z" />
-                                </svg>
-                                <!-- Pause Icon -->
-                                <svg
-                                    v-else
-                                    class="w-5 h-5"
-                                    fill="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                                </svg>
-                            </button>
-                            <button
-                                @click="downloadFile(file)"
-                                class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                    />
-                                </svg>
-                            </button>
-                            <button
-                                @click="deleteFile(file)"
-                                class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Loading more indicator -->
-                    <div
-                        v-if="loadingMore"
-                        class="flex justify-center py-6"
-                    >
-                        <div class="flex items-center space-x-3 text-stone-500">
-                            <svg
-                                class="w-6 h-6 animate-spin"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle
-                                    class="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    stroke-width="4"
-                                ></circle>
-                                <path
-                                    class="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                            </svg>
-                            <span class="text-sm font-medium"
-                                >Loading more recordings...</span
-                            >
-                        </div>
-                    </div>
-
-                    <!-- End of results indicator -->
-                    <div
-                        v-else-if="!hasMoreRecordings && recordings.length > 0"
-                        class="text-center py-4"
-                    >
-                        <span class="text-xs text-stone-400"
-                            >You've reached the end of your recordings</span
-                        >
-                    </div>
-
-                    <!-- Scroll trigger element -->
-                    <div
-                        ref="scrollTrigger"
-                        class="h-1 w-full"
-                    ></div>
-                </div>
-            </div>
-
-            <!-- Looped Mode: Show recording sessions -->
-            <div
-                v-if="recordingMode === 'looped'"
-                class="space-y-4"
-            >
-                <!-- Loading state for initial load -->
-                <div
-                    v-if="loadingSessions && sessions.length === 0"
-                    class="flex justify-center py-12"
-                >
-                    <div class="flex items-center space-x-3 text-stone-500">
-                        <svg
-                            class="w-6 h-6 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                            ></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                        </svg>
-                        <span class="text-sm font-medium"
-                            >Loading sessions...</span
-                        >
+                        <LibraryRecordingCard
+                            :recording="file"
+                            :title="file.title || file.name"
+                            :subtitle="file.recording_type?.display_name"
+                            :view-mode="viewMode"
+                            :is-playing="inlinePlayingId === file.id && inlinePlaying"
+                            :is-expanded="expandedId === file.id"
+                            :playback-url="urlCache[file.id] || ''"
+                            @toggle-play="toggleInlinePlay(file)"
+                            @toggle-expand="toggleExpand(file)"
+                            @open-full="openFullPlayer(file)"
+                            @download="downloadFile(file)"
+                            @delete="deleteFile(file)"
+                            @waveform-play="onWaveformPlay(file.id)"
+                            @waveform-pause="onWaveformPause"
+                            @waveform-finish="onWaveformFinish(file.id)"
+                        />
                     </div>
                 </div>
 
-                <!-- Sessions list -->
                 <div
-                    v-else-if="sessions.length > 0"
-                    class="space-y-4"
+                    v-else-if="recordingMode === 'looped' && sessions.length > 0"
+                    :class="gridClasses"
                 >
                     <div
                         v-for="session in sessions"
                         :key="session.id"
+                        :class="viewMode === 'grid' ? 'h-full min-h-[152px]' : ''"
                     >
-                        <!-- Simple Card for Single Recording Sessions -->
-                        <div
+                        <LibraryRecordingCard
                             v-if="session.recordings_count === 1"
-                            class="bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200 p-4"
-                        >
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3 flex-1">
-                                    <div class="">
-                                        <svg
-                                            class="w-5 h-5 text-stone-600"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="font-medium text-stone-900">
-                                            {{ session.title }}
-                                        </div>
-                                        <div class="text-sm text-stone-500">
-                                            {{ session.formatted_session_duration }}
-                                            • {{ session.recordings[0]?.formatted_file_size }}
-                                        </div>
-                                        <div
-                                            v-if="session.description"
-                                            class="text-xs text-stone-400 mt-1"
-                                        >
-                                            {{ session.description }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <!-- Play/Pause Button -->
-                                    <button
-                                        @click="playFile(session.recordings[0])"
-                                        class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
-                                    >
-                                        <svg
-                                            v-if="!(playingRecordingId === session.recordings[0]?.id && isPlayerPlaying)"
-                                            class="w-5 h-5"
-                                            fill="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path d="M8 5v14l11-7z" />
-                                        </svg>
-                                        <svg
-                                            v-else
-                                            class="w-5 h-5"
-                                            fill="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                                        </svg>
-                                    </button>
-
-                                    <!-- Download Button -->
-                                    <button
-                                        @click="downloadFile(session.recordings[0])"
-                                        class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
-                                    >
-                                        <svg
-                                                class="w-5 h-5"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                                />
-                                            </svg>
-                                    </button>
-
-                                    <!-- Delete Button -->
-                                    <button
-                                        @click="deleteSession(session)"
-                                        class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
-                                    >
-                                        <svg
-                                            class="w-5 h-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Expandable Session for Multiple Recordings -->
-                        <div
-                            v-else
-                            class="bg-white rounded-lg border border-stone-200 hover:border-stone-300 transition-colors duration-200"
-                        >
-                        <!-- Session Header -->
-                        <div
-                            class="p-4"
-                            :class="{
-                                'border-b border-stone-100': isSessionExpanded(
-                                    session.id
-                                ),
-                            }"
-                        >
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3 flex-1">
-                                    <div class="p-2">
-                                        <svg
-                                            class="w-5 h-5 text-stone-600"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="font-medium text-stone-900">
-                                            Grouped Memos | {{ session.title }}
-                                        </div>
-                                        <div class="text-sm text-stone-500">
-                                            {{
-                                                session.formatted_session_duration
-                                            }}
-                                            • {{ session.total_loops }} loops •
-                                            {{ session.recordings_count }}
-                                            recordings
-                                        </div>
-                                        <div
-                                            v-if="session.description"
-                                            class="text-xs text-stone-400 mt-1"
-                                        >
-                                            {{ session.description }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <button
-                                        @click="
-                                            toggleSessionExpanded(session.id)
-                                        "
-                                        class="p-2 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-50 transition-colors duration-200"
-                                        :class="{
-                                            'rotate-180': isSessionExpanded(
-                                                session.id
-                                            ),
-                                        }"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 transition-transform duration-200"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 9l-7 7-7-7"
-                                            />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        @click="deleteSession(session)"
-                                        class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
-                                    >
-                                        <svg
-                                            class="w-5 h-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Expandable Session Recordings -->
-                        <div
-                            v-if="isSessionExpanded(session.id)"
-                            class="p-4 pt-0 space-y-3"
-                        >
-                            <div
-                                v-if="
-                                    session.recordings &&
-                                    session.recordings.length > 0
-                                "
-                                class="space-y-2"
-                            >
-                                <div
-                                    class="text-xs font-medium text-stone-600 mb-2"
-                                >
-                                    Loop Recordings:
-                                </div>
-                                <div
-                                    v-for="recording in session.recordings"
-                                    :key="recording.id"
-                                    class="flex items-center justify-between p-3 bg-stone-50 rounded-lg border border-stone-100 hover:border-stone-200 transition-colors duration-200"
-                                >
-                                    <div class="flex items-center space-x-3">
-                                         <svg
-                                            class="w-5 h-5 text-stone-600"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                                            />
-                                        </svg>
-                                        <div>
-                                            <div
-                                                class="text-sm font-medium text-stone-800"
-                                            >
-                                                Loop {{ recording.loop_number }}
-                                            </div>
-                                            <div class="text-xs text-stone-500">
-                                                {{
-                                                    recording.formatted_duration
-                                                }}
-                                                •
-                                                {{
-                                                    recording.formatted_file_size
-                                                }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center space-x-1">
-                                        <button
-                                            @click="playFile(recording)"
-                                            class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
-                                        >
-                                            <!-- Play Icon -->
-                                            <svg
-                                                v-if="
-                                                    !(
-                                                        playingRecordingId === recording.id &&
-                                                        isPlayerPlaying
-                                                    )
-                                                "
-                                                class="w-5 h-5"
-                                                fill="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path d="M8 5v14l11-7z" />
-                                            </svg>
-                                            <!-- Pause Icon -->
-                                            <svg
-                                                v-else
-                                                class="w-5 h-5"
-                                                fill="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            @click="downloadFile(recording)"
-                                            class="p-1.5 rounded-full text-stone-600 hover:text-stone-800 hover:bg-stone-100 transition-colors duration-200"
-                                        >
-                                            <svg
-                                                class="w-5 h-5"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            @click="deleteFile(recording)"
-                                            class="p-2 rounded-full text-stone-600 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
-                                        >
-                                            <svg
-                                                class="w-5 h-5"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div
-                                v-else
-                                class="text-center py-4"
-                            >
-                                <p class="text-sm text-stone-400">
-                                    No recordings in this session
-                                </p>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-
-                    <!-- Loading more sessions indicator -->
-                    <div
-                        v-if="loadingMoreSessions"
-                        class="flex justify-center py-6"
-                    >
-                        <div class="flex items-center space-x-3 text-stone-500">
-                            <svg
-                                class="w-6 h-6 animate-spin"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle
-                                    class="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    stroke-width="4"
-                                ></circle>
-                                <path
-                                    class="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                            </svg>
-                            <span class="text-sm font-medium"
-                                >Loading more sessions...</span
-                            >
-                        </div>
-                    </div>
-
-                    <!-- End of sessions indicator -->
-                    <div
-                        v-else-if="!hasMoreSessions && sessions.length > 0"
-                        class="text-center py-4"
-                    >
-                        <span class="text-xs text-stone-400"
-                            >You've reached the end of your sessions</span
-                        >
-                    </div>
-
-                    <!-- Scroll trigger element for sessions -->
-                    <div
-                        ref="sessionsScrollTrigger"
-                        class="h-1 w-full"
-                    ></div>
-                </div>
-            </div>
-
-            <!-- Empty State -->
-            <div
-                v-if="
-                    (recordingMode === 'single' &&
-                        recordings.length === 0 &&
-                        !loadingRecordings) ||
-                    (recordingMode === 'looped' &&
-                        sessions.length === 0 &&
-                        !loadingSessions)
-                "
-                class="text-center py-12"
-            >
-                <div class="p-4 rounded-lg bg-stone-100 inline-block mb-4">
-                    <svg
-                        class="w-8 h-8 text-stone-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                            :recording="session.recordings[0]"
+                            :title="session.title"
+                            :subtitle="session.formatted_session_duration"
+                            :view-mode="viewMode"
+                            :is-playing="inlinePlayingId === session.recordings[0]?.id && inlinePlaying"
+                            :is-expanded="expandedId === session.recordings[0]?.id"
+                            :playback-url="urlCache[session.recordings[0]?.id] || ''"
+                            @toggle-play="toggleInlinePlay(session.recordings[0])"
+                            @toggle-expand="toggleExpand(session.recordings[0])"
+                            @open-full="openFullPlayer(session.recordings[0])"
+                            @download="downloadFile(session.recordings[0])"
+                            @delete="deleteSession(session)"
+                            @waveform-play="onWaveformPlay(session.recordings[0]?.id)"
+                            @waveform-pause="onWaveformPause"
+                            @waveform-finish="onWaveformFinish(session.recordings[0]?.id)"
                         />
-                    </svg>
+                        <LibraryFolderCard
+                            v-else
+                            :session="session"
+                            :view-mode="viewMode"
+                            @open="openFolder(session)"
+                            @delete="deleteSession(session)"
+                        />
+                    </div>
                 </div>
-                <p class="text-stone-500 mb-2">
-                    No
-                    {{ recordingMode === 'looped' ? 'sessions' : 'recordings' }}
-                    yet
-                </p>
-                <p class="text-stone-400 text-sm">
-                    {{
-                        recordingMode === 'looped'
-                            ? 'Start a looped recording session'
-                            : 'Create your first recording'
-                    }}
-                </p>
+
+                <div
+                    v-else-if="!isLoading"
+                    class="text-center py-16"
+                >
+                    <div class="p-4 rounded-xl bg-stone-100 inline-block mb-4">
+                        <svg class="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </div>
+                    <p class="text-stone-500 mb-1">
+                        {{ recordingMode === 'looped' ? 'No sessions yet' : 'No recordings yet' }}
+                    </p>
+                    <p class="text-stone-400 text-sm">
+                        {{ recordingMode === 'looped' ? 'Start a looped recording session' : 'Create your first recording' }}
+                    </p>
+                </div>
+            </template>
+
+            <div v-if="isLoadingMore" class="flex justify-center py-8">
+                <div class="flex items-center gap-3 text-stone-500">
+                    <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span class="text-sm">Loading more...</span>
+                </div>
             </div>
+            <div v-else-if="!hasMore && hasItems && !currentFolder" class="text-center py-6">
+                <span class="text-xs text-stone-400">You've reached the end</span>
+            </div>
+            <div ref="scrollTrigger" class="h-1 w-full" />
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <div 
+        <div
             v-if="showDeleteModal"
             class="fixed inset-0 flex items-center justify-center z-50"
             style="background-color: rgba(0, 0, 0, 0.6);"
             @click="cancelDelete"
         >
-            <div 
-                class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-md w-full"
-                @click.stop
-            >
+            <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-md w-full" @click.stop>
                 <div class="flex items-center mb-4">
                     <div class="p-2 bg-red-100 rounded-full mr-3">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        {{ deleteModalTitle }}
-                    </h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ deleteModalTitle }}</h3>
                 </div>
-                
-                <p class="text-gray-700 mb-6">
-                    {{ deleteModalMessage }}
-                </p>
-                
-                <div class="flex justify-end space-x-3">
-                    <button
-                        @click="cancelDelete"
-                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        @click="confirmDelete"
-                        class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
-                    >
-                        Delete
-                    </button>
+                <p class="text-gray-700 mb-6">{{ deleteModalMessage }}</p>
+                <div class="flex justify-end gap-3">
+                    <button @click="cancelDelete" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">Cancel</button>
+                    <button @click="confirmDelete" class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">Delete</button>
                 </div>
             </div>
         </div>
@@ -738,154 +234,257 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import LibraryRecordingCard from './LibraryRecordingCard.vue';
+import LibraryFolderCard from './LibraryFolderCard.vue';
 
 export default {
     name: 'RecordingsDrawer',
+    components: { LibraryRecordingCard, LibraryFolderCard },
     props: {
         recordingMode: {
             type: String,
             required: true,
             validator: (value) => ['single', 'looped'].includes(value),
         },
-        isMobile: {
-            type: Boolean,
-            default: false,
-        },
-        playingRecordingId: {
-            type: Number,
-            default: null,
-        },
-        isPlayerPlaying: {
-            type: Boolean,
-            default: false,
-        },
         useIndexedDb: {
             type: Boolean,
             default: false,
         },
     },
-    emits: ['close', 'play-recording'],
+    emits: ['expand-recording'],
     setup(props, { emit }) {
         const recordings = ref([]);
         const sessions = ref([]);
-        const expandedSessions = ref(new Set());
+        const viewMode = ref('grid');
+        const currentFolder = ref(null);
 
-        // Infinite scroll state for recordings
+        const inlinePlayingId = ref(null);
+        const inlinePlaying = ref(false);
+        const expandedId = ref(null);
+        const urlCache = ref({});
+        let inlineAudio = null;
+        const blobUrls = ref([]);
+
         const loadingRecordings = ref(false);
         const loadingMore = ref(false);
         const currentRecordingsPage = ref(1);
         const hasMoreRecordings = ref(true);
 
-        // Infinite scroll state for sessions
         const loadingSessions = ref(false);
         const loadingMoreSessions = ref(false);
         const currentSessionsPage = ref(1);
         const hasMoreSessions = ref(true);
 
-        // Intersection observers
-        const recordingsObserver = ref(null);
-        const sessionsObserver = ref(null);
+        const scrollObserver = ref(null);
         const scrollTrigger = ref(null);
-        const sessionsScrollTrigger = ref(null);
         const scrollContainer = ref(null);
 
-        // Delete modal state
         const showDeleteModal = ref(false);
         const deleteModalTitle = ref('');
         const deleteModalMessage = ref('');
         const pendingDeleteAction = ref(null);
 
-        // Load recordings from API on component mount
+        const isLoading = computed(() =>
+            props.recordingMode === 'looped' ? loadingSessions.value : loadingRecordings.value
+        );
+        const isLoadingMore = computed(() =>
+            props.recordingMode === 'looped' ? loadingMoreSessions.value : loadingMore.value
+        );
+        const hasMore = computed(() =>
+            props.recordingMode === 'looped' ? hasMoreSessions.value : hasMoreRecordings.value
+        );
+        const hasItems = computed(() =>
+            props.recordingMode === 'looped' ? sessions.value.length > 0 : recordings.value.length > 0
+        );
+        const gridClasses = computed(() =>
+            viewMode.value === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 items-stretch auto-rows-fr'
+                : 'space-y-2'
+        );
+
+        const cellClasses = (id) => {
+            if (viewMode.value !== 'grid') return '';
+            return [
+                'h-full min-h-[152px]',
+                expandedId.value === id ? 'col-span-full' : '',
+            ];
+        };
+
         onMounted(() => {
             loadDataFromAPI();
             setupInfiniteScroll();
         });
 
-        // Cleanup on unmount
         onUnmounted(() => {
-            if (recordingsObserver.value) {
-                recordingsObserver.value.disconnect();
-            }
-            if (sessionsObserver.value) {
-                sessionsObserver.value.disconnect();
-            }
+            scrollObserver.value?.disconnect();
+            stopInlineAudio();
+            revokeBlobUrls();
         });
 
-        // Watch for recordingMode changes to reload data
-        watch(
-            () => props.recordingMode,
-            () => {
-                // Reset pagination state
-                currentRecordingsPage.value = 1;
-                currentSessionsPage.value = 1;
-                hasMoreRecordings.value = true;
-                hasMoreSessions.value = true;
+        watch(() => props.recordingMode, () => {
+            currentRecordingsPage.value = 1;
+            currentSessionsPage.value = 1;
+            hasMoreRecordings.value = true;
+            hasMoreSessions.value = true;
+            currentFolder.value = null;
+            stopInlineAudio();
+            expandedId.value = null;
+            loadDataFromAPI();
+            nextTick(() => setupInfiniteScroll());
+        });
 
-                loadDataFromAPI();
-                expandedSessions.value.clear(); // Clear expanded state when switching modes
+        watch([recordings, sessions], () => {
+            nextTick(() => setupInfiniteScroll());
+        }, { deep: false });
 
-                // Re-setup infinite scroll after mode change
-                setTimeout(() => {
-                    setupInfiniteScroll();
-                }, 200);
+        const revokeBlobUrls = () => {
+            blobUrls.value.forEach((url) => URL.revokeObjectURL(url));
+            blobUrls.value = [];
+            urlCache.value = {};
+        };
+
+        const resolveUrl = async (file) => {
+            if (!file?.id) return null;
+            if (urlCache.value[file.id]) return urlCache.value[file.id];
+            if (file.url) {
+                urlCache.value[file.id] = file.url;
+                return file.url;
             }
-        );
 
-        // Watch for data changes to re-setup intersection observer
-        watch(
-            [recordings, sessions],
-            () => {
-                setTimeout(() => {
-                    setupInfiniteScroll();
-                }, 100);
-            },
-            { deep: false }
-        );
+            const response = await window.axios.get(`/api/recordings/${file.id}/stream`, {
+                responseType: 'blob',
+            });
+            const blobUrl = URL.createObjectURL(response.data);
+            blobUrls.value.push(blobUrl);
+            urlCache.value[file.id] = blobUrl;
+            return blobUrl;
+        };
 
-        const loadDataFromAPI = async () => {
-            if (props.recordingMode === 'looped') {
-                await loadSessionsFromAPI();
-            } else {
-                await loadRecordingsFromAPI();
+        const stopInlineAudio = () => {
+            if (inlineAudio) {
+                inlineAudio.pause();
+                inlineAudio.src = '';
+                inlineAudio = null;
+            }
+            inlinePlayingId.value = null;
+            inlinePlaying.value = false;
+        };
+
+        const toggleInlinePlay = async (file) => {
+            if (!file?.id) return;
+
+            if (inlinePlayingId.value === file.id && inlineAudio) {
+                if (inlineAudio.paused) {
+                    await inlineAudio.play();
+                    inlinePlaying.value = true;
+                } else {
+                    inlineAudio.pause();
+                    inlinePlaying.value = false;
+                }
+                return;
+            }
+
+            stopInlineAudio();
+
+            try {
+                const url = await resolveUrl(file);
+                if (!url) return;
+
+                inlineAudio = new Audio(url);
+                inlinePlayingId.value = file.id;
+
+                inlineAudio.addEventListener('play', () => { inlinePlaying.value = true; });
+                inlineAudio.addEventListener('pause', () => { inlinePlaying.value = false; });
+                inlineAudio.addEventListener('ended', () => {
+                    inlinePlayingId.value = null;
+                    inlinePlaying.value = false;
+                    inlineAudio = null;
+                });
+
+                await inlineAudio.play();
+            } catch (error) {
+                console.error('Error playing recording:', error);
+                stopInlineAudio();
             }
         };
 
-        const loadRecordingsFromAPI = async (page = 1, append = false) => {
-            if (page === 1) {
-                loadingRecordings.value = true;
-            } else {
-                loadingMore.value = true;
+        const toggleExpand = async (file) => {
+            if (!file?.id) return;
+
+            if (expandedId.value === file.id) {
+                expandedId.value = null;
+                return;
             }
+
+            stopInlineAudio();
+            expandedId.value = file.id;
+
+            try {
+                await resolveUrl(file);
+            } catch (error) {
+                console.error('Error loading recording for expand:', error);
+            }
+        };
+
+        const openFullPlayer = async (file) => {
+            if (!file?.id) return;
+            stopInlineAudio();
+            expandedId.value = null;
+
+            try {
+                const url = await resolveUrl(file);
+                if (!url) return;
+
+                emit('expand-recording', {
+                    ...file,
+                    url,
+                    title: file.title || file.name,
+                });
+            } catch (error) {
+                console.error('Error opening full player:', error);
+            }
+        };
+
+        const onWaveformPlay = (id) => {
+            stopInlineAudio();
+            inlinePlayingId.value = id;
+            inlinePlaying.value = true;
+        };
+
+        const onWaveformPause = () => {
+            inlinePlaying.value = false;
+        };
+
+        const onWaveformFinish = (id) => {
+            if (inlinePlayingId.value === id) {
+                inlinePlayingId.value = null;
+                inlinePlaying.value = false;
+            }
+        };
+
+        const loadDataFromAPI = async () => {
+            if (props.recordingMode === 'looped') await loadSessionsFromAPI();
+            else await loadRecordingsFromAPI();
+        };
+
+        const loadRecordingsFromAPI = async (page = 1, append = false) => {
+            if (page === 1) loadingRecordings.value = true;
+            else loadingMore.value = true;
 
             try {
                 const response = await window.axios.get('/api/recordings', {
-                    params: {
-                        mode: props.recordingMode,
-                        page: page,
-                        per_page: 15,
-                    },
+                    params: { mode: props.recordingMode, page, per_page: 15 },
                 });
-
-                if (append) {
-                    recordings.value = [
-                        ...recordings.value,
-                        ...(response.data.recordings || []),
-                    ];
-                } else {
-                    recordings.value = response.data.recordings || [];
-                }
-
-                // Update pagination state
+                recordings.value = append
+                    ? [...recordings.value, ...(response.data.recordings || [])]
+                    : response.data.recordings || [];
                 const pagination = response.data.pagination || {};
                 currentRecordingsPage.value = pagination.current_page || 1;
                 hasMoreRecordings.value = pagination.has_more_pages || false;
             } catch (error) {
                 console.error('Error loading recordings from API:', error);
-                // Set empty array on error to show empty state
-                if (!append) {
-                    recordings.value = [];
-                }
+                if (!append) recordings.value = [];
             } finally {
                 loadingRecordings.value = false;
                 loadingMore.value = false;
@@ -893,44 +492,22 @@ export default {
         };
 
         const loadSessionsFromAPI = async (page = 1, append = false) => {
-            if (page === 1) {
-                loadingSessions.value = true;
-            } else {
-                loadingMoreSessions.value = true;
-            }
+            if (page === 1) loadingSessions.value = true;
+            else loadingMoreSessions.value = true;
 
-         try {
-                const response = await window.axios.get(
-                    '/api/recording-sessions',
-                    {
-                        // headers: { Authorization: `Bearer ${token}` },
-                        params: {
-                            type: 'looped',
-                            page: page,
-                            per_page: 15,
-                        },
-                    }
-                );
-
-                if (append) {
-                    sessions.value = [
-                        ...sessions.value,
-                        ...(response.data.sessions || []),
-                    ];
-                } else {
-                    sessions.value = response.data.sessions || [];
-                }
-
-                // Update pagination state (assuming sessions API also supports pagination)
+            try {
+                const response = await window.axios.get('/api/recording-sessions', {
+                    params: { type: 'looped', page, per_page: 15 },
+                });
+                sessions.value = append
+                    ? [...sessions.value, ...(response.data.sessions || [])]
+                    : response.data.sessions || [];
                 const pagination = response.data.pagination || {};
                 currentSessionsPage.value = pagination.current_page || 1;
                 hasMoreSessions.value = pagination.has_more_pages || false;
             } catch (error) {
                 console.error('Error loading sessions from API:', error);
-                // Set empty array on error to show empty state
-                if (!append) {
-                    sessions.value = [];
-                }
+                if (!append) sessions.value = [];
             } finally {
                 loadingSessions.value = false;
                 loadingMoreSessions.value = false;
@@ -938,128 +515,57 @@ export default {
         };
 
         const setupInfiniteScroll = () => {
-            // Disconnect existing observers
-            if (recordingsObserver.value) {
-                recordingsObserver.value.disconnect();
-            }
-            if (sessionsObserver.value) {
-                sessionsObserver.value.disconnect();
-            }
-
-            // Setup recordings infinite scroll
-            recordingsObserver.value = new IntersectionObserver(
+            scrollObserver.value?.disconnect();
+            scrollObserver.value = new IntersectionObserver(
                 (entries) => {
-                    entries.forEach((entry) => {
-                        if (
-                            entry.isIntersecting &&
-                            hasMoreRecordings.value &&
-                            !loadingMore.value &&
-                            props.recordingMode === 'single'
-                        ) {
-                            loadMoreRecordings();
-                        }
-                    });
+                    if (!entries[0]?.isIntersecting || currentFolder.value) return;
+                    if (props.recordingMode === 'single' && hasMoreRecordings.value && !loadingMore.value) {
+                        loadMoreRecordings();
+                    } else if (props.recordingMode === 'looped' && hasMoreSessions.value && !loadingMoreSessions.value) {
+                        loadMoreSessions();
+                    }
                 },
-                {
-                    root: null, // Use viewport instead of scrollContainer
-                    rootMargin: '50px',
-                    threshold: 0.1,
-                }
+                { root: scrollContainer.value, rootMargin: '100px', threshold: 0.1 }
             );
-
-            // Setup sessions infinite scroll
-            sessionsObserver.value = new IntersectionObserver(
-                (entries) => {
-                    entries.forEach((entry) => {
-                        if (
-                            entry.isIntersecting &&
-                            hasMoreSessions.value &&
-                            !loadingMoreSessions.value &&
-                            props.recordingMode === 'looped'
-                        ) {
-                            loadMoreSessions();
-                        }
-                    });
-                },
-                {
-                    root: null, // Use viewport instead of scrollContainer
-                    rootMargin: '50px',
-                    threshold: 0.1,
-                }
-            );
-
-            // Observe scroll triggers when they're available with a delay
-            setTimeout(() => {
-                if (scrollTrigger.value && props.recordingMode === 'single') {
-                    recordingsObserver.value.observe(scrollTrigger.value);
-                }
-                if (
-                    sessionsScrollTrigger.value &&
-                    props.recordingMode === 'looped'
-                ) {
-                    sessionsObserver.value.observe(sessionsScrollTrigger.value);
-                }
-            }, 100);
+            nextTick(() => {
+                if (scrollTrigger.value) scrollObserver.value.observe(scrollTrigger.value);
+            });
         };
 
         const loadMoreRecordings = async () => {
-            if (!hasMoreRecordings.value || loadingMore.value) {
-                return;
-            }
-            const nextPage = currentRecordingsPage.value + 1;
-            await loadRecordingsFromAPI(nextPage, true);
-
-            // Re-observe the scroll trigger after a delay
-            setTimeout(() => {
-                if (scrollTrigger.value && recordingsObserver.value) {
-                    recordingsObserver.value.observe(scrollTrigger.value);
-                }
-            }, 100);
+            if (!hasMoreRecordings.value || loadingMore.value) return;
+            await loadRecordingsFromAPI(currentRecordingsPage.value + 1, true);
         };
 
         const loadMoreSessions = async () => {
-            if (!hasMoreSessions.value || loadingMoreSessions.value) {
-                return;
-            }
-            const nextPage = currentSessionsPage.value + 1;
-            await loadSessionsFromAPI(nextPage, true);
-
-            // Re-observe the scroll trigger after a delay
-            setTimeout(() => {
-                if (sessionsScrollTrigger.value && sessionsObserver.value) {
-                    sessionsObserver.value.observe(sessionsScrollTrigger.value);
-                }
-            }, 100);
+            if (!hasMoreSessions.value || loadingMoreSessions.value) return;
+            await loadSessionsFromAPI(currentSessionsPage.value + 1, true);
         };
 
-        const playFile = (file) => {
-            emit('play-recording', file);
+        const openFolder = (session) => {
+            stopInlineAudio();
+            expandedId.value = null;
+            currentFolder.value = session;
+        };
+
+        const closeFolder = () => {
+            stopInlineAudio();
+            expandedId.value = null;
+            currentFolder.value = null;
         };
 
         const downloadFile = async (file) => {
             try {
                 let downloadUrl = file.url;
                 let fileName = file.name;
-
-                // If file doesn't have a URL (from API), fetch it
                 if (!downloadUrl && file.id) {
-                    const response = await window.axios.get(
-                        `/api/recordings/${file.id}/stream`,
-                        {
-                            responseType: 'blob',
-                        }
-                    );
-                    downloadUrl = URL.createObjectURL(response.data);
-
-                    // Get filename from response headers if available
+                    downloadUrl = await resolveUrl(file);
+                    const response = await window.axios.get(`/api/recordings/${file.id}/stream`, { responseType: 'blob' });
                     const disposition = response.headers['content-disposition'];
-                    if (disposition && disposition.includes('filename=')) {
-                        fileName = disposition
-                            .split('filename=')[1]
-                            .replace(/"/g, '');
+                    if (disposition?.includes('filename=')) {
+                        fileName = disposition.split('filename=')[1].replace(/"/g, '');
                     }
                 }
-
                 if (downloadUrl) {
                     const a = document.createElement('a');
                     a.href = downloadUrl;
@@ -1067,18 +573,12 @@ export default {
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-
-                    // Clean up blob URL if we created it
-                    if (!file.url) {
-                        URL.revokeObjectURL(downloadUrl);
-                    }
                 }
             } catch (error) {
                 console.error('Error downloading file:', error);
             }
         };
 
-        // Modal helper functions
         const showDeleteConfirmation = (title, message, deleteAction) => {
             deleteModalTitle.value = title;
             deleteModalMessage.value = message;
@@ -1087,9 +587,7 @@ export default {
         };
 
         const confirmDelete = async () => {
-            if (pendingDeleteAction.value) {
-                await pendingDeleteAction.value();
-            }
+            if (pendingDeleteAction.value) await pendingDeleteAction.value();
             cancelDelete();
         };
 
@@ -1101,86 +599,54 @@ export default {
         };
 
         const deleteSession = async (session) => {
-            const actualDeleteSession = async () => {
-                try {
-                    // Delete session from API (this will also delete associated recordings)
-                    await window.axios.delete(
-                        `/api/recording-sessions/${session.id}`
-                    );
-
-                    // Remove from local list
-                    sessions.value = sessions.value.filter(
-                        (s) => s.id !== session.id
-                    );
-                } catch (error) {
-                    console.error('Error deleting session:', error);
-                    if (error.response?.status === 401) {
-                        if (!props.useIndexedDb) {
-                            alert('Authentication required. Please log in and try again.');
-                        }
-                    } else {
-                        alert('Error deleting session. Please try again.');
-                    }
-                }
-            };
-
             showDeleteConfirmation(
                 'Delete Session',
                 `Are you sure you want to delete "${session.title}" and all its recordings? This action cannot be undone.`,
-                actualDeleteSession
+                async () => {
+                    try {
+                        await window.axios.delete(`/api/recording-sessions/${session.id}`);
+                        sessions.value = sessions.value.filter((s) => s.id !== session.id);
+                        if (currentFolder.value?.id === session.id) currentFolder.value = null;
+                    } catch (error) {
+                        console.error('Error deleting session:', error);
+                        alert(error.response?.status === 401 && !props.useIndexedDb
+                            ? 'Authentication required. Please log in and try again.'
+                            : 'Error deleting session. Please try again.');
+                    }
+                }
             );
         };
 
         const deleteFile = async (file) => {
-            const actualDeleteFile = async () => {
-                try {
-                    if (file.id) {
-                        // Delete from API using axios
-                        await window.axios.delete(`/api/recordings/${file.id}`);
-                    }
-
-                    // If in single mode, remove from local recordings list
-                    if (props.recordingMode === 'single') {
-                        recordings.value = recordings.value.filter(
-                            (f) => f.id !== file.id
-                        );
-                    } else if (props.recordingMode === 'looped') {
-                        // For looped recordings, refresh session data to update counts and recordings
-                        await loadSessionsFromAPI(1, false);
-                    }
-
-                    // Clean up blob URL if it exists
-                    if (file.url) {
-                        URL.revokeObjectURL(file.url);
-                    }
-                } catch (error) {
-                    console.error('Error deleting file:', error);
-                    if (error.response?.status === 401) {
-                        if (!props.useIndexedDb) {
-                            alert('Authentication required. Please log in and try again.');
-                        }
-                    } else {
-                        alert('Error deleting recording. Please try again.');
-                    }
-                }
-            };
-
             showDeleteConfirmation(
                 'Delete Recording',
                 `Are you sure you want to delete "${file.title || file.name}"? This action cannot be undone.`,
-                actualDeleteFile
+                async () => {
+                    try {
+                        if (file.id) await window.axios.delete(`/api/recordings/${file.id}`);
+                        if (inlinePlayingId.value === file.id) stopInlineAudio();
+                        if (expandedId.value === file.id) expandedId.value = null;
+                        delete urlCache.value[file.id];
+
+                        if (props.recordingMode === 'single') {
+                            recordings.value = recordings.value.filter((f) => f.id !== file.id);
+                        } else {
+                            await loadSessionsFromAPI(1, false);
+                            if (currentFolder.value) {
+                                const updated = sessions.value.find((s) => s.id === currentFolder.value.id);
+                                currentFolder.value = updated || null;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error deleting file:', error);
+                        alert(error.response?.status === 401 && !props.useIndexedDb
+                            ? 'Authentication required. Please log in and try again.'
+                            : 'Error deleting recording. Please try again.');
+                    }
+                }
             );
         };
 
-        // Method to add a new recording (called from parent)
-        const addRecording = (newRecording) => {
-            recordings.value.unshift({
-                ...newRecording,
-                url: URL.createObjectURL(newRecording.blob),
-            });
-        };
-
-        // Method to refresh data (called from parent when a new recording is saved)
         const refreshData = async () => {
             currentRecordingsPage.value = 1;
             currentSessionsPage.value = 1;
@@ -1189,45 +655,35 @@ export default {
             await loadDataFromAPI();
         };
 
-        // Toggle session expansion
-        const toggleSessionExpanded = (sessionId) => {
-            if (expandedSessions.value.has(sessionId)) {
-                expandedSessions.value.delete(sessionId);
-            } else {
-                expandedSessions.value.add(sessionId);
-            }
-        };
-
-        // Check if session is expanded
-        const isSessionExpanded = (sessionId) => {
-            return expandedSessions.value.has(sessionId);
-        };
-
         return {
             recordings,
             sessions,
-            expandedSessions,
-            loadingRecordings,
-            loadingMore,
-            hasMoreRecordings,
-            loadingSessions,
-            loadingMoreSessions,
-            hasMoreSessions,
+            viewMode,
+            currentFolder,
+            inlinePlayingId,
+            inlinePlaying,
+            expandedId,
+            urlCache,
+            isLoading,
+            isLoadingMore,
+            hasMore,
+            hasItems,
+            gridClasses,
+            cellClasses,
             scrollTrigger,
-            sessionsScrollTrigger,
             scrollContainer,
-            playFile,
+            openFolder,
+            closeFolder,
+            toggleInlinePlay,
+            toggleExpand,
+            openFullPlayer,
+            onWaveformPlay,
+            onWaveformPause,
+            onWaveformFinish,
             downloadFile,
             deleteFile,
             deleteSession,
-            addRecording,
             refreshData,
-            toggleSessionExpanded,
-            isSessionExpanded,
-            loadRecordingsFromAPI,
-            loadSessionsFromAPI,
-
-            // Modal state and functions
             showDeleteModal,
             deleteModalTitle,
             deleteModalMessage,
@@ -1239,21 +695,7 @@ export default {
 </script>
 
 <style scoped>
-/* Custom scrollbar */
-.overflow-y-scroll::-webkit-scrollbar {
-    width: 4px;
-}
-
-.overflow-y-scroll::-webkit-scrollbar-track {
-    background: #f1f5f9;
-}
-
-.overflow-y-scroll::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 2px;
-}
-
-.overflow-y-scroll::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
+.overflow-y-auto::-webkit-scrollbar { width: 4px; }
+.overflow-y-auto::-webkit-scrollbar-track { background: #f1f5f9; }
+.overflow-y-auto::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 </style>

@@ -144,114 +144,86 @@
       </div>
     </div>
 
-    <div class="relative z-10 p-4 border-t border-stone-200 bg-stone-50 shrink-0">
-      <div v-if="recordingMode === 'looped'" class="flex items-center justify-between">
-        <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording || currentLoop === 1 }">
-          <div class="text-xs mb-2" :class="(isRecording && currentLoop > 1) ? 'text-stone-600' : 'text-stone-400'">Loop Progress</div>
-          <div class="relative w-16 h-16">
-            <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-              <circle
-                cx="32"
-                cy="32"
-                r="28"
-                fill="none"
-                :stroke="(isRecording && currentLoop > 1) ? '#d6d3d1' : '#e7e5e4'"
-                stroke-width="3"
-              />
-              <circle
-                v-if="loopDuration && currentLoop > 1"
-                cx="32"
-                cy="32"
-                r="28"
-                fill="none"
-                :stroke="isRecording ? '#78716c' : '#a8a29e'"
-                stroke-width="3"
-                stroke-linecap="round"
-                :stroke-dasharray="`${2 * Math.PI * 28}`"
-                :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - loopProgressRatio)}` : `${2 * Math.PI * 28}`"
-                class="transition-all duration-1000"
-              />
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-xs font-mono" :class="(isRecording && currentLoop > 1 && loopDuration) ? 'text-stone-700' : 'text-stone-400'">
-                {{ (isRecording && currentLoop > 1 && loopDuration) ? Math.round(loopProgressRatio * 100) : 0 }}%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center flex-1 mx-4">
-          <div class="text-3xl font-mono font-bold text-stone-800">
+    <div class="relative z-10 px-4 py-3 border-t border-stone-200 bg-stone-50 shrink-0">
+      <div v-if="recordingMode === 'looped'" class="max-w-sm mx-auto space-y-2.5">
+        <div class="flex items-baseline justify-center gap-2">
+          <div class="text-3xl font-mono font-bold text-stone-800 tabular-nums">
             {{ formatTime(recordingTime) }}
           </div>
-          <div v-if="isRecording" class="text-sm text-stone-500 mt-1">
-            Total: {{ formatTime(totalRecordingTime) }}
-          </div>
-          <div v-if="!isRecording" class="mt-3">
-            <div class="text-xs text-stone-500 mb-1.5">Count-in</div>
-            <div
-              class="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5"
-              role="group"
-              aria-label="Count-in duration"
-            >
-              <button
-                v-for="option in countInOptions"
-                :key="option.value"
-                type="button"
-                class="px-3 py-1 text-xs font-medium rounded-md transition-colors duration-150"
-                :class="countInSeconds === option.value
-                  ? 'bg-white text-stone-800 shadow-sm'
-                  : 'text-stone-500 hover:text-stone-700'"
-                @click="countInSeconds = option.value"
-              >
-                {{ option.label }}
-              </button>
-            </div>
-          </div>
+          <span v-if="isRecording" class="text-sm text-stone-400 tabular-nums">
+            / {{ formatTime(totalRecordingTime) }}
+          </span>
+        </div>
+
+        <div
+          v-if="!isRecording"
+          class="flex items-center justify-center gap-2"
+        >
+          <span class="text-xs text-stone-400 shrink-0">Count-in</span>
           <div
-            v-else-if="countInSeconds > 0"
-            class="text-xs text-stone-400 mt-2"
+            class="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-0.5"
+            role="group"
+            aria-label="Count-in duration"
           >
-            {{ countInSeconds }}s count-in
+            <button
+              v-for="option in countInOptions"
+              :key="option.value"
+              type="button"
+              class="px-2.5 py-1 text-xs font-medium rounded-md transition-colors duration-150"
+              :class="countInSeconds === option.value
+                ? 'bg-white text-stone-800 shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'"
+              @click="countInSeconds = option.value"
+            >
+              {{ option.label }}
+            </button>
           </div>
         </div>
 
-        <div class="flex flex-col items-center" :class="{ 'opacity-40': !isRecording }">
-          <div class="text-xs mb-2" :class="isRecording ? 'text-stone-600' : 'text-stone-400'">Audio Level</div>
-          <div class="relative w-16 h-16">
-            <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-              <circle
-                cx="32"
-                cy="32"
-                r="28"
-                fill="none"
-                :stroke="isRecording ? '#d6d3d1' : '#e7e5e4'"
-                stroke-width="3"
+        <div
+          v-else-if="countInSeconds > 0 && !isCountingIn"
+          class="text-center text-xs text-stone-400"
+        >
+          {{ countInSeconds }}s count-in
+        </div>
+
+        <div
+          v-if="isRecording"
+          class="flex items-center gap-3"
+        >
+          <div
+            v-if="currentLoop > 1 && loopDuration"
+            class="flex-1 min-w-0"
+            :class="{ 'opacity-40': currentLoop === 1 }"
+          >
+            <div class="flex justify-between text-[10px] text-stone-400 mb-0.5">
+              <span>Loop</span>
+              <span class="tabular-nums">{{ Math.round(loopProgressRatio * 100) }}%</span>
+            </div>
+            <div class="h-1.5 bg-stone-200 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-stone-500 rounded-full transition-all duration-300"
+                :style="{ width: `${loopProgressRatio * 100}%` }"
               />
-              <circle
-                cx="32"
-                cy="32"
-                r="28"
-                fill="none"
-                :stroke="isRecording ? '#78716c' : '#a8a29e'"
-                stroke-width="3"
-                stroke-linecap="round"
-                :stroke-dasharray="`${2 * Math.PI * 28}`"
-                :stroke-dashoffset="isRecording ? `${2 * Math.PI * 28 * (1 - audioLevel / 100)}` : `${2 * Math.PI * 28}`"
-                class="transition-all duration-150"
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between text-[10px] text-stone-400 mb-0.5">
+              <span>Level</span>
+              <span class="tabular-nums">{{ Math.round(audioLevel) }}%</span>
+            </div>
+            <div class="h-1.5 bg-stone-200 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-stone-500 rounded-full transition-all duration-150"
+                :style="{ width: `${audioLevel}%` }"
               />
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-xs font-mono" :class="isRecording ? 'text-stone-700' : 'text-stone-400'">
-                {{ isRecording ? Math.round(audioLevel) : 0 }}%
-              </span>
             </div>
           </div>
         </div>
       </div>
 
       <div v-else class="text-center">
-        <div class="text-3xl font-mono font-bold text-stone-800">
+        <div class="text-3xl font-mono font-bold text-stone-800 tabular-nums">
           {{ formatTime(recordingTime) }}
         </div>
       </div>

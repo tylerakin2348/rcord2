@@ -9,3 +9,55 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Library list/grid item transitions */
+.library-item-move,
+.library-item-enter-active,
+.library-item-leave-active {
+    transition:
+        opacity 0.28s ease,
+        transform 0.28s ease,
+        max-height 0.28s ease,
+        margin 0.28s ease;
+}
+
+.library-item-enter-from,
+.library-item-leave-to {
+    opacity: 0;
+    transform: scale(0.97);
+}
+
+.library-item-leave-active {
+    overflow: hidden;
+    max-height: 420px;
+}
+
+.library-item-leave-to {
+    max-height: 0;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Modal transitions */
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.modal-enter-active .modal-panel,
+.modal-leave-active .modal-panel {
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-enter-from .modal-panel,
+.modal-leave-to .modal-panel {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+}

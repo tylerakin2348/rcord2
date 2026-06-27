@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RecordingController;
 use App\Http\Controllers\RecordingTypeController;
 use App\Http\Controllers\RecordingSessionController;
+use App\Http\Controllers\RecordingExportController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StripeController;
@@ -61,9 +62,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('recordings', [RecordingController::class, 'store']);
     Route::put('recordings/{recording}', [RecordingController::class, 'update']);
     Route::delete('recordings/{recording}', [RecordingController::class, 'destroy']);
+    Route::get('recordings/{recording}/download', [RecordingController::class, 'download']);
+    Route::post('exports/recording/{recording}', [RecordingExportController::class, 'storeRecording']);
+    Route::post('exports/session/{session}', [RecordingExportController::class, 'storeSession']);
+    Route::get('exports/{export}', [RecordingExportController::class, 'show']);
+    Route::get('exports/{export}/download', [RecordingExportController::class, 'download']);
     // Recording session routes (all require authentication)
     Route::get('recording-sessions', [RecordingSessionController::class, 'index']);
     Route::get('recording-sessions/{session}', [RecordingSessionController::class, 'show']);
+    Route::get('recording-sessions/{session}/download', [RecordingSessionController::class, 'download']);
     Route::post('recording-sessions', [RecordingSessionController::class, 'store']);
     Route::put('recording-sessions/{session}', [RecordingSessionController::class, 'update']);
     Route::delete('recording-sessions/{session}', [RecordingSessionController::class, 'destroy']);

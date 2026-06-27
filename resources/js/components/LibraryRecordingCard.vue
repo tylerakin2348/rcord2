@@ -84,16 +84,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </button>
-        <button
-          type="button"
-          class="p-2 rounded-full text-stone-400 hover:text-stone-800 hover:bg-stone-100 transition-colors"
-          aria-label="Download"
-          @click.stop="$emit('download')"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-        </button>
+        <DownloadFormatMenu
+          button-class="text-stone-400 hover:text-stone-800 hover:bg-stone-100"
+          @download="(format) => $emit('download', format)"
+        />
         <button
           type="button"
           class="p-2 rounded-full text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -140,15 +134,10 @@
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
             </svg>
           </button>
-          <button
-            type="button"
-            class="p-2 rounded-full text-stone-400 hover:text-stone-800 hover:bg-stone-100 transition-colors"
-            @click.stop="$emit('download')"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-          </button>
+          <DownloadFormatMenu
+            button-class="text-stone-400 hover:text-stone-800 hover:bg-stone-100"
+            @download="(format) => $emit('download', format)"
+          />
           <button
             type="button"
             class="p-2 rounded-full text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -182,6 +171,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import WaveformPlayer from './WaveformPlayer.vue'
+import DownloadFormatMenu from './DownloadFormatMenu.vue'
 
 const props = defineProps({
   recording: { type: Object, required: true },

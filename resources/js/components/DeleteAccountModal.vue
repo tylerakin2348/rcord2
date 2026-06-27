@@ -1,18 +1,45 @@
 <template>
-  <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.5)">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-      <h2 class="text-xl font-semibold text-red-700 mb-4">Delete Account</h2>
-      <p class="mb-6 text-red-600">Are you sure you want to permanently delete your account? This action cannot be undone.</p>
-      <div class="flex justify-end space-x-2">
-        <button @click="$emit('close')" class="px-4 py-2 rounded bg-stone-200 text-stone-700 hover:bg-stone-300">Cancel</button>
-        <button @click="deleteAccount" :disabled="loading" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 font-medium">
-          <span v-if="loading">Deleting...</span>
-          <span v-else>Delete</span>
-        </button>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="visible"
+        class="fixed inset-0 z-[100000] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div
+          class="absolute inset-0 bg-stone-900/50 backdrop-blur-[1px]"
+          @click="$emit('close')"
+        />
+        <div
+          class="modal-panel relative w-full max-w-md rounded-xl bg-white shadow-xl border border-stone-200/80 p-6"
+          @click.stop
+        >
+          <h2 class="text-xl font-semibold text-red-700 mb-4">Delete Account</h2>
+          <p class="mb-6 text-red-600">Are you sure you want to permanently delete your account? This action cannot be undone.</p>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg bg-stone-200 text-stone-700 hover:bg-stone-300 transition-colors"
+              @click="$emit('close')"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors disabled:opacity-50"
+              :disabled="loading"
+              @click="deleteAccount"
+            >
+              <span v-if="loading">Deleting...</span>
+              <span v-else>Delete</span>
+            </button>
+          </div>
+          <p v-if="error" class="mt-4 text-red-500 text-sm">{{ error }}</p>
+        </div>
       </div>
-      <p v-if="error" class="mt-4 text-red-500 text-sm">{{ error }}</p>
-    </div>
-  </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -20,8 +47,9 @@ import { ref, watch } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
-  visible: Boolean
+  visible: Boolean,
 })
+
 const emit = defineEmits(['close', 'success'])
 const loading = ref(false)
 const error = ref('')

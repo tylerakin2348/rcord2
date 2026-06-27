@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RecordingSession;
 use App\Models\RecordingType;
+use App\Services\SessionZipExporter;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -228,5 +229,25 @@ class RecordingSessionController extends Controller
         $session->delete();
 
         return response()->json(['message' => 'Recording session deleted successfully']);
+    }
+
+    /**
+     * Download all recordings in a session as a zip archive.
+     */
+    public function download(RecordingSession $session, SessionZipExporter $exporter): JsonResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        if ($session->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $archive = $exporter->export($session);
+
+            return response()
+                ->download($archive['path'], $archive['filename'])
+                ->deleteFileAfterSend(true);
+        } catch (\RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 404);
+        }
     }
 }

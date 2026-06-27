@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="min-h-screen bg-white">
     <router-view />
+    <ToastContainer />
   </div>
 </template>
 
@@ -8,11 +9,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMainStore } from './stores/main';
-import Header from './components/Header.vue';
-import Hero from './components/Hero.vue';
-import Features from './components/Features.vue';
-import Footer from './components/Footer.vue';
-import LoginModal from './components/LoginModal.vue';
+import ToastContainer from './components/ToastContainer.vue';
 
 const store = useMainStore();
 const route = useRoute();

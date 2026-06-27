@@ -436,6 +436,26 @@ class RecordingController extends Controller
     }
 
     /**
+     * Download the audio file as an attachment.
+     */
+    public function download(Recording $recording)
+    {
+        if ($recording->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if (! Storage::disk('public')->exists($recording->file_path)) {
+            return response()->json(['message' => 'Audio file not found'], 404);
+        }
+
+        return Storage::disk('public')->download(
+            $recording->file_path,
+            $recording->filename,
+            ['Content-Type' => $recording->mime_type ?? 'application/octet-stream']
+        );
+    }
+
+    /**
      * Get the audio file for streaming/download
      */
     public function stream(Recording $recording)

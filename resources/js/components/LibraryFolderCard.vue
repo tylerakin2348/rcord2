@@ -26,16 +26,22 @@
       </div>
       <div class="flex items-center justify-between mt-auto pt-2 border-t border-stone-100 shrink-0">
         <span class="text-xs text-amber-700 font-medium">Open folder →</span>
-        <button
-          type="button"
-          class="p-2 rounded-full text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-          aria-label="Delete session"
-          @click.stop="$emit('delete')"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
+        <div class="flex items-center gap-0.5">
+          <DownloadFormatMenu
+            button-class="text-stone-400 hover:text-stone-800 hover:bg-stone-100 opacity-0 group-hover:opacity-100"
+            @download="(format) => $emit('download', format)"
+          />
+          <button
+            type="button"
+            class="p-2 rounded-full text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+            aria-label="Delete session"
+            @click.stop="$emit('delete')"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -54,6 +60,10 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
       </div>
+      <DownloadFormatMenu
+        button-class="text-stone-400 hover:text-stone-800 hover:bg-stone-100 shrink-0"
+        @download="(format) => $emit('download', format)"
+      />
       <button
         type="button"
         class="p-2 rounded-full text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
@@ -71,6 +81,7 @@
 <script setup>
 import { computed } from 'vue'
 import { displaySessionTitle } from '../utils/libraryDates.js'
+import DownloadFormatMenu from './DownloadFormatMenu.vue'
 
 const props = defineProps({
   session: { type: Object, required: true },
@@ -78,7 +89,7 @@ const props = defineProps({
   recordedAt: { type: String, default: '' },
 })
 
-defineEmits(['open', 'delete'])
+defineEmits(['open', 'download', 'delete'])
 
 const displayTitle = computed(() => displaySessionTitle(props.session))
 

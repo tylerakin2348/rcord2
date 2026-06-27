@@ -46,6 +46,21 @@
                     <p class="text-sm text-stone-400 mt-0.5">
                         {{ currentFolder.recordings_count }} loops · {{ currentFolder.formatted_session_duration }}
                     </p>
+                    <DownloadFormatMenu
+                        variant="inline"
+                        aria-label="Download all loops"
+                        button-class="mt-2 inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors"
+                        @download="(format) => downloadSession(currentFolder, format)"
+                    >
+                        <template #icon>
+                            <span class="inline-flex items-center gap-1.5 px-1 py-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Download all
+                            </span>
+                        </template>
+                    </DownloadFormatMenu>
                 </div>
             </template>
 
@@ -100,7 +115,11 @@
                         <h3 class="text-sm font-semibold text-stone-700 mb-3">
                             {{ group.label }}
                         </h3>
-                        <div :class="gridClasses">
+                        <TransitionGroup
+                            name="library-item"
+                            tag="div"
+                            :class="gridClasses"
+                        >
                             <div
                                 v-for="recording in group.items"
                                 :key="recording.id"
@@ -117,14 +136,14 @@
                                     @toggle-play="toggleInlinePlay(recording)"
                                     @toggle-expand="toggleExpand(recording)"
                                     @open-full="openFullPlayer(recording)"
-                                    @download="downloadFile(recording)"
+                                    @download="(format) => downloadFile(recording, format)"
                                     @delete="deleteFile(recording)"
                                     @waveform-play="onWaveformPlay(recording.id)"
                                     @waveform-pause="onWaveformPause"
                                     @waveform-finish="onWaveformFinish(recording.id)"
                                 />
                             </div>
-                        </div>
+                        </TransitionGroup>
                     </section>
                 </div>
                 <p v-else class="text-center py-16 text-stone-400 text-sm">No recordings in this session</p>
@@ -140,7 +159,11 @@
                         <h3 class="text-sm font-semibold text-stone-700 mb-3">
                             {{ group.label }}
                         </h3>
-                        <div :class="gridClasses">
+                        <TransitionGroup
+                            name="library-item"
+                            tag="div"
+                            :class="gridClasses"
+                        >
                             <div
                                 v-for="file in group.items"
                                 :key="file.id"
@@ -157,14 +180,14 @@
                                     @toggle-play="toggleInlinePlay(file)"
                                     @toggle-expand="toggleExpand(file)"
                                     @open-full="openFullPlayer(file)"
-                                    @download="downloadFile(file)"
+                                    @download="(format) => downloadFile(file, format)"
                                     @delete="deleteFile(file)"
                                     @waveform-play="onWaveformPlay(file.id)"
                                     @waveform-pause="onWaveformPause"
                                     @waveform-finish="onWaveformFinish(file.id)"
                                 />
                             </div>
-                        </div>
+                        </TransitionGroup>
                     </section>
                 </div>
 
@@ -177,7 +200,11 @@
                         <h3 class="text-sm font-semibold text-stone-700 mb-3">
                             {{ group.label }}
                         </h3>
-                        <div :class="gridClasses">
+                        <TransitionGroup
+                            name="library-item"
+                            tag="div"
+                            :class="gridClasses"
+                        >
                             <div
                                 v-for="session in group.items"
                                 :key="session.id"
@@ -195,7 +222,7 @@
                                     @toggle-play="toggleInlinePlay(session.recordings[0])"
                                     @toggle-expand="toggleExpand(session.recordings[0])"
                                     @open-full="openFullPlayer(session.recordings[0])"
-                                    @download="downloadFile(session.recordings[0])"
+                                    @download="(format) => downloadFile(session.recordings[0], format)"
                                     @delete="deleteSession(session)"
                                     @waveform-play="onWaveformPlay(session.recordings[0]?.id)"
                                     @waveform-pause="onWaveformPause"
@@ -207,10 +234,11 @@
                                     :view-mode="viewMode"
                                     :recorded-at="formatItemTimestamp(getSessionActivityDate(session))"
                                     @open="openFolder(session)"
+                                    @download="(format) => downloadSession(session, format)"
                                     @delete="deleteSession(session)"
                                 />
                             </div>
-                        </div>
+                        </TransitionGroup>
                     </section>
                 </div>
 
@@ -247,29 +275,14 @@
             <div ref="scrollTrigger" class="h-1 w-full" />
         </div>
 
-        <!-- Delete Confirmation Modal -->
-        <div
-            v-if="showDeleteModal"
-            class="fixed inset-0 flex items-center justify-center z-50"
-            style="background-color: rgba(0, 0, 0, 0.6);"
-            @click="cancelDelete"
-        >
-            <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-md w-full" @click.stop>
-                <div class="flex items-center mb-4">
-                    <div class="p-2 bg-red-100 rounded-full mr-3">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ deleteModalTitle }}</h3>
-                </div>
-                <p class="text-gray-700 mb-6">{{ deleteModalMessage }}</p>
-                <div class="flex justify-end gap-3">
-                    <button @click="cancelDelete" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">Cancel</button>
-                    <button @click="confirmDelete" class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">Delete</button>
-                </div>
-            </div>
-        </div>
+        <ConfirmModal
+            :is-open="showDeleteModal"
+            :title="deleteModalTitle"
+            :message="deleteModalMessage"
+            confirm-text="Delete"
+            @close="cancelDelete"
+            @confirm="confirmDelete"
+        />
     </div>
 </template>
 
@@ -277,6 +290,8 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import LibraryRecordingCard from './LibraryRecordingCard.vue';
 import LibraryFolderCard from './LibraryFolderCard.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import DownloadFormatMenu from './DownloadFormatMenu.vue';
 import {
     groupItemsByDay,
     getSessionActivityDate,
@@ -285,10 +300,14 @@ import {
     displaySessionTitle,
 } from '../utils/libraryDates.js';
 import { LIBRARY_PAGE_SIZE } from '../utils/libraryPagination.js';
+import {
+    requestRecordingExport,
+    requestSessionExport,
+} from '../utils/exports.js';
 
 export default {
     name: 'RecordingsDrawer',
-    components: { LibraryRecordingCard, LibraryFolderCard },
+    components: { LibraryRecordingCard, LibraryFolderCard, ConfirmModal, DownloadFormatMenu },
     props: {
         recordingMode: {
             type: String,
@@ -614,28 +633,50 @@ export default {
             currentFolder.value = null;
         };
 
-        const downloadFile = async (file) => {
+        const downloadFile = async (file, format = 'mp3') => {
+            if (!file?.id) return;
+
             try {
-                let downloadUrl = file.url;
-                let fileName = file.name;
-                if (!downloadUrl && file.id) {
-                    downloadUrl = await resolveUrl(file);
-                    const response = await window.axios.get(`/api/recordings/${file.id}/stream`, { responseType: 'blob' });
-                    const disposition = response.headers['content-disposition'];
-                    if (disposition?.includes('filename=')) {
-                        fileName = disposition.split('filename=')[1].replace(/"/g, '');
-                    }
-                }
-                if (downloadUrl) {
-                    const a = document.createElement('a');
-                    a.href = downloadUrl;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
+                await requestRecordingExport(file, format);
             } catch (error) {
-                console.error('Error downloading file:', error);
+                console.error('Error requesting recording export:', error);
+            }
+        };
+
+        const downloadSession = async (session, format = 'mp3') => {
+            if (!session?.id) return;
+
+            try {
+                await requestSessionExport(session, format);
+            } catch (error) {
+                console.error('Error requesting session export:', error);
+            }
+        };
+
+        const removeRecordingFromSessionState = (file) => {
+            if (!file?.id) return;
+
+            sessions.value = sessions.value.map((session) => {
+                if (!session.recordings?.some((recording) => recording.id === file.id)) {
+                    return session;
+                }
+
+                const recordings = session.recordings.filter((recording) => recording.id !== file.id);
+
+                return {
+                    ...session,
+                    recordings,
+                    recordings_count: recordings.length,
+                };
+            });
+
+            if (currentFolder.value?.recordings?.some((recording) => recording.id === file.id)) {
+                const recordings = currentFolder.value.recordings.filter((recording) => recording.id !== file.id);
+                currentFolder.value = {
+                    ...currentFolder.value,
+                    recordings,
+                    recordings_count: recordings.length,
+                };
             }
         };
 
@@ -690,12 +731,10 @@ export default {
 
                         if (props.recordingMode === 'single') {
                             recordings.value = recordings.value.filter((f) => f.id !== file.id);
+                        } else if (currentFolder.value) {
+                            removeRecordingFromSessionState(file);
                         } else {
                             await loadSessionsFromAPI(1, false);
-                            if (currentFolder.value) {
-                                const updated = sessions.value.find((s) => s.id === currentFolder.value.id);
-                                currentFolder.value = updated || null;
-                            }
                         }
                     } catch (error) {
                         console.error('Error deleting file:', error);
@@ -749,6 +788,7 @@ export default {
             onWaveformPause,
             onWaveformFinish,
             downloadFile,
+            downloadSession,
             deleteFile,
             deleteSession,
             refreshData,

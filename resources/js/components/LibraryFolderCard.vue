@@ -17,7 +17,7 @@
           </svg>
         </div>
         <div class="min-w-0 flex-1">
-          <div class="font-medium text-stone-900 truncate">{{ session.title }}</div>
+          <div class="font-medium text-stone-900 truncate">{{ displayTitle }}</div>
           <div class="text-sm text-stone-500 mt-0.5">{{ meta }}</div>
           <div v-if="session.description" class="text-xs text-stone-400 mt-1 truncate">
             {{ session.description }}
@@ -47,7 +47,7 @@
           </svg>
         </div>
         <div class="min-w-0 flex-1">
-          <div class="font-medium text-stone-900 truncate">{{ session.title }}</div>
+          <div class="font-medium text-stone-900 truncate">{{ displayTitle }}</div>
           <div class="text-sm text-stone-500">{{ meta }}</div>
         </div>
         <svg class="w-5 h-5 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,16 +70,21 @@
 
 <script setup>
 import { computed } from 'vue'
+import { displaySessionTitle } from '../utils/libraryDates.js'
 
 const props = defineProps({
   session: { type: Object, required: true },
   viewMode: { type: String, default: 'grid' },
+  recordedAt: { type: String, default: '' },
 })
 
 defineEmits(['open', 'delete'])
 
+const displayTitle = computed(() => displaySessionTitle(props.session))
+
 const meta = computed(() =>
-  [props.session.formatted_session_duration,
+  [props.recordedAt,
+   props.session.formatted_session_duration,
    `${props.session.total_loops || props.session.recordings_count} loops`,
    `${props.session.recordings_count} recordings`]
     .filter(Boolean)

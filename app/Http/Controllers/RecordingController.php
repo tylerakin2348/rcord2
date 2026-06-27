@@ -50,7 +50,7 @@ class RecordingController extends Controller
                     'file_size' => $recording->file_size,
                     'formatted_file_size' => $recording->formatted_file_size,
                     'mime_type' => $recording->mime_type,
-                    'created_at' => $recording->created_at,
+                    'created_at' => $recording->created_at?->toIso8601String(),
                     'recording_type' => $recording->recordingType ? [
                         'id' => $recording->recordingType->id,
                         'name' => $recording->recordingType->name,
@@ -217,7 +217,7 @@ class RecordingController extends Controller
                         $loopNumber = $recordingSession->recordings()->count() + 1;
                     } else {
                         // Create new session for looped recording
-                        $sessionTitle = $request->session_title ?? ('Looped Session - ' . now()->format('M j, Y g:i A'));
+                        $sessionTitle = $request->session_title ?? 'Looped Session';
                         $sessionDescription = $request->session_description ?? 'Looped recording session';
 
                         $recordingSession = RecordingSession::create([
@@ -234,9 +234,9 @@ class RecordingController extends Controller
 
                 // Generate title based on mode and session context
                 if ($recordingSession) {
-                    $title = $recordingSession->title . ' - Loop ' . $loopNumber;
+                    $title = 'Loop ' . $loopNumber;
                 } else {
-                    $title = ucfirst($request->mode) . ' Recording - ' . now()->format('M j, Y g:i A');
+                    $title = ucfirst($request->mode) . ' Recording';
                 }
                 
                 // Generate description
@@ -275,7 +275,7 @@ class RecordingController extends Controller
                         'formatted_duration' => $recording->formatted_duration,
                         'file_size' => $recording->file_size,
                         'formatted_file_size' => $recording->formatted_file_size,
-                        'created_at' => $recording->created_at,
+                        'created_at' => $recording->created_at?->toIso8601String(),
                         'file_url' => Storage::url($filePath),
                         'loop_number' => $recording->loop_number,
                         'session_id' => $recording->recording_session_id,
@@ -340,7 +340,7 @@ class RecordingController extends Controller
                         'formatted_duration' => $recording->formatted_duration,
                         'file_size' => $recording->file_size,
                         'formatted_file_size' => $recording->formatted_file_size,
-                        'created_at' => $recording->created_at,
+                        'created_at' => $recording->created_at?->toIso8601String(),
                         'file_url' => Storage::url($filePath),
                     ]
                 ], 201);
@@ -371,7 +371,7 @@ class RecordingController extends Controller
                 'file_size' => $recording->file_size,
                 'formatted_file_size' => $recording->formatted_file_size,
                 'mime_type' => $recording->mime_type,
-                'created_at' => $recording->created_at,
+                'created_at' => $recording->created_at?->toIso8601String(),
                 'updated_at' => $recording->updated_at,
                 'file_url' => Storage::url($recording->file_path),
                 'user' => $recording->user ? [

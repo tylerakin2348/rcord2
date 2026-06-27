@@ -86,6 +86,30 @@ export function labelFromDayKey(key) {
     return formatDayLabel(dateFromDayKey(key));
 }
 
+export function stripEmbeddedTitleDate(title) {
+    if (!title || typeof title !== 'string') return '';
+
+    return title
+        .replace(/\s*-\s*\d{1,2}\/\d{1,2}\/\d{4},\s*\d{1,2}:\d{2}:\d{2}\s*[AP]M/i, '')
+        .replace(/\s*-\s*[A-Za-z]{3,9}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s*[AP]M/i, '')
+        .replace(/\s*-\s*\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}\s*[AP]M/i, '')
+        .trim();
+}
+
+export function displaySessionTitle(session) {
+    const stripped = stripEmbeddedTitleDate(session?.title);
+    return stripped || 'Looped Session';
+}
+
+export function displayRecordingTitle(recording) {
+    if (recording?.loop_number != null) {
+        return `Loop ${recording.loop_number}`;
+    }
+
+    const stripped = stripEmbeddedTitleDate(recording?.title || recording?.name || '');
+    return stripped || 'Recording';
+}
+
 export function formatItemTimestamp(value, options = {}) {
     const date = parseApiDate(value);
     if (!date) return '';

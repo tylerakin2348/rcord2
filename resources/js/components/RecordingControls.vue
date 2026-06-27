@@ -806,8 +806,7 @@ export default {
             // console.log('Using existing session:', currentSession.value.id, 'Loop number:', (currentSession.value.recordings_count || 0) + 1)
           } else {
             // Create session title and description for new session
-            const timestamp = new Date().toLocaleString()
-            const title = sessionTitle.value || `Looped Session - ${timestamp}`
+            const title = sessionTitle.value || 'Looped Session'
             const description = sessionDescription.value || 'Looped recording session'
             
             formData.append('session_title', title)

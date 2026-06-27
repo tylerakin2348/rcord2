@@ -62,11 +62,11 @@ class RecordingSessionController extends Controller
                             'file_size' => $recording->file_size,
                             'formatted_file_size' => $recording->formatted_file_size,
                             'loop_number' => $recording->loop_number,
-                            'created_at' => $recording->created_at,
+                            'created_at' => $recording->created_at?->toIso8601String(),
                         ];
                     }),
-                    'created_at' => $session->created_at,
-                    'updated_at' => $session->updated_at,
+                    'created_at' => $session->created_at?->toIso8601String(),
+                    'updated_at' => $session->updated_at?->toIso8601String(),
                 ];
             }),
             'pagination' => [
@@ -119,8 +119,8 @@ class RecordingSessionController extends Controller
                 'loop_duration' => $session->loop_duration,
                 'settings' => $session->settings,
                 'recordings_count' => $session->recordings->count(),
-                'created_at' => $session->created_at,
-                'updated_at' => $session->updated_at,
+                'created_at' => $session->created_at?->toIso8601String(),
+                'updated_at' => $session->updated_at?->toIso8601String(),
             ]
         ], 201);
     }
@@ -160,11 +160,11 @@ class RecordingSessionController extends Controller
                         'file_size' => $recording->file_size,
                         'formatted_file_size' => $recording->formatted_file_size,
                         'loop_number' => $recording->loop_number,
-                        'created_at' => $recording->created_at,
+                        'created_at' => $recording->created_at?->toIso8601String(),
                     ];
                 }),
-                'created_at' => $session->created_at,
-                'updated_at' => $session->updated_at,
+                'created_at' => $session->created_at?->toIso8601String(),
+                'updated_at' => $session->updated_at?->toIso8601String(),
             ]
         ]);
     }
@@ -200,8 +200,8 @@ class RecordingSessionController extends Controller
                 'loop_duration' => $session->loop_duration,
                 'settings' => $session->settings,
                 'recordings_count' => $session->recordings->count(),
-                'created_at' => $session->created_at,
-                'updated_at' => $session->updated_at,
+                'created_at' => $session->created_at?->toIso8601String(),
+                'updated_at' => $session->updated_at?->toIso8601String(),
             ]
         ]);
     }

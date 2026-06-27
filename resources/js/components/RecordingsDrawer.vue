@@ -95,6 +95,7 @@
                                 <LibraryRecordingCard
                                     :recording="recording"
                                     :title="`Loop ${recording.loop_number}`"
+                                    :subtitle="formatItemTimestamp(recording.created_at)"
                                     :view-mode="viewMode"
                                     :is-playing="inlinePlayingId === recording.id && inlinePlaying"
                                     :is-expanded="expandedId === recording.id"
@@ -133,8 +134,8 @@
                             >
                                 <LibraryRecordingCard
                                     :recording="file"
-                                    :title="file.title || file.name"
-                                    :subtitle="file.recording_type?.display_name"
+                                    :title="displayRecordingTitle(file)"
+                                    :subtitle="recordingSubtitle(file, file.recording_type?.display_name)"
                                     :view-mode="viewMode"
                                     :is-playing="inlinePlayingId === file.id && inlinePlaying"
                                     :is-expanded="expandedId === file.id"
@@ -171,8 +172,8 @@
                                 <LibraryRecordingCard
                                     v-if="session.recordings_count === 1"
                                     :recording="session.recordings[0]"
-                                    :title="session.title"
-                                    :subtitle="session.formatted_session_duration"
+                                    :title="displaySessionTitle(session)"
+                                    :subtitle="recordingSubtitle(session.recordings[0], session.formatted_session_duration)"
                                     :view-mode="viewMode"
                                     :is-playing="inlinePlayingId === session.recordings[0]?.id && inlinePlaying"
                                     :is-expanded="expandedId === session.recordings[0]?.id"
@@ -190,6 +191,7 @@
                                     v-else
                                     :session="session"
                                     :view-mode="viewMode"
+                                    :recorded-at="formatItemTimestamp(getSessionActivityDate(session))"
                                     @open="openFolder(session)"
                                     @delete="deleteSession(session)"
                                 />
@@ -261,7 +263,13 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import LibraryRecordingCard from './LibraryRecordingCard.vue';
 import LibraryFolderCard from './LibraryFolderCard.vue';
-import { groupItemsByDay, getSessionActivityDate } from '../utils/libraryDates.js';
+import {
+    groupItemsByDay,
+    getSessionActivityDate,
+    formatItemTimestamp,
+    displayRecordingTitle,
+    displaySessionTitle,
+} from '../utils/libraryDates.js';
 
 export default {
     name: 'RecordingsDrawer',
@@ -680,6 +688,11 @@ export default {
             );
         };
 
+        const recordingSubtitle = (recording, extra = '') => {
+            const timestamp = formatItemTimestamp(recording?.created_at);
+            return [extra, timestamp].filter(Boolean).join(' · ');
+        };
+
         const refreshData = async () => {
             currentRecordingsPage.value = 1;
             currentSessionsPage.value = 1;
@@ -725,6 +738,11 @@ export default {
             deleteModalMessage,
             confirmDelete,
             cancelDelete,
+            recordingSubtitle,
+            formatItemTimestamp,
+            getSessionActivityDate,
+            displayRecordingTitle,
+            displaySessionTitle,
         };
     },
 };

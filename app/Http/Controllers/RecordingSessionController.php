@@ -28,7 +28,7 @@ class RecordingSessionController extends Controller
         }
 
         // Pagination parameters
-        $perPage = $request->get('per_page', 15); // Default to 15 sessions per page
+        $perPage = $request->get('per_page', 20); // Default to 20 sessions per page
         $page = $request->get('page', 1);
         
         // Validate per_page parameter

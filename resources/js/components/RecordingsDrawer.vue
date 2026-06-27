@@ -270,6 +270,7 @@ import {
     displayRecordingTitle,
     displaySessionTitle,
 } from '../utils/libraryDates.js';
+import { LIBRARY_PAGE_SIZE } from '../utils/libraryPagination.js';
 
 export default {
     name: 'RecordingsDrawer',
@@ -375,7 +376,7 @@ export default {
             nextTick(() => setupInfiniteScroll());
         });
 
-        watch([recordings, sessions], () => {
+        watch([recordings, sessions, groupedSessions, groupedRecordings], () => {
             nextTick(() => setupInfiniteScroll());
         }, { deep: false });
 
@@ -414,6 +415,8 @@ export default {
 
         const toggleInlinePlay = async (file) => {
             if (!file?.id) return;
+
+            if (expandedId.value === file.id) return;
 
             if (inlinePlayingId.value === file.id && inlineAudio) {
                 if (inlineAudio.paused) {
@@ -515,7 +518,7 @@ export default {
 
             try {
                 const response = await window.axios.get('/api/recordings', {
-                    params: { mode: props.recordingMode, page, per_page: 15 },
+                    params: { mode: props.recordingMode, page, per_page: LIBRARY_PAGE_SIZE },
                 });
                 recordings.value = append
                     ? [...recordings.value, ...(response.data.recordings || [])]
@@ -529,6 +532,7 @@ export default {
             } finally {
                 loadingRecordings.value = false;
                 loadingMore.value = false;
+                nextTick(() => setupInfiniteScroll());
             }
         };
 
@@ -538,7 +542,7 @@ export default {
 
             try {
                 const response = await window.axios.get('/api/recording-sessions', {
-                    params: { type: 'looped', page, per_page: 15 },
+                    params: { type: 'looped', page, per_page: LIBRARY_PAGE_SIZE },
                 });
                 sessions.value = append
                     ? [...sessions.value, ...(response.data.sessions || [])]
@@ -552,6 +556,7 @@ export default {
             } finally {
                 loadingSessions.value = false;
                 loadingMoreSessions.value = false;
+                nextTick(() => setupInfiniteScroll());
             }
         };
 

@@ -38,13 +38,14 @@
         class="mb-3 rounded-lg overflow-hidden bg-stone-50 border border-stone-100 p-2"
       >
         <WaveformPlayer
+          :key="`${recording.id}-${playbackUrl}`"
           ref="player"
           :url="playbackUrl"
           :autoplay="false"
           variant="inline"
-          @play="$emit('waveform-play')"
-          @pause="$emit('waveform-pause')"
-          @finish="$emit('waveform-finish')"
+          @play="onWaveformPlay"
+          @pause="onWaveformPause"
+          @finish="onWaveformFinish"
         />
       </div>
 
@@ -53,7 +54,7 @@
           type="button"
           class="p-2 rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors"
           :aria-label="isPlaying ? 'Pause' : 'Play'"
-          @click.stop="$emit('toggle-play')"
+          @click.stop="handlePlayClick"
         >
           <svg v-if="!isPlaying" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
@@ -130,7 +131,7 @@
           <button
             type="button"
             class="p-2 rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors"
-            @click.stop="$emit('toggle-play')"
+            @click.stop="handlePlayClick"
           >
             <svg v-if="!isPlaying" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
@@ -164,13 +165,14 @@
         class="rounded-lg overflow-hidden bg-stone-50 border border-stone-100 p-2"
       >
         <WaveformPlayer
+          :key="`${recording.id}-${playbackUrl}`"
           ref="player"
           :url="playbackUrl"
           :autoplay="false"
           variant="inline"
-          @play="$emit('waveform-play')"
-          @pause="$emit('waveform-pause')"
-          @finish="$emit('waveform-finish')"
+          @play="onWaveformPlay"
+          @pause="onWaveformPause"
+          @finish="onWaveformFinish"
         />
       </div>
     </div>
@@ -178,7 +180,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import WaveformPlayer from './WaveformPlayer.vue'
 
 const props = defineProps({
@@ -191,7 +193,7 @@ const props = defineProps({
   playbackUrl: { type: String, default: '' },
 })
 
-defineEmits([
+const emit = defineEmits([
   'toggle-play',
   'toggle-expand',
   'open-full',
@@ -202,10 +204,24 @@ defineEmits([
   'waveform-finish',
 ])
 
+const player = ref(null)
+
 const meta = computed(() =>
   [props.recording.formatted_duration || props.recording.duration,
    props.recording.formatted_file_size || props.recording.size]
     .filter(Boolean)
     .join(' · ')
 )
+
+const handlePlayClick = () => {
+  if (props.isExpanded && props.playbackUrl && player.value) {
+    player.value.toggle()
+    return
+  }
+  emit('toggle-play')
+}
+
+const onWaveformPlay = () => emit('waveform-play')
+const onWaveformPause = () => emit('waveform-pause')
+const onWaveformFinish = () => emit('waveform-finish')
 </script>
